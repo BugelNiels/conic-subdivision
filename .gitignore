@@ -19,3 +19,6 @@ build*/
 **/timings.txt
 **/quadricSubdiv
 models/*mtl
+
+cmake-build*
+CMakeLists.txt.user*
