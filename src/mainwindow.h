@@ -18,6 +18,9 @@ class MainWindow : public QMainWindow {
   ~MainWindow() override;
 
  private slots:
+  void on_numPresetPointsSpinBox_valueChanged(int arg1);
+
+ private slots:
   void on_netPresets_currentIndexChanged(int index);
   void on_subdivSteps_valueChanged(int numSteps);
   void on_pointWeightSpinBox_valueChanged(double value);

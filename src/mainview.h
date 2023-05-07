@@ -37,6 +37,8 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
   void mouseMoveEvent(QMouseEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
 
+  void resizeGL(int width, int height) override;
+
  private:
   bool initialized = false;
   QOpenGLDebugLogger *debugLogger;

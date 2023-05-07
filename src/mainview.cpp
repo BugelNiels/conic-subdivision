@@ -61,18 +61,23 @@ void MainView::initializeGL() {
 
   subCurve.addSettings(&settings);
   // load preset curve net
-  subCurve.presetNet(0);
+  subCurve.presetNet(settings.presetIdx);
 
   initialized = true;
   // update buffers
   updateBuffers();
 }
 
+void MainView::resizeGL(int width, int height) {
+  int side = qMin(width, height);
+  glViewport((width - side) / 2, (height - side) / 2, side, side);
+}
+
 void MainView::recalculateCurve() {
   if (!initialized) {
     return;
   }
-  subCurve.reSubdivide();
+  subCurve.reSubdivide(settings.presetIdx < 3);
   cnr.updateBuffers(subCurve, settings.closed);
   cr.updateBuffers(subCurve, settings.closed);
   update();
@@ -96,6 +101,9 @@ void MainView::updateBuffers() {
  * @brief MainView::paintGL Draw call.
  */
 void MainView::paintGL() {
+  // Set the viewport to be square
+  int side = qMin(width(), height());
+  glViewport((width() - side) / 2, (height() - side) / 2, side, side);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -113,13 +121,13 @@ void MainView::paintGL() {
  * @return A vector containing the normalized x and y screen coordinates.
  */
 QVector2D MainView::toNormalizedScreenCoordinates(float x, float y) {
-  float xRatio = x / float(width());
-  float yRatio = y / float(height());
+  int side = qMin(width(), height());
+  float xViewport = (width() - side) / 2.0f;
+  float yViewport = (height() - side) / 2.0f;
 
-  // By default, the drawing canvas is the square [-1,1]^2:
+  float xRatio = (x - xViewport) / side;
+  float yRatio = (y - yViewport) / side;
   float xScene = (1 - xRatio) * -1 + xRatio * 1;
-  // Note that the origin of the canvas is in the top left corner (not the lower
-  // left).
   float yScene = yRatio * -1 + (1 - yRatio) * 1;
 
   return {xScene, yScene};

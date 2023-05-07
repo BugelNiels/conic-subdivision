@@ -31,7 +31,7 @@ class SubdivisionCurve {
   void removePoint(int idx);
 
   void subdivide(int level);
-  void reSubdivide();
+  void reSubdivide(bool recalculate = true);
 
  private:
   int subdivisionLevel;

@@ -48,6 +48,7 @@ QVector2D calcNormal(const QVector2D& a, const QVector2D& b,
 
 QVector<QVector2D> SubdivisionCurve::calcNormals(
     const QVector<QVector2D>& coords) const {
+  qDebug() << "Recalculating normals";
   QVector<QVector2D> normals;
   int n = coords.size();
   normals.resize(n);
@@ -113,7 +114,6 @@ void SubdivisionCurve::presetNet(int preset) {
   netNormals.clear();
   curveCoords.clear();
   curveNormals.clear();
-  subdivisionLevel = 0;
 
   switch (preset) {
     case 0:
@@ -124,6 +124,7 @@ void SubdivisionCurve::presetNet(int preset) {
       netCoords.append(QVector2D(-0.25f, 0.75f));
       netCoords.append(QVector2D(0.75f, 0.5f));
       netCoords.append(QVector2D(0.5f, -0.75f));
+      netNormals = calcNormals(netCoords);
       break;
     case 1:
       // Basis
@@ -137,6 +138,7 @@ void SubdivisionCurve::presetNet(int preset) {
       netCoords.append(QVector2D(0.5f, -0.25f));
       netCoords.append(QVector2D(0.75f, -0.25f));
       netCoords.append(QVector2D(1.0f, -0.25f));
+      netNormals = calcNormals(netCoords);
       break;
     case 2:
       // G
@@ -155,9 +157,43 @@ void SubdivisionCurve::presetNet(int preset) {
       netCoords.append(QVector2D(-0.55f, 0.55f));
       netCoords.append(QVector2D(0.55f, 0.55f));
       netCoords.append(QVector2D(0.55f, 0.35f));
+      netNormals = calcNormals(netCoords);
       break;
+    case 3: {
+      // Ellipse
+      int numPointsEllipse = settings->numPresetPoints;
+      netCoords.reserve(numPointsEllipse);
+      float a = 0.8f;
+      float b = 0.5f;
+
+      for (int i = 0; i < numPointsEllipse; ++i) {
+        const float theta = i * (2.0f * M_PI / numPointsEllipse);
+        const float x = a * std::cos(theta);
+        const float y = b * std::sin(theta);
+        netCoords.append(QVector2D(x, y));
+        const float tx = -a * std::sin(theta);
+        const float ty = b * std::cos(theta);
+        const QVector2D normal(ty, -tx);
+        netNormals.append(normal.normalized());
+      }
+      break;
+    }
+    case 4: {
+      // Circle
+      int numPointsCircle = settings->numPresetPoints;
+      netCoords.reserve(numPointsCircle);
+      float r = 0.5f;
+
+      for (int i = 0; i < numPointsCircle; ++i) {
+        const float theta = i * (2.0f * M_PI / numPointsCircle);
+        const float x = r * std::cos(theta);
+        const float y = r * std::sin(theta);
+        netCoords.append(QVector2D(x, y));
+        netNormals.append(QVector2D(x, y).normalized());
+      }
+      break;
+    }
   }
-  netNormals = calcNormals(netCoords);
 }
 
 /**
@@ -216,8 +252,10 @@ int SubdivisionCurve::findClosest(const QVector2D& p, const float maxDist) {
   return ptIndex;
 }
 
-void SubdivisionCurve::reSubdivide() {
-  netNormals = calcNormals(netCoords);
+void SubdivisionCurve::reSubdivide(bool recalculate) {
+  if (recalculate) {
+    netNormals = calcNormals(netCoords);
+  }
   subdivide(subdivisionLevel);
 }
 
@@ -303,12 +341,6 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D>& points,
         indices.append(pIdx + 3);
       }
     }
-    //    indices[0] = pIdx;                              // p0
-    //    indices[1] = MIN(pIdx + 1, points.size() - 1);  // p1
-    //    indices[2] = MIN(pIdx + 2, points.size() - 1);  // p2
-    //    indices[3] = MAX(pIdx - 1, 0);                  // p_1
-    //    indices[4] = MIN(pIdx + 3, points.size() - 1);  // p3
-    //    indices[5] = MAX(pIdx - 2, 0);                  // p_2
 
     for (int j = 0; j < indices.size(); j++) {
       patchCoords.append(points[indices[j]]);

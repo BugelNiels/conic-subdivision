@@ -124,7 +124,30 @@ QGroupBox::title {
             <string>G</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Ellipse</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Circle</string>
+           </property>
+          </item>
          </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of points to spawn the circle/ellipse preset with.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Num Preset Points</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="numPresetPointsSpinBox"/>
         </item>
         <item>
          <widget class="QLabel" name="stepsLabel">
@@ -149,7 +172,7 @@ QGroupBox::title {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In the line segment &lt;/p&gt;&lt;p&gt;a-b-&lt;span style=&quot; font-weight:600;&quot;&gt;c-d&lt;/span&gt;-e-f&lt;/p&gt;&lt;p&gt;this value changes the weights of the points at &lt;span style=&quot; font-weight:600;&quot;&gt;c&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;d &lt;/span&gt;(the edge points).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <double>0.000000000000000</double>
           </property>
           <property name="maximum">
            <double>1000000.000000000000000</double>
@@ -162,7 +185,7 @@ QGroupBox::title {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In the line segment &lt;/p&gt;&lt;p&gt;a-&lt;span style=&quot; font-weight:600;&quot;&gt;b&lt;/span&gt;-c&lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt;d-&lt;span style=&quot; font-weight:600;&quot;&gt;e&lt;/span&gt;-f&lt;/p&gt;&lt;p&gt;this value change the weights of the points at &lt;span style=&quot; font-weight:600;&quot;&gt;b&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;e&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <double>0.000000000000000</double>
           </property>
           <property name="maximum">
            <double>1000.000000000000000</double>
@@ -195,7 +218,7 @@ QGroupBox::title {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In the line segment &lt;/p&gt;&lt;p&gt;a-b-&lt;span style=&quot; font-weight:600;&quot;&gt;c-d&lt;/span&gt;-e-f&lt;/p&gt;&lt;p&gt;this value changes the weights of the normals at &lt;span style=&quot; font-weight:600;&quot;&gt;c&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;d &lt;/span&gt;(the edge points).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <double>0.000000000000000</double>
           </property>
           <property name="maximum">
            <double>1000000.000000000000000</double>
@@ -208,7 +231,7 @@ QGroupBox::title {
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;In the line segment &lt;/p&gt;&lt;p&gt;a-&lt;span style=&quot; font-weight:600;&quot;&gt;b&lt;/span&gt;-c&lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt;d-&lt;span style=&quot; font-weight:600;&quot;&gt;e&lt;/span&gt;-f&lt;/p&gt;&lt;p&gt;this value change the weights of the normals at &lt;span style=&quot; font-weight:600;&quot;&gt;b&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;e&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="minimum">
-           <double>1.000000000000000</double>
+           <double>0.000000000000000</double>
           </property>
           <property name="maximum">
            <double>1000.000000000000000</double>

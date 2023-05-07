@@ -28,6 +28,13 @@ Conic::Conic(const QVector<QVector2D> &coords,
   hasSolution = fitConic(coords, normals, settings);
 }
 
+void normalizeCoefs(QVector<double> &coefs) {
+  double fac = 1 / coefs[0];
+  for (int i = 0; i < coefs.size(); i++) {
+    coefs[i] *= fac;
+  }
+}
+
 /**
  * @brief Quadric::fitQuadric Attempts to fit a quadric to the provided patch
  * based on the provided solve settings.
@@ -49,6 +56,10 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
   if (foundCoefs.isEmpty()) {
     return false;
   }
+  // unComment these two lines to see the found coefficients for every edge
+  //  normalizeCoefs(foundCoefs);
+  //  qDebug() << foundCoefs;
+
   Q = coefsToMatrix(foundCoefs);
   return true;
 }

@@ -30,6 +30,8 @@ MainWindow::MainWindow(QWidget* parent)
 
   ui->controlPointsCheckBox->setChecked(settings.showControlPoints);
   ui->controlCurveCheckBox->setChecked(settings.showControlCurve);
+  ui->numPresetPointsSpinBox->setValue(settings.numPresetPoints);
+  ui->netPresets->setCurrentIndex(settings.presetIdx);
 }
 
 /**
@@ -43,6 +45,7 @@ MainWindow::~MainWindow() {
 void MainWindow::on_netPresets_currentIndexChanged(int index) {
   if (ui->mainView->isValid()) {
     ui->subdivSteps->setValue(0);
+    ui->mainView->settings.presetIdx = index;
     ui->mainView->subCurve.presetNet(index);
   }
   ui->mainView->updateBuffers();
@@ -126,4 +129,12 @@ void MainWindow::on_middleNormalWeightSpinBox_valueChanged(double value) {
 void MainWindow::on_outerNormalWeightSpinBox_valueChanged(double value) {
   ui->mainView->settings.outerNormalWeight = value;
   ui->mainView->recalculateCurve();
+}
+
+void MainWindow::on_numPresetPointsSpinBox_valueChanged(int value) {
+  ui->mainView->settings.numPresetPoints = value;
+  if (ui->mainView->isValid()) {
+    ui->mainView->subCurve.presetNet(ui->mainView->settings.presetIdx);
+    ui->mainView->recalculateCurve();
+  }
 }

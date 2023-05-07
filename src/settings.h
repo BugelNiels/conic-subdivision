@@ -33,6 +33,9 @@ typedef struct Settings {
   bool showControlPoints = true;
   bool showControlCurve = true;
 
+  int numPresetPoints = 5;
+  int presetIdx = 3;
+
 } Settings;
 
 #endif  // SETTINGS_H
