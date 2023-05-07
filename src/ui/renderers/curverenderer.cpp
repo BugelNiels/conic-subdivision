@@ -1,10 +1,12 @@
 #include "curverenderer.hpp"
 
+#include "core/settings.hpp"
+
 CurveRenderer::~CurveRenderer() {
-    gl->glDeleteVertexArrays(1, &vao);
-    gl->glDeleteBuffers(1, &vbo_coords);
-    gl->glDeleteBuffers(1, &vbo_norms);
-    gl->glDeleteBuffers(1, &ibo);
+    gl->glDeleteVertexArrays(1, &vao_);
+    gl->glDeleteBuffers(1, &vbo_coords_);
+    gl->glDeleteBuffers(1, &vbo_norms_);
+    gl->glDeleteBuffers(1, &ibo_);
 }
 
 void CurveRenderer::initShaders() {
@@ -15,22 +17,22 @@ void CurveRenderer::initBuffers() {
     // Pure OpenGL functions used here
 
     // create vao
-    gl->glGenVertexArrays(1, &vao);
+    gl->glGenVertexArrays(1, &vao_);
     // bind vao
-    gl->glBindVertexArray(vao);
+    gl->glBindVertexArray(vao_);
 
-    gl->glGenBuffers(1, &vbo_coords);
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords);
+    gl->glGenBuffers(1, &vbo_coords_);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
     gl->glEnableVertexAttribArray(0);
     gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl->glGenBuffers(1, &vbo_norms);
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms);
+    gl->glGenBuffers(1, &vbo_norms_);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms_);
     gl->glEnableVertexAttribArray(1);
     gl->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl->glGenBuffers(1, &ibo);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    gl->glGenBuffers(1, &ibo_);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
     // unbind
     gl->glBindVertexArray(0);
@@ -50,11 +52,11 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
         return;
     }
 
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
     gl->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords.size(),
                      coords.data(), GL_DYNAMIC_DRAW);
 
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms_);
     gl->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals.size(),
                      normals.data(), GL_DYNAMIC_DRAW);
 
@@ -70,11 +72,11 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
         indices.append(coords.size() - 1);
     }
 
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
     gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
                      indices.data(), GL_DYNAMIC_DRAW);
 
-    vboSize = indices.size();
+    vboSize_ = indices.size();
 }
 
 void CurveRenderer::draw() {
@@ -84,7 +86,7 @@ void CurveRenderer::draw() {
     shader->setUniformValue(shader->uniformLocation("visualize_normals"),
                             settings->visualizeNormals);
 
-    gl->glLineWidth(2);
+    gl->glLineWidth(settings->curveLineWidth);
     QColor qCol = settings->style.smoothCurveCol;
     QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
     shader->setUniformValue(shader->uniformLocation("lineColor"), col);
@@ -95,9 +97,9 @@ void CurveRenderer::draw() {
 
     shader->setUniformValue("projectionMatrix", settings->projectionMatrix);
 
-    gl->glBindVertexArray(vao);
+    gl->glBindVertexArray(vao_);
 
-    gl->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize, GL_UNSIGNED_INT,
+    gl->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize_, GL_UNSIGNED_INT,
                        nullptr);
     gl->glBindVertexArray(0);
 

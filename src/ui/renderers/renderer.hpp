@@ -3,7 +3,9 @@
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLShaderProgram>
 
-#include "src/settings.hpp"
+#include "shadertypes.hpp"
+
+class Settings;
 
 /**
  * @brief The Renderer class represents a generic renderer class. The class is

@@ -12,7 +12,8 @@ namespace conics::ui {
         QColor controlCurveCol;
         QColor controlPointCol;
         QColor smoothCurveCol;
-        QColor selectedCol;
+        QColor selectedVertCol;
+        QColor selectedNormCol;
         QColor normCol;
 
         QPalette palette;

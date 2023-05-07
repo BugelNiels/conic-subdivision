@@ -4,7 +4,7 @@
 #include <QVector2D>
 #include <QVector>
 
-#include "settings.hpp"
+class Settings;
 
 class Conic {
 public:
@@ -18,9 +18,9 @@ public:
 
     bool intersects(const QVector2D &ro, const QVector2D &rd, double &t) const;
 
-    inline bool isValid() const { return hasSolution; }
+    inline bool isValid() const { return hasSolution_; }
 
-    inline QMatrix4x4 getCoefficients() const { return Q; }
+    inline QMatrix4x4 getCoefficients() const { return Q_; }
 
     Conic average(const Conic &other) const;
 
@@ -29,8 +29,8 @@ public:
     void operator+=(const Conic &other);
 
 private:
-    QMatrix4x4 Q;
-    bool hasSolution;
+    QMatrix4x4 Q_;
+    bool hasSolution_;
 
     bool fitConic(const QVector<QVector2D> &coords,
                   const QVector<QVector2D> &normals, const Settings &settings);

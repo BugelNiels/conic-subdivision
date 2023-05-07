@@ -1,4 +1,4 @@
-#include "src/core/conicfitter.hpp"
+#include "src/core/conics/conicfitter.hpp"
 
 #include <QApplication>
 #include <QSurfaceFormat>
@@ -6,8 +6,8 @@
 
 #include <QDockWidget>
 
-#include "mainwindow.hpp"
-#include "settings.hpp"
+#include "src/ui/mainwindow.hpp"
+#include "src/core/settings.hpp"
 
 //#define COEF_TEST
 
@@ -75,8 +75,8 @@ int main(int argc, char *argv[]) {
     font.setPixelSize(14);
     QApplication::setFont(font);
 
-    auto *w = new MainWindow();
-w->showMaximized();
+    MainWindow w;
+    w.showMaximized();
     return QApplication::exec();
 #endif
 }

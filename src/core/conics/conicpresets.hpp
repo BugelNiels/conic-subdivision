@@ -2,14 +2,14 @@
 
 #include <QString>
 #include <QMap>
-#include "subdivisioncurve.hpp"
+#include "src/core/subdivisioncurve.hpp"
 
 namespace conics {
 
     class ConicPresets {
 
     public:
-        ConicPresets();
+        ConicPresets(Settings *settings);
         ~ConicPresets();
 
         SubdivisionCurve getPreset(const QString& name) const;
@@ -17,7 +17,8 @@ namespace conics {
 
 
     private:
-        QMap<QString, SubdivisionCurve> presets;
+        Settings *settings_;
+        QMap<QString, SubdivisionCurve> presets_;
 
         SubdivisionCurve getPentagon();
 

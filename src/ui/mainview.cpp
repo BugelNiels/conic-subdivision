@@ -1,13 +1,13 @@
 #include "mainview.hpp"
 
 #include <QOpenGLVersionFunctionsFactory>
+#include "src/core/subdivisioncurve.hpp"
+#include <QMouseEvent>
+#include "core/settings.hpp"
 
-#include "math.h"
+MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings) {
 
-
-MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent), settings(settings) {
-
-    subCurve = std::make_shared<SubdivisionCurve>(SubdivisionCurve());
+    subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve());
     QSurfaceFormat format;
     format.setSamples(4);    // Set the number of samples used for multisampling
     setFormat(format);
@@ -15,23 +15,23 @@ MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent),
 
 
 MainView::~MainView() {
-    debugLogger->stopLogging();
+    debugLogger_->stopLogging();
 
-    delete debugLogger;
+    delete debugLogger_;
 }
 
 void MainView::initializeGL() {
     initializeOpenGLFunctions();
     qDebug() << ":: OpenGL initialized";
 
-    debugLogger = new QOpenGLDebugLogger();
-    connect(debugLogger, SIGNAL(messageLogged(QOpenGLDebugMessage)), this,
-            SLOT(onMessageLogged(QOpenGLDebugMessage)), Qt::DirectConnection);
+    debugLogger_ = new QOpenGLDebugLogger();
+    connect(debugLogger_, SIGNAL(messageLogged(QOpenGLDebugMessage)), this, SLOT(onMessageLogged(QOpenGLDebugMessage)),
+            Qt::DirectConnection);
 
-    if (debugLogger->initialize()) {
+    if (debugLogger_->initialize()) {
         qDebug() << ":: Logging initialized";
-        debugLogger->startLogging(QOpenGLDebugLogger::SynchronousLogging);
-        debugLogger->enableMessages();
+        debugLogger_->startLogging(QOpenGLDebugLogger::SynchronousLogging);
+        debugLogger_->enableMessages();
     }
 
     // If the application crashes here, try setting "MESA_GL_VERSION_OVERRIDE
@@ -48,49 +48,45 @@ void MainView::initializeGL() {
     glDepthFunc(GL_LEQUAL);
 
     // grab the opengl context
-    auto *functions =
-            QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(
-                    this->context());
+    auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(this->context());
     functions->glEnable(GL_MULTISAMPLE);
 
     functions->glLineWidth(2);
 
     // initialize renderers here with the current context
-    cnr.init(functions, settings);
-    cr.init(functions, settings);
+    cnr_.init(functions, settings_);
+    cr_.init(functions, settings_);
     // update buffers
     updateBuffers();
 }
 
 void MainView::resizeGL(int width, int height) {
     QMatrix4x4 projectMatrix;
-    float sizeCorrection = 500;
-    float halfWidth = width / 2.0f / sizeCorrection;
-    float halfHeight = height / 2.0f / sizeCorrection;
+    float halfWidth = width / 2.0f / settings_->sizeCorrection;
+    float halfHeight = height / 2.0f / settings_->sizeCorrection;
     projectMatrix.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 0, 1);
-    settings->projectionMatrix = projectMatrix;
+    settings_->projectionMatrix = projectMatrix;
     int side = qMin(width, height);
     glViewport((width - side) / 2, (height - side) / 2, side, side);
 }
 
 void MainView::subdivideCurve(int numSteps) {
-    if (subCurve == nullptr) {
+    if (subCurve_ == nullptr) {
         return;
     }
-    subCurve->subdivide(numSteps);
-    cnr.updateBuffers(*subCurve, settings->closed);
-    cr.updateBuffers(*subCurve, settings->closed);
+    subCurve_->subdivide(numSteps);
+    cnr_.updateBuffers(*subCurve_, settings_->closed);
+    cr_.updateBuffers(*subCurve_, settings_->closed);
     update();
 }
 
 void MainView::recalculateCurve() {
-    if (subCurve == nullptr) {
+    if (subCurve_ == nullptr) {
         return;
     }
-    // TODO: do this better
-    subCurve->reSubdivide(settings->presetIdx < 3);
-    cnr.updateBuffers(*subCurve, settings->closed);
-    cr.updateBuffers(*subCurve, settings->closed);
+    subCurve_->reSubdivide();
+    cnr_.updateBuffers(*subCurve_, settings_->closed);
+    cr_.updateBuffers(*subCurve_, settings_->closed);
     update();
 }
 
@@ -99,11 +95,11 @@ void MainView::recalculateCurve() {
  * subdivision curve renderers.
  */
 void MainView::updateBuffers() {
-    if (subCurve == nullptr) {
+    if (subCurve_ == nullptr) {
         return;
     }
-    cnr.updateBuffers(*subCurve, settings->closed);
-    cr.updateBuffers(*subCurve, settings->closed);
+    cnr_.updateBuffers(*subCurve_, settings_->closed);
+    cr_.updateBuffers(*subCurve_, settings_->closed);
 
     update();
 }
@@ -112,13 +108,13 @@ void MainView::updateBuffers() {
  * @brief MainView::paintGL Draw call.
  */
 void MainView::paintGL() {
-    QColor bCol = settings->style.backgroundCol;
+    QColor bCol = settings_->style.backgroundCol;
     glClearColor(bCol.redF(), bCol.greenF(), bCol.blueF(), 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (settings->showNet && subCurve != nullptr) {
-        cnr.draw();
-        cr.draw();
+    if (subCurve_ != nullptr) {
+        cr_.draw();
+        cnr_.draw();
     }
 }
 
@@ -151,37 +147,68 @@ QVector2D MainView::toNormalizedScreenCoordinates(float x, float y) {
 void MainView::mousePressEvent(QMouseEvent *event) {
     // In order to allow keyPressEvents:
     setFocus();
-    if (subCurve == nullptr) {
+    if (subCurve_ == nullptr) {
         return;
     }
 
-    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(),
-                                                       event->position().y());
+    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
 
     switch (event->buttons()) {
         case Qt::LeftButton: {
-            if (hasMouseTracking()) {
-                settings->selectedVertex = -1;
-                setMouseTracking(false);
+
+            if (event->modifiers().testFlag(Qt::ControlModifier)) {
+                // First attempt to select a normal. If unsuccessful, select a point
+                if (!attemptNormalSelect(scenePos)) {
+                    attemptVertexSelect(scenePos);
+                }
+
+            } else {
+                // First attempt to select a vertex. If unsuccessful, select a normal
+                if (!attemptVertexSelect(scenePos)) {
+                    attemptNormalSelect(scenePos);
+                }
             }
-            float maxDist = 0.6f;
-            if (settings->selectedVertex != -1) {
-                // Smaller click radius for easy de-selection of points
-                maxDist = 0.1f;
-            }
-            // Select control point
-            settings->selectedVertex = subCurve->findClosest(scenePos, maxDist);
             update();
             break;
         }
         case Qt::RightButton: {
             // Add new control point
-            subCurve->addPoint(scenePos);
-            settings->selectedVertex = -1;
+            subCurve_->addPoint(scenePos);
+            settings_->selectedVertex = -1;
             updateBuffers();
             break;
         }
     }
+}
+
+bool MainView::attemptVertexSelect(const QVector2D &scenePos) {
+    settings_->selectedNormal = -1;
+    float maxDist = settings_->selectRadius;
+    if (settings_->selectedVertex != -1) {
+        // Smaller click radius for easy de-selection of points
+        maxDist = settings_->deselectRadius;
+    }
+    // Select control point
+    settings_->selectedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
+    if (settings_->selectedVertex > -1) {
+        return true;
+    }
+    return false;
+}
+
+bool MainView::attemptNormalSelect(const QVector2D &scenePos) {
+    settings_->selectedVertex = -1;
+    float maxDist = settings_->selectRadius;
+    if (settings_->selectedNormal != -1) {
+        // Smaller click radius for easy de-selection of points
+        maxDist = settings_->deselectRadius;
+    }
+    // Select control point
+    settings_->selectedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
+    if (settings_->selectedNormal > -1) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -190,11 +217,16 @@ void MainView::mousePressEvent(QMouseEvent *event) {
  * @param event Mouse event.
  */
 void MainView::mouseMoveEvent(QMouseEvent *event) {
-    if (settings->selectedVertex > -1) {
-        QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(),
-                                                           event->position().y());
+    if (settings_->selectedVertex > -1) {
+        QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
         // Update position of the control point
-        subCurve->setPointPosition(settings->selectedVertex, scenePos);
+        subCurve_->setVertexPosition(settings_->selectedVertex, scenePos);
+        updateBuffers();
+    }
+    if (settings_->selectedNormal > -1) {
+        QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+        // Update position of the control point
+        subCurve_->setNormalPosition(settings_->selectedNormal, scenePos);
         updateBuffers();
     }
 }
@@ -206,22 +238,16 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
  * @param event Key press event.
  */
 void MainView::keyPressEvent(QKeyEvent *event) {
-    if (subCurve == nullptr) {
+    if (subCurve_ == nullptr) {
         return;
     }
     // Only works when the widget has focus!
     switch (event->key()) {
-        case 'G':
-            if (settings->selectedVertex > -1) {
-                // Grab selected control point
-                setMouseTracking(true);
-            }
-            break;
         case 'X':
-            if (settings->selectedVertex > -1) {
+            if (settings_->selectedVertex > -1) {
                 // Remove selected control point
-                subCurve->removePoint(settings->selectedVertex);
-                settings->selectedVertex = -1;
+                subCurve_->removePoint(settings_->selectedVertex);
+                settings_->selectedVertex = -1;
                 updateBuffers();
             }
             break;
@@ -261,6 +287,21 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
 }
 
 void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {
-    subCurve = newSubCurve;
-    subCurve->addSettings(settings);
+    subCurve_ = newSubCurve;
+}
+
+void MainView::flipCurveNorms() {
+    if (subCurve_ == nullptr) {
+        return;
+    }
+    subCurve_->flipNormals();
+    recalculateCurve();
+}
+
+void MainView::recalculateNormals() {
+    if (subCurve_ == nullptr) {
+        return;
+    }
+    subCurve_->recalculateNormals();
+    recalculateCurve();
 }

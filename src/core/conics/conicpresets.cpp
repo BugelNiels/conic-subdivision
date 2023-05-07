@@ -1,12 +1,12 @@
 #include "conicpresets.hpp"
 
-conics::ConicPresets::ConicPresets() {
+conics::ConicPresets::ConicPresets(Settings *settings) : settings_(settings) {
 
-    presets["Pentagon"] = getPentagon();
-    presets["Basis"] = getBasis();
-    presets["G"] = getG();
-    presets["Circle"] = getCircle(5, 0.5f);
-    presets["Ellipse"] = getEllipse(5, 0.8f, 0.3f);
+    presets_["Pentagon"] = getPentagon();
+    presets_["Basis"] = getBasis();
+    presets_["G"] = getG();
+    presets_["Circle"] = getCircle(5, 0.5f);
+    presets_["Ellipse"] = getEllipse(5, 0.8f, 0.3f);
 }
 
 
@@ -23,7 +23,7 @@ SubdivisionCurve conics::ConicPresets::getPentagon() {
     netCoords.append(QVector2D(-0.25f, 0.75f));
     netCoords.append(QVector2D(0.75f, 0.5f));
     netCoords.append(QVector2D(0.5f, -0.75f));
-    return SubdivisionCurve(netCoords);
+    return SubdivisionCurve(settings_, netCoords);
 }
 
 SubdivisionCurve conics::ConicPresets::getBasis() {
@@ -38,7 +38,7 @@ SubdivisionCurve conics::ConicPresets::getBasis() {
     netCoords.append(QVector2D(0.5f, -0.25f));
     netCoords.append(QVector2D(0.75f, -0.25f));
     netCoords.append(QVector2D(1.0f, -0.25f));
-    return SubdivisionCurve(netCoords);
+    return SubdivisionCurve(settings_, netCoords);
 }
 
 SubdivisionCurve conics::ConicPresets::getG() {
@@ -58,7 +58,7 @@ SubdivisionCurve conics::ConicPresets::getG() {
     netCoords.append(QVector2D(-0.55f, 0.55f));
     netCoords.append(QVector2D(0.55f, 0.55f));
     netCoords.append(QVector2D(0.55f, 0.35f));
-    return SubdivisionCurve(netCoords);
+    return SubdivisionCurve(settings_, netCoords);
 }
 
 SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, float radius) {
@@ -73,7 +73,7 @@ SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, float radius) {
         netCoords.append(QVector2D(x, y));
         netNormals.append(QVector2D(x, y).normalized());
     }
-    return SubdivisionCurve(netCoords, netNormals);
+    return SubdivisionCurve(settings_, netCoords, netNormals);
 }
 
 SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, float width, float height) {
@@ -91,14 +91,14 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, float width, fl
         const QVector2D normal(ty, -tx);
         netNormals.append(normal.normalized());
     }
-    return SubdivisionCurve(netCoords, netNormals);
+    return SubdivisionCurve(settings_, netCoords, netNormals);
 }
 
 
 SubdivisionCurve conics::ConicPresets::getPreset(const QString &name) const {
-    return presets[name];
+    return presets_[name];
 }
 
 QList<QString> conics::ConicPresets::getPresetNames() const {
-    return presets.keys();
+    return presets_.keys();
 }

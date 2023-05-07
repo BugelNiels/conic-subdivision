@@ -1,8 +1,9 @@
 #pragma once
 
 #include <QMainWindow>
-#include "mainview.hpp"
-#include "core/conicpresets.hpp"
+#include "src/core/conics/conicpresets.hpp"
+
+class MainView;
 
 class MainWindow : public QMainWindow {
 Q_OBJECT
@@ -14,9 +15,9 @@ public:
 
 private:
 
-    conics::ConicPresets presets;
-    Settings *settings;
-    MainView *mainView;
+    conics::ConicPresets *presets_;
+    Settings *settings_;
+    MainView *mainView_;
 
     QMenu *getPresetMenu();
 

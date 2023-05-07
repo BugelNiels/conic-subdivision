@@ -47,37 +47,37 @@ inline arma::rowvec normEqY(const QVector2D &coord, const QVector2D &normal,
 
 double ConicFitter::getPointWeight(int index) const {
     if (index < 2) {
-        return pointWeight;
+        return pointWeight_;
     } else if (index < 4) {
-        return middlePointWeight;
+        return middlePointWeight_;
     }
-    return outerPointWeight;
+    return outerPointWeight_;
 }
 
 double ConicFitter::getNormalWeight(int index) const {
     if (index < 2) {
-        return normalWeight;
+        return normalWeight_;
     } else if (index < 4) {
-        return middleNormalWeight;
+        return middleNormalWeight_;
     }
-    return outerNormalWeight;
+    return outerNormalWeight_;
 }
 
 arma::mat ConicFitter::initA(const QVector<QVector2D> &coords,
                              const QVector<QVector2D> &normals) const {
-    arma::mat A(numEq, numUnkowns);
+    arma::mat A(numEq_, numUnknowns_);
 
     arma::uword rowIdx = 0;
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < numPoints_; i++) {
         double weight = getPointWeight(i);
-        A.row(rowIdx++) = pointEq(coords[i], numUnkowns) * weight;
+        A.row(rowIdx++) = pointEq(coords[i], numUnknowns_) * weight;
     }
-    for (int i = 0; i < numNormals; i++) {
+    for (int i = 0; i < numNormals_; i++) {
         double weight = getNormalWeight(i);
         QVector2D coord = coords[i];
         QVector2D normal = normals[i];
-        A.row(rowIdx++) = normEqX(coord, normal, numUnkowns, i) * weight;
-        A.row(rowIdx++) = normEqY(coord, normal, numUnkowns, i) * weight;
+        A.row(rowIdx++) = normEqX(coord, normal, numUnknowns_, i) * weight;
+        A.row(rowIdx++) = normEqY(coord, normal, numUnknowns_, i) * weight;
     }
     return A;
 }
@@ -85,13 +85,13 @@ arma::mat ConicFitter::initA(const QVector<QVector2D> &coords,
 QVector<double> ConicFitter::vecToQVec(const arma::vec &res) const {
     QVector<double> coefs;
     int numZeros = 0;
-    for (int i = 0; i < numUnkowns; i++) {
+    for (int i = 0; i < numUnknowns_; i++) {
         coefs.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
-    if (numZeros == numUnkowns) {
+    if (numZeros == numUnknowns_) {
         return QVector<double>();
     }
     return coefs;
@@ -128,22 +128,22 @@ QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
 QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
                                       const QVector<QVector2D> &normals,
                                       const Settings &settings) {
-    numPoints = coords.size();
-    numNormals = normals.size();
+    numPoints_ = coords.size();
+    numNormals_ = normals.size();
     if (settings.outerNormalWeight == 0.0 || settings.outerPointWeight == 0.0) {
-        numNormals -= 2;
-        numPoints -= 2;
+        numNormals_ -= 2;
+        numPoints_ -= 2;
     }
-    numUnkowns = 6 + numNormals;
+    numUnknowns_ = 6 + numNormals_;
 
-    pointWeight = settings.pointWeight;
-    normalWeight = settings.normalWeight;
-    middlePointWeight = settings.middlePointWeight;
-    middleNormalWeight = settings.middleNormalWeight;
-    outerPointWeight = settings.outerPointWeight;
-    outerNormalWeight = settings.outerNormalWeight;
+    pointWeight_ = settings.pointWeight;
+    normalWeight_ = settings.normalWeight;
+    middlePointWeight_ = settings.middlePointWeight;
+    middleNormalWeight_ = settings.middleNormalWeight;
+    outerPointWeight_ = settings.outerPointWeight;
+    outerNormalWeight_ = settings.outerNormalWeight;
 
-    numEq = numPoints + numNormals * 2;
+    numEq_ = numPoints_ + numNormals_ * 2;
 
     return solveLinSystem(initA(coords, normals));
 }

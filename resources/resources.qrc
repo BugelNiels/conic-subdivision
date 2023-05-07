@@ -7,5 +7,6 @@
         <file>shaders/normals_calc.geom</file>
         <file>shaders/polyline.vert</file>
         <file>shaders/polyline.frag</file>
+        <file>icons/theme.png</file>
     </qresource>
 </RCC>

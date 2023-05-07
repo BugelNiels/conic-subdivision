@@ -1,7 +1,7 @@
 #include "stylepresets.hpp"
 
 #include <QApplication>
-#include "settings.hpp"
+#include "src/core/settings.hpp"
 
 void conics::ui::applyStylePreset(Settings &settings, const StylePreset &preset) {
     QApplication::setPalette(preset.palette);
@@ -30,7 +30,8 @@ conics::ui::StylePreset conics::ui::getDarkModePalette() {
     preset.controlCurveCol = QColor(255, 255, 255);
     preset.controlPointCol = QColor(255, 150, 150);
     preset.smoothCurveCol = QColor(50, 50, 255);
-    preset.selectedCol = QColor(255, 0, 0);
+    preset.selectedVertCol = QColor(255, 0, 0);
+    preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
     return preset;
 }
@@ -57,7 +58,8 @@ conics::ui::StylePreset conics::ui::getLightModePalette() {
     preset.controlCurveCol = QColor(70, 70, 70);
     preset.controlPointCol = QColor(255, 150, 150);
     preset.smoothCurveCol = QColor(50, 50, 255);
-    preset.selectedCol = QColor(255, 0, 0);
+    preset.selectedVertCol = QColor(255, 0, 0);
+    preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
     return preset;
 }

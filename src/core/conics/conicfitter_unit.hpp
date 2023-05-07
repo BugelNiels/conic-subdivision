@@ -1,13 +1,10 @@
 #pragma once
 
-#include <math.h>
-
 #include <QVector2D>
 #include <QVector>
 #include <armadillo>
 
-#include "conic.hpp"
-#include "settings.hpp"
+#include "src/core/settings.hpp"
 
 class UnitConicFitter {
 public:
@@ -18,17 +15,17 @@ public:
                              const Settings &settings);
 
 private:
-    int numPoints;
-    int numNormals;
-    int numConstraints;
-    int numEq;
-    double pointWeight = 1.0;
-    double normalWeight = 1.0;
-    double middlePointWeight = 1.0;
-    double middleNormalWeight = 1.0;
-    double outerPointWeight = 1.0;
-    double outerNormalWeight = 1.0;
-    int numUnkowns;
+    int numPoints_;
+    int numNormals_;
+    int numConstraints_;
+    int numEq_;
+    double pointWeight_ = 1.0;
+    double normalWeight_ = 1.0;
+    double middlePointWeight_ = 1.0;
+    double middleNormalWeight_ = 1.0;
+    double outerPointWeight_ = 1.0;
+    double outerNormalWeight_ = 1.0;
+    int numUnknowns_;
 
     double getPointWeight(int index) const;
 

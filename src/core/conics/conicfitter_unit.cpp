@@ -4,20 +4,20 @@ UnitConicFitter::UnitConicFitter() {}
 
 double UnitConicFitter::getPointWeight(int index) const {
     if (index < 2) {
-        return pointWeight;
+        return pointWeight_;
     } else if (index < 4) {
-        return middlePointWeight;
+        return middlePointWeight_;
     }
-    return outerPointWeight;
+    return outerPointWeight_;
 }
 
 double UnitConicFitter::getNormalWeight(int index) const {
     if (index < 2) {
-        return normalWeight;
+        return normalWeight_;
     } else if (index < 4) {
-        return middleNormalWeight;
+        return middleNormalWeight_;
     }
-    return outerNormalWeight;
+    return outerNormalWeight_;
 }
 
 inline arma::rowvec pointEq(const QVector2D &coord, int numUnkowns) {
@@ -60,18 +60,18 @@ inline arma::rowvec normEqY(const QVector2D &coord, int numUnkowns) {
 }
 
 arma::mat UnitConicFitter::initA(const QVector<QVector2D> &coords) const {
-    arma::mat A(numEq, numUnkowns);
+    arma::mat A(numEq_, numUnknowns_);
 
     arma::uword rowIdx = 0;
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < numPoints_; i++) {
         float weight = getPointWeight(i);
-        A.row(rowIdx++) = pointEq(coords[i], numUnkowns) * weight;
+        A.row(rowIdx++) = pointEq(coords[i], numUnknowns_) * weight;
     }
-    for (int i = 0; i < numNormals; i++) {
+    for (int i = 0; i < numNormals_; i++) {
         float weight = getNormalWeight(i);
         QVector2D coord = coords[i];
-        A.row(rowIdx++) = normEqX(coord, numUnkowns) * weight;
-        A.row(rowIdx++) = normEqY(coord, numUnkowns) * weight;
+        A.row(rowIdx++) = normEqX(coord, numUnknowns_) * weight;
+        A.row(rowIdx++) = normEqY(coord, numUnknowns_) * weight;
     }
     return A;
 }
@@ -82,9 +82,9 @@ arma::mat UnitConicFitter::initA(const QVector<QVector2D> &coords) const {
  * @return Vector B.
  */
 arma::vec UnitConicFitter::initB(const QVector<QVector2D> &normals) const {
-    arma::vec B = arma::zeros(numEq);
-    arma::uword eqIdx = numPoints;
-    for (int i = 0; i < numNormals; i++) {
+    arma::vec B = arma::zeros(numEq_);
+    arma::uword eqIdx = numPoints_;
+    for (int i = 0; i < numNormals_; i++) {
         float weight = getNormalWeight(i);
         B(eqIdx++) = normals[i].x() * weight;
         B(eqIdx++) = normals[i].y() * weight;
@@ -95,24 +95,24 @@ arma::vec UnitConicFitter::initB(const QVector<QVector2D> &normals) const {
 arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
                                  const QVector<QVector2D> &normals,
                                  int numConstraints) const {
-    arma::mat C(3 * numConstraints, numUnkowns);
+    arma::mat C(3 * numConstraints, numUnknowns_);
 
     arma::uword rowIdx = 0;
     for (int i = 0; i < numConstraints; i++) {
-        C.row(rowIdx++) = pointEq(coords[i], numUnkowns);
-        C.row(rowIdx++) = normEqX(normals[i], numUnkowns);
-        C.row(rowIdx++) = normEqY(normals[i], numUnkowns);
+        C.row(rowIdx++) = pointEq(coords[i], numUnknowns_);
+        C.row(rowIdx++) = normEqX(normals[i], numUnknowns_);
+        C.row(rowIdx++) = normEqY(normals[i], numUnknowns_);
     }
     return C;
 }
 
 arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
                                  int numConstraints) const {
-    arma::mat C(numConstraints, numUnkowns);
+    arma::mat C(numConstraints, numUnknowns_);
 
     arma::uword rowIdx = 0;
     for (int i = 0; i < numConstraints; i++) {
-        C.row(rowIdx++) = pointEq(coords[i], numUnkowns);
+        C.row(rowIdx++) = pointEq(coords[i], numUnknowns_);
     }
     return C;
 }
@@ -126,13 +126,13 @@ arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
 QVector<double> UnitConicFitter::vecToQVec(const arma::vec &res) const {
     QVector<double> coefs;
     int numZeros = 0;
-    for (int i = 0; i < numUnkowns; i++) {
+    for (int i = 0; i < numUnknowns_; i++) {
         coefs.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
-    if (numZeros == numUnkowns) {
+    if (numZeros == numUnknowns_) {
         return QVector<double>();
     }
     return coefs;
@@ -174,7 +174,7 @@ QVector<double> UnitConicFitter::fitQuadricConstrained(
   //  vec D = zeros(numConstraints * 3);
 #else
 
-    arma::mat C = initC(coords, numConstraints);
+    arma::mat C = initC(coords, numConstraints_);
     arma::vec D = arma::zeros(C.n_rows);
 #endif
 
@@ -196,18 +196,18 @@ QVector<double> UnitConicFitter::fitQuadricConstrained(
 QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
                                           const QVector<QVector2D> &normals,
                                           const Settings &settings) {
-    numPoints = coords.size();
-    numNormals = normals.size();
-    pointWeight = settings.pointWeight;
-    normalWeight = settings.normalWeight;
-    middlePointWeight = settings.middlePointWeight;
-    middleNormalWeight = settings.middleNormalWeight;
-    outerPointWeight = settings.outerPointWeight;
-    outerNormalWeight = settings.outerNormalWeight;
+    numPoints_ = coords.size();
+    numNormals_ = normals.size();
+    pointWeight_ = settings.pointWeight;
+    normalWeight_ = settings.normalWeight;
+    middlePointWeight_ = settings.middlePointWeight;
+    middleNormalWeight_ = settings.middleNormalWeight;
+    outerPointWeight_ = settings.outerPointWeight;
+    outerNormalWeight_ = settings.outerNormalWeight;
 
-    numEq = numPoints + numNormals * 2;
-    numConstraints = 2;
-    numUnkowns = 6;
+    numEq_ = numPoints_ + numNormals_ * 2;
+    numConstraints_ = 2;
+    numUnknowns_ = 6;
 
     return fitQuadricConstrained(coords, normals);
 }

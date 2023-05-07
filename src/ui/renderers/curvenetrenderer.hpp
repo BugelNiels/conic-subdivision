@@ -25,6 +25,8 @@ protected:
     void initBuffers() override;
 
 private:
-    GLuint vao, vbo_coords, vbo_norms, ibo;
-    int vboSize = 0;
+    GLuint vao_, vbo_coords_, vbo_norms_, ibo_;
+    int vboSize_ = 0;
+    QVector<QVector2D> coords_;
+    QVector<QVector2D> normals_;
 };

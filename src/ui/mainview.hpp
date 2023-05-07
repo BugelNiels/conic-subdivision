@@ -1,15 +1,12 @@
 #pragma once
 
-#include <QMouseEvent>
-#include <QOpenGLDebugLogger>
-#include <QOpenGLFunctions_4_1_Core>
-#include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
-#include <QVector2D>
+#include <QOpenGLDebugLogger>
 
 #include "ui/renderers/curvenetrenderer.hpp"
 #include "ui/renderers/curverenderer.hpp"
-#include "src/core/subdivisioncurve.hpp"
+
+class SubdivisionCurve;
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 Q_OBJECT
@@ -20,18 +17,20 @@ public:
     ~MainView() override;
 
     void recalculateCurve();
+    void recalculateNormals();
 
     void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
 
     void updateBuffers();
 
     void subdivideCurve(int numSteps);
+
+    void flipCurveNorms();
+
     void paintGL() override;
 
 protected:
     void initializeGL() override;
-
-
 
     QVector2D toNormalizedScreenCoordinates(float x, float y);
 
@@ -44,13 +43,17 @@ protected:
     void resizeGL(int width, int height) override;
 
 private:
-    Settings *settings;
-    QOpenGLDebugLogger *debugLogger;
+    bool attemptNormalSelect(const QVector2D &scenePos);
 
-    CurveNetRenderer cnr;
-    CurveRenderer cr;
+    bool attemptVertexSelect(const QVector2D &scenePos);
 
-    std::shared_ptr<SubdivisionCurve> subCurve;
+    Settings *settings_;
+    QOpenGLDebugLogger *debugLogger_;
+
+    CurveNetRenderer cnr_;
+    CurveRenderer cr_;
+
+    std::shared_ptr<SubdivisionCurve> subCurve_;
 
 private slots:
 

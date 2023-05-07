@@ -5,6 +5,8 @@
 #include "conicfitter.hpp"
 #include "conicfitter_unit.hpp"
 
+#include "src/core/settings.hpp"
+
 #define EPSILON 0.000001f
 
 QMatrix4x4 coefsToMatrix(QVector<double> coefs) {
@@ -18,12 +20,12 @@ QMatrix4x4 coefsToMatrix(QVector<double> coefs) {
     return QMatrix4x4(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
 }
 
-Conic::Conic() : hasSolution(false) { Q.fill(0); }
+Conic::Conic() : hasSolution_(false) { Q_.fill(0); }
 
 Conic::Conic(const QVector<QVector2D> &coords,
              const QVector<QVector2D> &normals, const Settings &settings)
         : Conic() {
-    hasSolution = fitConic(coords, normals, settings);
+    hasSolution_ = fitConic(coords, normals, settings);
 }
 
 void normalizeCoefs(QVector<double> &coefs) {
@@ -58,14 +60,14 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
     //  normalizeCoefs(foundCoefs);
     //  qDebug() << foundCoefs;
 
-    Q = coefsToMatrix(foundCoefs);
+    Q_ = coefsToMatrix(foundCoefs);
     return true;
 }
 
 QVector2D Conic::conicNormal(const QVector2D &p, const QVector2D &rd) const {
     QVector4D p4 = QVector4D(p, 1, 0);
-    float xn = QVector4D::dotProduct(Q.row(0), p4);
-    float yn = QVector4D::dotProduct(Q.row(1), p4);
+    float xn = QVector4D::dotProduct(Q_.row(0), p4);
+    float yn = QVector4D::dotProduct(Q_.row(1), p4);
     QVector2D normal = QVector2D(xn, yn);
     normal.normalize();
     if (QVector2D::dotProduct(normal, rd) < 0) {
@@ -92,9 +94,9 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
                        double &t) const {
     QVector4D p = QVector4D(ro, 1, 0);
     QVector4D u = QVector4D(rd, 0, 0);
-    double a = QVector4D::dotProduct(u, Q * u);
-    double b = QVector4D::dotProduct(u, Q * p);
-    double c = QVector4D::dotProduct(p, Q * p);
+    double a = QVector4D::dotProduct(u, Q_ * u);
+    double b = QVector4D::dotProduct(u, Q_ * p);
+    double c = QVector4D::dotProduct(p, Q_ * p);
     if (fabs(a) < EPSILON) {
         t = -c / b;
         return true;
@@ -117,31 +119,31 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
 
 Conic Conic::average(const Conic &other) const {
     Conic q = *this + other;
-    q.Q /= 2.0;
+    q.Q_ /= 2.0;
     return q;
 }
 
 Conic Conic::operator+(const Conic &other) const {
     Conic q;
-    q.hasSolution = true;
+    q.hasSolution_ = true;
     if (isValid() && other.isValid()) {
-        q.Q = Q + other.Q;
+        q.Q_ = Q_ + other.Q_;
     } else if (other.isValid()) {
-        q.Q = other.Q;
+        q.Q_ = other.Q_;
     } else if (isValid()) {
-        q.Q = Q;
+        q.Q_ = Q_;
     } else {
-        q.hasSolution = false;
+        q.hasSolution_ = false;
     }
     return q;
 }
 
 void Conic::operator+=(const Conic &other) {
     if (isValid() && other.isValid()) {
-        Q = (Q + other.Q);
-        hasSolution = true;
+        Q_ = (Q_ + other.Q_);
+        hasSolution_ = true;
     } else if (other.isValid()) {
-        Q = other.Q;
-        hasSolution = true;
+        Q_ = other.Q_;
+        hasSolution_ = true;
     }
 }

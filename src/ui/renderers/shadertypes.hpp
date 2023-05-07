@@ -6,4 +6,3 @@
 enum ShaderType {
     FLAT, POLYLINE
 };
-

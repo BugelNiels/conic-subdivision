@@ -8,31 +8,35 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QCheckBox>
-#include <QToolTip>
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
 #include <QFileDialog>
-#include <QMessageBox>
 #include <QOpenGLPaintDevice>
+#include <QPushButton>
 
-#include "src/core/conicpresets.hpp"
+#include "src/core/conics/conicpresets.hpp"
 #include "ui/stylepresets.hpp"
+#include "core/settings.hpp"
+#include "util/imgresourcereader.hpp"
+
+#include "mainview.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent) {
 
-    settings = new Settings();
-    mainView = new MainView(settings, this);
+    settings_ = new Settings();
+    presets_ = new conics::ConicPresets(settings_);
+    mainView_ = new MainView(settings_, this);
 
 
     auto *dock = initSideMenu();
     addDockWidget(Qt::LeftDockWidgetArea, dock);
     setMenuBar(initMenuBar());
-    setCentralWidget(mainView);
+    setCentralWidget(mainView_);
 
-    conics::ui::applyStylePreset(*settings, conics::ui::getLightModePalette());
+    conics::ui::applyStylePreset(*settings_, conics::ui::getLightModePalette());
 
-    mainView->setSubCurve(std::make_shared<SubdivisionCurve>(presets.getPreset(presets.getPresetNames().at(0))));
+    mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presets_->getPresetNames().at(0))));
 }
 
 
@@ -43,13 +47,22 @@ MainWindow::~MainWindow() {
 QDockWidget *MainWindow::initSideMenu() {
     QWidget *sideMenu = new QWidget(this);
     auto *vertLayout = new QVBoxLayout(sideMenu);
+
+
+    auto *recalcButton = new QPushButton("Recalculate Normals");
+    connect(recalcButton, &QPushButton::pressed, this, [this] {
+        mainView_->recalculateNormals();
+    });
+    vertLayout->addWidget(recalcButton);
+    vertLayout->addStretch();
+
     vertLayout->addWidget(new QLabel("Subdivision Steps"));
     auto *subdivStepsSpinBox = new QSpinBox();
     subdivStepsSpinBox->setMinimum(0);
     subdivStepsSpinBox->setMaximum(20);
     connect(subdivStepsSpinBox, &QSpinBox::valueChanged, [this](int numSteps) {
-        mainView->subdivideCurve(numSteps);
-        mainView->updateBuffers();
+        mainView_->subdivideCurve(numSteps);
+        mainView_->updateBuffers();
     });
     vertLayout->addWidget(subdivStepsSpinBox);
     vertLayout->addStretch();
@@ -60,10 +73,10 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     edgeVertWeightSpinBox->setMinimum(0);
     edgeVertWeightSpinBox->setMaximum(100000);
-    edgeVertWeightSpinBox->setValue(settings->pointWeight);
+    edgeVertWeightSpinBox->setValue(settings_->pointWeight);
     connect(edgeVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->pointWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->pointWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeVertWeightSpinBox);
 
@@ -73,10 +86,10 @@ QDockWidget *MainWindow::initSideMenu() {
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
-    midVertWeightSpinBox->setValue(settings->middlePointWeight);
+    midVertWeightSpinBox->setValue(settings_->middlePointWeight);
     connect(midVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->middlePointWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->middlePointWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midVertWeightSpinBox);
 
@@ -86,10 +99,10 @@ QDockWidget *MainWindow::initSideMenu() {
     outerVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the points <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
     );
-    outerVertWeightSpinBox->setValue(settings->outerPointWeight);
+    outerVertWeightSpinBox->setValue(settings_->outerPointWeight);
     connect(outerVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->outerPointWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->outerPointWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(outerVertWeightSpinBox);
     vertLayout->addStretch();
@@ -101,10 +114,10 @@ QDockWidget *MainWindow::initSideMenu() {
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>"
     );
-    edgeNormWeightSpinBox->setValue(settings->normalWeight);
+    edgeNormWeightSpinBox->setValue(settings_->normalWeight);
     connect(edgeNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->normalWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->normalWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeNormWeightSpinBox);
 
@@ -114,10 +127,10 @@ QDockWidget *MainWindow::initSideMenu() {
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
-    midNormWeightSpinBox->setValue(settings->middleNormalWeight);
+    midNormWeightSpinBox->setValue(settings_->middleNormalWeight);
     connect(midNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->middleNormalWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->middleNormalWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midNormWeightSpinBox);
 
@@ -127,10 +140,10 @@ QDockWidget *MainWindow::initSideMenu() {
     outerNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
     );
-    outerNormWeightSpinBox->setValue(settings->outerNormalWeight);
+    outerNormWeightSpinBox->setValue(settings_->outerNormalWeight);
     connect(outerNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings->outerNormalWeight = newVal;
-        mainView->recalculateCurve();
+        settings_->outerNormalWeight = newVal;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(outerNormWeightSpinBox);
 
@@ -139,10 +152,10 @@ QDockWidget *MainWindow::initSideMenu() {
     normSolveCheckBox->setToolTip(
             "<html><head/><body><p>Enabling this will try to fit a conic using the unit normal constraint. If this option is disabled, a separated scaling value for each normal is calculated.</p></body></html>"
     );
-    normSolveCheckBox->setChecked(settings->normalizedSolve);
+    normSolveCheckBox->setChecked(settings_->normalizedSolve);
     connect(normSolveCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings->normalizedSolve = toggled;
-        mainView->recalculateCurve();
+        settings_->normalizedSolve = toggled;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(normSolveCheckBox);
 
@@ -150,20 +163,20 @@ QDockWidget *MainWindow::initSideMenu() {
     circleNormsCheckBox->setToolTip(
             "<html><head/><body><p>Estimate the normals using oscilating circles.</p></body></html>"
     );
-    circleNormsCheckBox->setChecked(settings->circleNormals);
+    circleNormsCheckBox->setChecked(settings_->circleNormals);
     connect(circleNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings->circleNormals = toggled;
-        mainView->recalculateCurve();
+        settings_->circleNormals = toggled;
+        mainView_->recalculateCurve();
     });
 
     auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
     recalcNormsCheckBox->setToolTip(
             "<html><head/><body><p>If this option is enabled, the normals will be re-evaluated at every step. If this option is disabled, the vertex points will keep their normals. Any new edge points will obtain the normal of the conic they were sampled from.</p></body></html>"
     );
-    recalcNormsCheckBox->setChecked(settings->recalculateNormals);
+    recalcNormsCheckBox->setChecked(settings_->recalculateNormals);
     connect(recalcNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings->recalculateNormals = toggled;
-        mainView->recalculateCurve();
+        settings_->recalculateNormals = toggled;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(recalcNormsCheckBox);
 
@@ -171,10 +184,10 @@ QDockWidget *MainWindow::initSideMenu() {
     edgeSampleCheckBox->setToolTip(
             "<html><head/><body><p>If enabled, uses a ray perpendical to the edge to intersect with the conic and sample the new point from. If disabled, uses the average of the edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the middle of the edge.</p></body></html>"
     );
-    edgeSampleCheckBox->setChecked(settings->edgeTangentSample);
+    edgeSampleCheckBox->setChecked(settings_->edgeTangentSample);
     connect(edgeSampleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings->edgeTangentSample = toggled;
-        mainView->recalculateCurve();
+        settings_->edgeTangentSample = toggled;
+        mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeSampleCheckBox);
 
@@ -194,22 +207,39 @@ QMenuBar *MainWindow::initMenuBar() {
     menuBar->addMenu(getFileMenu());
     menuBar->addMenu(getPresetMenu());
     menuBar->addMenu(getRenderMenu());
+
+    auto *lightModeToggle = new QAction(menuBar);
+    lightModeToggle->setIcon(
+            QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png", {42, 42}, QColor(128, 128, 128))));
+    lightModeToggle->setCheckable(true);
+    lightModeToggle->setChecked(true); // default is light mode
+    connect(lightModeToggle, &QAction::toggled, this, [this](bool toggled) {
+        if (toggled) {
+            conics::ui::applyStylePreset(*settings_, conics::ui::getLightModePalette());
+        } else {
+            conics::ui::applyStylePreset(*settings_, conics::ui::getDarkModePalette());
+        }
+    });
+    auto *rightBar = new QMenuBar(menuBar);
+    rightBar->addAction(lightModeToggle);
+    menuBar->setCornerWidget(rightBar);
     return menuBar;
 }
 
 QMenu *MainWindow::getFileMenu() {
     auto *fileMenu = new QMenu("File");
 
-    auto *newAction = new QAction(QStringLiteral("New"), this);
+    auto *newAction = new QAction(QStringLiteral("New"), fileMenu);
     newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
     connect(newAction, &QAction::triggered, [this]() {
-        mainView->setSubCurve(std::make_shared<SubdivisionCurve>(presets.getPreset(presets.getPresetNames().at(0))));
-        mainView->recalculateCurve(); // TODO: resit settings
+        mainView_->setSubCurve(
+                std::make_shared<SubdivisionCurve>(presets_->getPreset(presets_->getPresetNames().at(0))));
+        mainView_->recalculateCurve(); // TODO: resit settings
     });
     fileMenu->addAction(newAction);
 
 
-    auto *saveAction = new QAction(QStringLiteral("Save"), this);
+    auto *saveAction = new QAction(QStringLiteral("Save"), fileMenu);
     saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(saveAction, &QAction::triggered, [this]() {
         // TODO
@@ -245,7 +275,7 @@ QMenu *MainWindow::getFileMenu() {
     });
     fileMenu->addAction(saveAction);
 
-    auto *quitAction = new QAction(QStringLiteral("Quit"), this);
+    auto *quitAction = new QAction(QStringLiteral("Quit"), fileMenu);
     quitAction->setShortcutContext(Qt::ApplicationShortcut);
     quitAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     connect(quitAction, &QAction::triggered, []() {
@@ -259,12 +289,12 @@ QMenu *MainWindow::getPresetMenu() {
     auto *presetMenu = new QMenu("Presets");
 
     int i = 1;
-    for (auto &name: presets.getPresetNames()) {
-        auto *newAction = new QAction(name, this);
+    for (auto &name: presets_->getPresetNames()) {
+        auto *newAction = new QAction(name, presetMenu);
         newAction->setShortcut(QKeySequence::fromString(QString("Ctrl+%1").arg(i)));
         connect(newAction, &QAction::triggered, [this, name]() {
-            mainView->setSubCurve(std::make_shared<SubdivisionCurve>(presets.getPreset(name)));
-            mainView->recalculateCurve();
+            mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(name)));
+            mainView_->recalculateCurve();
         });
         presetMenu->addAction(newAction);
         i++;
@@ -276,56 +306,64 @@ QMenu *MainWindow::getPresetMenu() {
 QMenu *MainWindow::getRenderMenu() {
     auto *renderMenu = new QMenu("View");
 
-    auto *controlPointsAction = new QAction(QStringLiteral("Control Points"), this);
+    auto *controlPointsAction = new QAction(QStringLiteral("Control Points"), renderMenu);
     controlPointsAction->setCheckable(true);
-    controlPointsAction->setChecked(settings->showControlPoints);
+    controlPointsAction->setChecked(settings_->showControlPoints);
     controlPointsAction->setShortcut(QKeySequence(Qt::Key_P));
     connect(controlPointsAction, &QAction::triggered, [this](bool toggled) {
-        settings->showControlPoints = toggled;
-        mainView->updateBuffers();
+        settings_->showControlPoints = toggled;
+        mainView_->updateBuffers();
     });
     renderMenu->addAction(controlPointsAction);
 
-    auto *controlCurveAction = new QAction(QStringLiteral("Control Curve"), this);
+    auto *controlCurveAction = new QAction(QStringLiteral("Control Curve"), renderMenu);
     controlCurveAction->setCheckable(true);
-    controlCurveAction->setChecked(settings->showControlCurve);
+    controlCurveAction->setChecked(settings_->showControlCurve);
     controlCurveAction->setShortcut(QKeySequence(Qt::Key_O));
     connect(controlCurveAction, &QAction::triggered, [this](bool toggled) {
-        settings->showControlCurve = toggled;
-        mainView->updateBuffers();
+        settings_->showControlCurve = toggled;
+        mainView_->recalculateCurve();
     });
     renderMenu->addAction(controlCurveAction);
 
     renderMenu->addSeparator();
 
-    auto *closedCurveAction = new QAction(QStringLiteral("Closed Curve"), this);
+    auto *closedCurveAction = new QAction(QStringLiteral("Closed Curve"), renderMenu);
     closedCurveAction->setCheckable(true);
-    closedCurveAction->setChecked(settings->closed);
+    closedCurveAction->setChecked(settings_->closed);
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {
-        settings->closed = toggled;
-        mainView->updateBuffers();
+        settings_->closed = toggled;
+        mainView_->updateBuffers();
     });
     renderMenu->addAction(closedCurveAction);
 
     renderMenu->addSeparator();
 
-    auto *visualizeNormalsAction = new QAction(QStringLiteral("Visualize Normals"), this);
+    auto *visualizeNormalsAction = new QAction(QStringLiteral("Visualize Normals"), renderMenu);
     visualizeNormalsAction->setCheckable(true);
-    visualizeNormalsAction->setChecked(settings->visualizeNormals);
+    visualizeNormalsAction->setChecked(settings_->visualizeNormals);
     visualizeNormalsAction->setShortcut(QKeySequence(Qt::Key_N));
     connect(visualizeNormalsAction, &QAction::triggered, [this](bool toggled) {
-        settings->visualizeNormals = toggled;
-        mainView->updateBuffers();
+        settings_->visualizeNormals = toggled;
+        mainView_->updateBuffers();
     });
     renderMenu->addAction(visualizeNormalsAction);
 
-    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), this);
+    auto *normalHandlesAction = new QAction(QStringLiteral("Normal Handles"), renderMenu);
+    normalHandlesAction->setCheckable(true);
+    normalHandlesAction->setChecked(settings_->normalHandles);
+    normalHandlesAction->setShortcut(QKeySequence(Qt::Key_M));
+    connect(normalHandlesAction, &QAction::triggered, [this](bool toggled) {
+        settings_->normalHandles = toggled;
+        mainView_->updateBuffers();
+    });
+    renderMenu->addAction(normalHandlesAction);
+
+    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), renderMenu);
     flipNormals->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
     connect(flipNormals, &QAction::triggered, [this]() {
-        settings->outwardNormals = !settings->outwardNormals;
-        mainView->recalculateCurve();
-        mainView->updateBuffers();
+        mainView_->flipCurveNorms();
     });
     renderMenu->addAction(flipNormals);
     return renderMenu;
