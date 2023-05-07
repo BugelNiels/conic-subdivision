@@ -22,3 +22,5 @@ models/*mtl
 
 cmake-build*
 CMakeLists.txt.user*
+
+.idea/

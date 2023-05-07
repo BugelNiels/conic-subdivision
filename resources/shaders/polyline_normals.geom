@@ -6,6 +6,10 @@ const float norm_length = 0.1f;
 
 uniform bool visualize_normals;
 
+uniform vec3 normalColor;
+uniform vec3 lineColor;
+
+uniform mat4 projectionMatrix;
 in vec2 norm_vs[];
 out vec4 line_color;
 
@@ -16,9 +20,9 @@ out vec4 line_color;
  * @param b Point a
  */
 void emitLine(vec4 b, vec4 a) {
-  gl_Position = a;
+  gl_Position = projectionMatrix * a;
   EmitVertex();
-  gl_Position = b;
+  gl_Position = projectionMatrix * b;
   EmitVertex();
   EndPrimitive();
 }
@@ -26,15 +30,11 @@ void emitLine(vec4 b, vec4 a) {
 void emitNormal(vec4 a, vec4 b, vec4 c, vec2 norm) {
   // calculates the normal at b and then emits a line from b along its normal
 
-  vec4 norm4 = vec4(norm, 0, 0);
+  vec4 norm4 = vec4(normalize(norm), 0, 0);
 
-  line_color = vec4(1, 0, 0, 1);
+  line_color = vec4(normalColor, 1);
 
-  gl_Position = b;
-  EmitVertex();
-  gl_Position = b + norm_length * norm4;
-  EmitVertex();
-  EndPrimitive();
+  emitLine(b, b + norm_length * norm4);
 }
 
 void main() {
@@ -48,7 +48,7 @@ void main() {
   // Emit the curve itself
   // we are drawing most lines multiple times, but this ensures the lines
   // from/to the first/last vertex are drawn properly
-  line_color = vec4(.9, .9, .9, 1);
+  line_color = vec4(lineColor, 1);
   emitLine(p0, p1);
   emitLine(p1, p2);
   emitLine(p2, p3);

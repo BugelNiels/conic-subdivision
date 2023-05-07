@@ -1,11 +1,10 @@
-#ifndef CURVE_RENDERER_H
-#define CURVE_RENDERER_H
+#pragma once
 
 #include <QOpenGLShaderProgram>
 
-#include "renderer.h"
-#include "shadertypes.h"
-#include "subdivisioncurve.h"
+#include "renderer.hpp"
+#include "shadertypes.hpp"
+#include "src/core/subdivisioncurve.hpp"
 
 class CurveRenderer : public Renderer {
  public:
@@ -20,7 +19,5 @@ class CurveRenderer : public Renderer {
 
  private:
   GLuint vao, vbo_coords, vbo_norms, ibo;
-  int vboSize;
+  int vboSize = 0;
 };
-
-#endif  // CURVE_RENDERER_H
