@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 
 #include "ui_mainwindow.h"
+#include <QDockWidget>
+#include <QMenu>
+#include <QMenuBar>
+#include <QAction>
 
 /**
  * @brief MainWindow::MainWindow Creates a new Main Window UI.
@@ -30,14 +34,51 @@ MainWindow::MainWindow(QWidget* parent)
 
   ui->controlPointsCheckBox->setChecked(settings.showControlPoints);
   ui->controlCurveCheckBox->setChecked(settings.showControlCurve);
+
+    setMenuBar(initMenuBar());
+
 }
 
 /**
  * @brief MainWindow::~MainWindow Deconstructs the main window.
  */
 MainWindow::~MainWindow() {
-  qDebug() << "✗✗ MainWindow destructor";
   delete ui;
+}
+
+
+QMenuBar *MainWindow::initMenuBar() {
+    auto *menuBar = new QMenuBar();
+
+    menuBar->addMenu(getPresetMenu());
+    menuBar->addMenu(getRenderMenu());
+    return menuBar;
+}
+
+QMenu *MainWindow::getPresetMenu() {
+    auto *presetMenu = new QMenu("Presets");
+
+    auto *newAction = new QAction(QStringLiteral("New"), this);
+    newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+    connect(newAction, &QAction::triggered, [this]() {
+
+
+    });
+    presetMenu->addAction(newAction);
+
+    return presetMenu;
+}
+
+QMenu *MainWindow::getRenderMenu() {
+    auto *renderMenu = new QMenu("View");
+
+    auto *newAction = new QAction(QStringLiteral("New"), this);
+    newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+    connect(newAction, &QAction::triggered, [this]() {
+    });
+    renderMenu->addAction(newAction);
+
+    return renderMenu;
 }
 
 void MainWindow::on_netPresets_currentIndexChanged(int index) {

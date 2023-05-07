@@ -27,7 +27,7 @@ qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
     ${CPP_SOURCES} ${H_HEADERS}
     src/mainwindow.ui
     src/resources.qrc
-)
+        src/presets.cpp src/presets.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::Core
     Qt::Gui

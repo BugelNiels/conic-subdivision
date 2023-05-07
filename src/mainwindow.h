@@ -50,6 +50,12 @@ class MainWindow : public QMainWindow {
 
  private:
   Ui::MainWindow *ui;
+
+    QMenu *getPresetMenu();
+
+    QMenu *getRenderMenu();
+
+    QMenuBar *initMenuBar();
 };
 
 #endif  // MAINWINDOW_H
