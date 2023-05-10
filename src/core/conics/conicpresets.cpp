@@ -2,6 +2,7 @@
 
 conics::ConicPresets::ConicPresets(Settings *settings) : settings_(settings) {
 
+    presets_["Blank"] = getBlank();
     presets_["Pentagon"] = getPentagon();
     presets_["Basis"] = getBasis();
     presets_["G"] = getG();
@@ -14,6 +15,10 @@ conics::ConicPresets::~ConicPresets() {
 
 }
 
+SubdivisionCurve conics::ConicPresets::getBlank() {
+    QVector<QVector2D> netCoords;
+    return SubdivisionCurve(settings_, netCoords, true);
+}
 
 SubdivisionCurve conics::ConicPresets::getPentagon() {
     QVector<QVector2D> netCoords;
@@ -38,7 +43,7 @@ SubdivisionCurve conics::ConicPresets::getBasis() {
     netCoords.append(QVector2D(0.5f, -0.25f));
     netCoords.append(QVector2D(0.75f, -0.25f));
     netCoords.append(QVector2D(1.0f, -0.25f));
-    return SubdivisionCurve(settings_, netCoords);
+    return SubdivisionCurve(settings_, netCoords, false);
 }
 
 SubdivisionCurve conics::ConicPresets::getG() {

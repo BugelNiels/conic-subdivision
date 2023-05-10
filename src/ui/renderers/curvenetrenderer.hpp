@@ -15,7 +15,7 @@ public:
 
     ~CurveNetRenderer() override;
 
-    void updateBuffers(SubdivisionCurve &sc, bool closed);
+    void updateBuffers(SubdivisionCurve &sc);
 
     void draw();
 

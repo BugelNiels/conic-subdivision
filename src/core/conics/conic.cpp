@@ -57,7 +57,7 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
         return false;
     }
     // unComment these two lines to see the found coefficients for every edge
-    //  normalizeCoefs(foundCoefs);
+      normalizeCoefs(foundCoefs);
     //  qDebug() << foundCoefs;
 
     Q_ = coefsToMatrix(foundCoefs);

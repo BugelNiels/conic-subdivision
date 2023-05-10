@@ -14,9 +14,9 @@ class SubdivisionCurve {
 public:
     SubdivisionCurve();
 
-    explicit SubdivisionCurve(Settings *settings, QVector<QVector2D> coords);
+    explicit SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, bool closed = true);
 
-    SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals);
+    SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals, bool closed = true);
 
     inline QVector<QVector2D> getNetCoords() { return netCoords_; }
 
@@ -46,12 +46,19 @@ public:
     void reSubdivide();
 
     void recalculateNormals();
+    void recalculateNormal(int idx);
+
+    bool isClosed() const;
+
+    void setClosed(bool closed);
 
 private:
     int subdivisionLevel_;
+    bool closed_ = false;
 
     QVector<QVector2D> curveCoords_;
     QVector<QVector2D> curveNormals_;
+    QVector<bool> customNormals_;
 
     QVector<QVector2D> netCoords_;
     QVector<QVector2D> netNormals_;
@@ -62,4 +69,10 @@ private:
 
     QVector<QVector2D> calcNormals(const QVector<QVector2D> &coords) const;
     void calcNormalAtIndex(const QVector<QVector2D> &coords, QVector<QVector2D> &normals, int i) const;
+
+    int findInsertIdx(const QVector2D &p);
+
+    int getNextIdx(int idx);
+
+    int getPrevIdx(int idx);
 };

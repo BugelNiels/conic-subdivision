@@ -75,9 +75,7 @@ void MainView::subdivideCurve(int numSteps) {
         return;
     }
     subCurve_->subdivide(numSteps);
-    cnr_.updateBuffers(*subCurve_, settings_->closed);
-    cr_.updateBuffers(*subCurve_, settings_->closed);
-    update();
+    updateBuffers();
 }
 
 void MainView::recalculateCurve() {
@@ -85,9 +83,7 @@ void MainView::recalculateCurve() {
         return;
     }
     subCurve_->reSubdivide();
-    cnr_.updateBuffers(*subCurve_, settings_->closed);
-    cr_.updateBuffers(*subCurve_, settings_->closed);
-    update();
+    updateBuffers();
 }
 
 /**
@@ -98,8 +94,8 @@ void MainView::updateBuffers() {
     if (subCurve_ == nullptr) {
         return;
     }
-    cnr_.updateBuffers(*subCurve_, settings_->closed);
-    cr_.updateBuffers(*subCurve_, settings_->closed);
+    cnr_.updateBuffers(*subCurve_);
+    cr_.updateBuffers(*subCurve_);
 
     update();
 }
@@ -155,7 +151,6 @@ void MainView::mousePressEvent(QMouseEvent *event) {
 
     switch (event->buttons()) {
         case Qt::LeftButton: {
-
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
                 // First attempt to select a normal. If unsuccessful, select a point
                 if (!attemptNormalSelect(scenePos)) {
@@ -243,7 +238,9 @@ void MainView::keyPressEvent(QKeyEvent *event) {
     }
     // Only works when the widget has focus!
     switch (event->key()) {
-        case 'X':
+        case Qt::Key_Backspace:
+        case Qt::Key_Delete:
+        case Qt::Key_X:
             if (settings_->selectedVertex > -1) {
                 // Remove selected control point
                 subCurve_->removePoint(settings_->selectedVertex);
@@ -303,5 +300,18 @@ void MainView::recalculateNormals() {
         return;
     }
     subCurve_->recalculateNormals();
+    recalculateCurve();
+}
+
+const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
+    return subCurve_;
+}
+
+void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
+    QWidget::mouseDoubleClickEvent(event);
+    if(subCurve_ == nullptr || settings_->selectedNormal < 0) {
+        return;
+    }
+    subCurve_->recalculateNormal(settings_->selectedNormal);
     recalculateCurve();
 }

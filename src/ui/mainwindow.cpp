@@ -36,7 +36,14 @@ MainWindow::MainWindow(QWidget *parent)
 
     conics::ui::applyStylePreset(*settings_, conics::ui::getLightModePalette());
 
-    mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presets_->getPresetNames().at(0))));
+    resetView();
+}
+
+void MainWindow::resetView() {
+    QString presetName = "Blank";
+    mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presetName)));
+    presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
+    mainView_->recalculateCurve();
 }
 
 
@@ -48,8 +55,11 @@ QDockWidget *MainWindow::initSideMenu() {
     QWidget *sideMenu = new QWidget(this);
     auto *vertLayout = new QVBoxLayout(sideMenu);
 
+    presetLabel = new QLabel("Preset: ");
+    vertLayout->addWidget(presetLabel);
+    vertLayout->addStretch();
 
-    auto *recalcButton = new QPushButton("Recalculate Normals");
+    auto *recalcButton = new QPushButton("Reset Normals");
     connect(recalcButton, &QPushButton::pressed, this, [this] {
         mainView_->recalculateNormals();
     });
@@ -65,9 +75,8 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->updateBuffers();
     });
     vertLayout->addWidget(subdivStepsSpinBox);
-    vertLayout->addStretch();
 
-    vertLayout->addWidget(new QLabel("Vertex Weights"));
+    vertLayout->addWidget(new QLabel("Vertex weights"));
     auto *edgeVertWeightSpinBox = new QDoubleSpinBox();
     edgeVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
@@ -166,8 +175,9 @@ QDockWidget *MainWindow::initSideMenu() {
     circleNormsCheckBox->setChecked(settings_->circleNormals);
     connect(circleNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         settings_->circleNormals = toggled;
-        mainView_->recalculateCurve();
+        mainView_->recalculateNormals();
     });
+    vertLayout->addWidget(circleNormsCheckBox);
 
     auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
     recalcNormsCheckBox->setToolTip(
@@ -203,7 +213,6 @@ QDockWidget *MainWindow::initSideMenu() {
 
 QMenuBar *MainWindow::initMenuBar() {
     auto *menuBar = new QMenuBar();
-
     menuBar->addMenu(getFileMenu());
     menuBar->addMenu(getPresetMenu());
     menuBar->addMenu(getRenderMenu());
@@ -232,9 +241,7 @@ QMenu *MainWindow::getFileMenu() {
     auto *newAction = new QAction(QStringLiteral("New"), fileMenu);
     newAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
     connect(newAction, &QAction::triggered, [this]() {
-        mainView_->setSubCurve(
-                std::make_shared<SubdivisionCurve>(presets_->getPreset(presets_->getPresetNames().at(0))));
-        mainView_->recalculateCurve(); // TODO: resit settings
+        resetView();
     });
     fileMenu->addAction(newAction);
 
@@ -294,6 +301,7 @@ QMenu *MainWindow::getPresetMenu() {
         newAction->setShortcut(QKeySequence::fromString(QString("Ctrl+%1").arg(i)));
         connect(newAction, &QAction::triggered, [this, name]() {
             mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(name)));
+            presetLabel->setText(QString("<b>Preset:</b> %1").arg(name));
             mainView_->recalculateCurve();
         });
         presetMenu->addAction(newAction);
@@ -330,11 +338,12 @@ QMenu *MainWindow::getRenderMenu() {
 
     auto *closedCurveAction = new QAction(QStringLiteral("Closed Curve"), renderMenu);
     closedCurveAction->setCheckable(true);
-    closedCurveAction->setChecked(settings_->closed);
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {
-        settings_->closed = toggled;
-        mainView_->updateBuffers();
+        if (mainView_->getSubCurve() != nullptr) {
+            mainView_->getSubCurve()->setClosed(toggled);
+            mainView_->updateBuffers();
+        }
     });
     renderMenu->addAction(closedCurveAction);
 
@@ -360,11 +369,11 @@ QMenu *MainWindow::getRenderMenu() {
     });
     renderMenu->addAction(normalHandlesAction);
 
-    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), renderMenu);
-    flipNormals->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
-    connect(flipNormals, &QAction::triggered, [this]() {
-        mainView_->flipCurveNorms();
-    });
-    renderMenu->addAction(flipNormals);
+//    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), renderMenu);
+//    flipNormals->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
+//    connect(flipNormals, &QAction::triggered, [this]() {
+//        mainView_->flipCurveNorms();
+//    });
+//    renderMenu->addAction(flipNormals);
     return renderMenu;
 }

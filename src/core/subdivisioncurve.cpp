@@ -1,5 +1,7 @@
 #include "subdivisioncurve.hpp"
 
+#include <utility>
+
 #include "src/core/conics/conicfitter.hpp"
 
 #include "settings.hpp"
@@ -14,18 +16,24 @@
 SubdivisionCurve::SubdivisionCurve() : subdivisionLevel_(0) {}
 
 
-SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords) : settings_(settings),
-                                                                                    netCoords_(coords),
-                                                                                    subdivisionLevel_(0) {
+SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, bool closed) : settings_(settings),
+                                                                                                 netCoords_(std::move(
+                                                                                                         coords)),
+                                                                                                 closed_(closed),
+                                                                                                 subdivisionLevel_(0) {
     netNormals_ = calcNormals(netCoords_);
+    customNormals_.resize(netNormals_.size());
+    customNormals_.fill(false);
 }
 
 
-SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals)
-        : settings_(settings), netCoords_(coords),
-          netNormals_(normals),
+SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals,
+                                   bool closed)
+        : settings_(settings), netCoords_(std::move(coords)), closed_(closed),
+          netNormals_(std::move(normals)),
           subdivisionLevel_(0) {
-
+    customNormals_.resize(netNormals_.size());
+    customNormals_.fill(false);
 }
 
 QVector2D calcNormal(const QVector2D &a, const QVector2D &b,
@@ -67,7 +75,7 @@ QVector<QVector2D> SubdivisionCurve::calcNormals(
 void SubdivisionCurve::calcNormalAtIndex(const QVector<QVector2D> &coords, QVector<QVector2D> &normals, int i) const {
     int n = normals.size();
     int nextIdx, prevIdx;
-    if (settings_->closed) {
+    if (closed_) {
         prevIdx = (i - 1 + n) % n;
         nextIdx = (i + 1) % n;
     } else {
@@ -115,9 +123,13 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<QVector2D> &coords, QVect
  * @param p The point to add to the control net.
  */
 void SubdivisionCurve::addPoint(QVector2D p) {
-    netCoords_.append(p);
-    netNormals_.append(QVector2D());
-    calcNormalAtIndex(netCoords_, netNormals_, netNormals_.size() - 1);
+    int idx = findInsertIdx(p);
+    netCoords_.insert(idx, p);
+    netNormals_.insert(idx, QVector2D());
+    customNormals_.insert(idx, false);
+    calcNormalAtIndex(netCoords_, netNormals_, idx);
+    calcNormalAtIndex(netCoords_, netNormals_, getNextIdx(idx));
+    calcNormalAtIndex(netCoords_, netNormals_, getPrevIdx(idx));
     reSubdivide();
 }
 
@@ -129,12 +141,24 @@ void SubdivisionCurve::addPoint(QVector2D p) {
  */
 void SubdivisionCurve::setVertexPosition(int idx, QVector2D p) {
     netCoords_[idx] = p;
+    if (!customNormals_[idx]) {
+        recalculateNormal(idx);
+    }
+    int nextIdx = getNextIdx(idx);
+    if (!customNormals_[nextIdx]) {
+        recalculateNormal(nextIdx);
+    }
+    int prevIdx = getPrevIdx(idx);
+    if (!customNormals_[prevIdx]) {
+        recalculateNormal(prevIdx);
+    }
     reSubdivide();
 }
 
 void SubdivisionCurve::setNormalPosition(int idx, QVector2D p) {
     netNormals_[idx] = p - netCoords_[idx];
     netNormals_[idx].normalize();
+    customNormals_[idx] = true;
     reSubdivide();
 }
 
@@ -145,6 +169,14 @@ void SubdivisionCurve::setNormalPosition(int idx, QVector2D p) {
 void SubdivisionCurve::removePoint(int idx) {
     netCoords_.remove(idx);
     netNormals_.remove(idx);
+    customNormals_.remove(idx);
+    if (!customNormals_[idx]) {
+        recalculateNormal(idx);
+    }
+    int prevIdx = getPrevIdx(idx);
+    if (!customNormals_[prevIdx]) {
+        recalculateNormal(prevIdx);
+    }
     reSubdivide();
 }
 
@@ -173,6 +205,29 @@ int SubdivisionCurve::findClosestVertex(const QVector2D &p, const float maxDist)
     }
 
     return ptIndex;
+}
+
+int SubdivisionCurve::getNextIdx(int idx) {
+    int n = netCoords_.size();
+    return closed_ ? (idx + 1) % n : MIN(idx + 1, n - 1);
+}
+
+int SubdivisionCurve::getPrevIdx(int idx) {
+    int n = netCoords_.size();
+    return closed_ ? (idx - 1 + n) % n : MAX(idx - 1, 0);
+}
+
+int SubdivisionCurve::findInsertIdx(const QVector2D &p) {
+    if (netCoords_.empty()) {
+        return 0;
+    }
+    constexpr float inf = std::numeric_limits<float>::infinity();
+    int idx = findClosestVertex(p, inf);
+    int nextIdx = getNextIdx(idx);
+    int prevIdx = getPrevIdx(idx);
+    float dist1 = netCoords_[idx].distanceToPoint(netCoords_[nextIdx]);
+    float dist2 = netCoords_[idx].distanceToPoint(netCoords_[prevIdx]);
+    return dist1 < dist2 ? idx : nextIdx;
 }
 
 // Returns index of the point normal thingie
@@ -236,7 +291,7 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
         return;
     }
     int n = points.size() * 2 - 1;
-    if (settings_->closed) {
+    if (closed_) {
         n += 1;
     }
     QVector<QVector2D> newPoints(n);
@@ -261,7 +316,7 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
         indices.clear();
         indices.append(pIdx);
         // p_2-p_1-p0-p1-p2-p3
-        if (settings_->closed) {
+        if (closed_) {
             indices.append((pIdx + 1) % size);
             indices.append((pIdx + 2) % size);
             indices.append((pIdx - 1 + size) % size);
@@ -331,4 +386,18 @@ void SubdivisionCurve::flipNormals() {
 
 void SubdivisionCurve::recalculateNormals() {
     netNormals_ = calcNormals(netCoords_);
+}
+
+void SubdivisionCurve::recalculateNormal(int idx) {
+    customNormals_[idx] = false;
+    calcNormalAtIndex(netCoords_, netNormals_, idx);
+}
+
+
+bool SubdivisionCurve::isClosed() const {
+    return closed_;
+}
+
+void SubdivisionCurve::setClosed(bool closed) {
+    closed_ = closed;
 }

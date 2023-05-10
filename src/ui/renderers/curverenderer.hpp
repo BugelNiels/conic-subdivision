@@ -10,7 +10,7 @@ class CurveRenderer : public Renderer {
  public:
   CurveRenderer() {}
   ~CurveRenderer() override;
-  void updateBuffers(SubdivisionCurve& sc, bool closed);
+  void updateBuffers(SubdivisionCurve& sc);
   void draw();
 
  protected:

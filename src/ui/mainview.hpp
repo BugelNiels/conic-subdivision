@@ -17,6 +17,7 @@ public:
     ~MainView() override;
 
     void recalculateCurve();
+
     void recalculateNormals();
 
     void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
@@ -29,6 +30,8 @@ public:
 
     void paintGL() override;
 
+    const std::shared_ptr<SubdivisionCurve> &getSubCurve() const;
+
 protected:
     void initializeGL() override;
 
@@ -37,6 +40,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
 
     void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
 

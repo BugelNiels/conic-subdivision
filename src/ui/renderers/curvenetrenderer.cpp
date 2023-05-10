@@ -51,10 +51,11 @@ void CurveNetRenderer::initBuffers() {
  * @param sc The subdivision curve containing the information to update the
  * buffer(s) with.
  */
-void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
+void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
     coords_ = sc.getNetCoords();
     normals_ = sc.getNetNormals();
     if (coords_.size() == 0) {
+        vboSize_ = 0;
         return;
     }
     int size = coords_.size();
@@ -66,7 +67,7 @@ void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
     for (int i = 0; i < coords_.size(); i++) {
         indices.append(i);
     }
-    if (closed) {
+    if (sc.isClosed()) {
         indices.prepend(coords_.size() - 1);
         indices.append(0);
     } else {

@@ -33,7 +33,6 @@ typedef struct Settings {
     bool circleNormals = false;
     bool recalculateNormals = true;
     bool edgeTangentSample = true;
-    bool closed = false;
 
 
     // UI related constants

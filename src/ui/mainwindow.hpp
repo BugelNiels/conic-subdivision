@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QLabel>
 #include "src/core/conics/conicpresets.hpp"
 
 class MainView;
@@ -28,4 +29,8 @@ private:
     QDockWidget *initSideMenu();
 
     QMenu *getFileMenu();
+
+    QLabel *presetLabel;
+
+    void resetView();
 };

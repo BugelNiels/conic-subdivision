@@ -98,31 +98,31 @@ QVector<double> ConicFitter::vecToQVec(const arma::vec &res) const {
 }
 
 QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
-    arma::vec eigval;
-    arma::mat eigvec;
-
-    // Compute the smallest eigenvector of A
-    //  arma::eig_sym(eigval, eigvec, A);
-
-    eig_sym(eigval, eigvec, A);
-
-    double minEigval = eigval.min();
-    int minEigvalIdx = eigval.index_min();
-
-    return vecToQVec(eigvec.col(minEigvalIdx));
+//    arma::vec eigval;
+//    arma::mat eigvec;
+//
+//    // Compute the smallest eigenvector of A
+//    //  arma::eig_sym(eigval, eigvec, A);
+//
+//    eig_sym(eigval, eigvec, A);
+//
+//    double minEigval = eigval.min();
+//    int minEigvalIdx = eigval.index_min();
+//
+//    return vecToQVec(eigvec.col(minEigvalIdx));
 
     //  bool hasSolution;
 
-    //  arma::mat U;
-    //  vec S;
-    //  arma::mat V;
-    //#pragma omp critical
-    //  hasSolution = svd(U, S, V, A);
+    arma::mat U;
+    arma::vec S;
+    arma::mat V;
+#pragma omp critical
+    bool hasSolution = svd(U, S, V, A);
 
-    //  if (hasSolution) {
-    //    return vecToQVec(V.col(V.n_cols - 1));
-    //  }
-    //  return QVector<double>();
+    if (hasSolution) {
+        return vecToQVec(V.col(V.n_cols - 1));
+    }
+    return QVector<double>();
 }
 
 QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,

@@ -38,7 +38,7 @@ void CurveRenderer::initBuffers() {
     gl->glBindVertexArray(0);
 }
 
-void CurveRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
+void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     QVector<QVector2D> coords;
     QVector<QVector2D> normals;
     if (sc.getSubdivLevel() == 0) {
@@ -49,6 +49,7 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
         normals = sc.getCurveNormals();
     }
     if (coords.size() == 0) {
+        vboSize_ = 0;
         return;
     }
 
@@ -64,7 +65,7 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc, bool closed) {
     for (int i = 0; i < coords.size(); i++) {
         indices.append(i);
     }
-    if (closed) {
+    if (sc.isClosed()) {
         indices.prepend(coords.size() - 1);
         indices.append(0);
     } else {
