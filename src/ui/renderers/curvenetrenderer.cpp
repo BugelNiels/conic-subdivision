@@ -2,6 +2,10 @@
 
 #include "core/settings.hpp"
 
+CurveNetRenderer::CurveNetRenderer(Settings *settings) : Renderer(settings) {
+
+}
+
 /**
  * @brief CurveNetRenderer::~CurveNetRenderer Destructor of the control curve
  * net renderer.
@@ -38,7 +42,6 @@ void CurveNetRenderer::initBuffers() {
     gl->glEnableVertexAttribArray(0);
     gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-
     gl->glGenBuffers(1, &ibo_);
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
@@ -60,7 +63,7 @@ void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
     }
     int size = coords_.size();
     for (int i = 0; i < size; i++) {
-        normals_[i] = (coords_.at(i) + settings->normalLength * normals_.at(i));
+        normals_[i] = (coords_[i] + settings->normalLength * normals_[i]);
     }
 
     QVector<int> indices(coords_.size() + 2);
@@ -91,6 +94,10 @@ void CurveNetRenderer::draw() {
     // Always renders the control net using the flat shader.
     auto shader = shaders[ShaderType::FLAT];
     shader->bind();
+
+    if(vboSize_ == 0) {
+        return;
+    }
 
     gl->glLineWidth(settings->controlLineWidth);
     gl->glBindVertexArray(vao_);
@@ -141,7 +148,6 @@ void CurveNetRenderer::draw() {
             QVector3D secCol(secQCol.redF(), secQCol.greenF(), secQCol.blueF());
             shader->setUniformValue(shader->uniformLocation("lineColor"), secCol);
             gl->glDrawArrays(GL_POINTS, settings->selectedNormal, 1);
-
         }
     }
 

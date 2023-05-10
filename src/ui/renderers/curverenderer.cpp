@@ -2,6 +2,11 @@
 
 #include "core/settings.hpp"
 
+
+CurveRenderer::CurveRenderer(Settings *settings) : Renderer(settings) {
+
+}
+
 CurveRenderer::~CurveRenderer() {
     gl->glDeleteVertexArrays(1, &vao_);
     gl->glDeleteBuffers(1, &vbo_coords_);

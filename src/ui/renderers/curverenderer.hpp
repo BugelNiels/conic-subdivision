@@ -8,7 +8,7 @@
 
 class CurveRenderer : public Renderer {
  public:
-  CurveRenderer() {}
+  CurveRenderer(Settings* settings);
   ~CurveRenderer() override;
   void updateBuffers(SubdivisionCurve& sc);
   void draw();

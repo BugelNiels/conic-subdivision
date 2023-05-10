@@ -11,7 +11,7 @@
  */
 class CurveNetRenderer : public Renderer {
 public:
-    CurveNetRenderer() {}
+    CurveNetRenderer(Settings *settings);
 
     ~CurveNetRenderer() override;
 
