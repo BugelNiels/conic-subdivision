@@ -29,3 +29,19 @@ To run:
 ```
 
 Or run via QtCreator.
+
+## Usage
+
+Settings:
+
+- Calculation settings can be found in the menu on the left;
+- View settings, such as which items to show/hide can be found in the top menu
+- Presets can be found in the top menu
+- Light/dark mode can be enabled via the top right
+
+Main view:
+
+- Click and drag to move points/normals
+- Right-clicking adds a new point
+- Double-clicking on a normal will reset it
+- Holding control favours normal selection over vertex selection when they are close together

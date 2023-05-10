@@ -3,9 +3,6 @@ project(ConicSubdiv VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Set up AUTOMOC and some sensible defaults for runtime execution
-# When using Qt 6.3, you can replace the code block below with
-# qt_standard_project_setup()
 set(CMAKE_AUTOMOC ON)
 include(GNUInstallDirs)
 set(CMAKE_AUTOUIC ON)
@@ -20,29 +17,28 @@ include_directories(${ARMADILLO_INCLUDE_DIRS})
 include_directories(src)
 
 file(GLOB_RECURSE CPP_SOURCES src/*.cpp)
-file(GLOB_RECURSE H_HEADERS src/*.h)
+file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
-# Make sure to add any new files you add over here manually
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
-    ${CPP_SOURCES} ${H_HEADERS}
-    src/mainwindow.ui
-    src/resources.qrc
-)
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt::Core
-    Qt::Gui
-    ${ARMADILLO_LIBRARIES}
-)
+        ${CPP_SOURCES} ${H_HEADERS}
+        resources/resources.qrc
+        )
 
-if((QT_VERSION_MAJOR GREATER 5))
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        Qt::Core
+        Qt::Gui
+        ${ARMADILLO_LIBRARIES}
+        )
+
+if ((QT_VERSION_MAJOR GREATER 5))
     target_link_libraries(${PROJECT_NAME} PRIVATE
-        Qt::OpenGL
-        Qt::OpenGLWidgets
-        Qt::Widgets
-    )
-endif()
+            Qt::OpenGL
+            Qt::OpenGLWidgets
+            Qt::Widgets
+            )
+endif ()
 
 install(TARGETS ${PROJECT_NAME}
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
