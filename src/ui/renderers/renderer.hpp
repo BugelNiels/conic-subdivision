@@ -14,13 +14,13 @@ class Settings;
  */
 class Renderer {
 public:
-    Renderer();
+    Renderer(Settings *settings);
 
     Renderer(QOpenGLFunctions_4_1_Core *functions, Settings *settings);
 
     virtual ~Renderer();
 
-    void init(QOpenGLFunctions_4_1_Core *f, Settings *s);
+    void init(QOpenGLFunctions_4_1_Core *f);
 
 protected:
     virtual void initShaders() = 0;
@@ -32,6 +32,6 @@ protected:
     QOpenGLShaderProgram *constructPolyLineShader() const;
 
     QMap<ShaderType, QOpenGLShaderProgram *> shaders;
-    QOpenGLFunctions_4_1_Core *gl;
+    QOpenGLFunctions_4_1_Core *gl = nullptr;
     Settings *settings;
 };

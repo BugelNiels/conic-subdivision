@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QSpinBox>
 #include "src/core/conics/conicpresets.hpp"
 
 class MainView;
@@ -32,5 +33,9 @@ private:
 
     QLabel *presetLabel;
 
-    void resetView();
+    void resetView(bool recalculate = true);
+
+    QSpinBox *subdivStepsSpinBox;
+    QAction *closedCurveAction;
+    QString presetName;
 };

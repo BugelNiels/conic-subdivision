@@ -25,9 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent) {
 
     settings_ = new Settings();
-    presets_ = new conics::ConicPresets(settings_);
     mainView_ = new MainView(settings_, this);
-
+    presets_ = new conics::ConicPresets(settings_);
 
     auto *dock = initSideMenu();
     addDockWidget(Qt::LeftDockWidgetArea, dock);
@@ -35,15 +34,17 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(mainView_);
 
     conics::ui::applyStylePreset(*settings_, conics::ui::getLightModePalette());
-
-    resetView();
+    resetView(false);
 }
 
-void MainWindow::resetView() {
-    QString presetName = "Blank";
+void MainWindow::resetView(bool recalculate) {
+    presetName = "Blank";
     mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presetName)));
     presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
-    mainView_->recalculateCurve();
+    if (recalculate) {
+        mainView_->recalculateCurve();
+    }
+    subdivStepsSpinBox->setValue(0);
 }
 
 
@@ -64,10 +65,20 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(recalcButton);
+    auto *resetPresetButton = new QPushButton("Reset Preset");
+    connect(resetPresetButton, &QPushButton::pressed, this, [this] {
+        // TODO: extract this
+        mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presetName)));
+        presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
+        subdivStepsSpinBox->setValue(0);
+        closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(resetPresetButton);
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Subdivision Steps"));
-    auto *subdivStepsSpinBox = new QSpinBox();
+    subdivStepsSpinBox = new QSpinBox();
     subdivStepsSpinBox->setMinimum(0);
     subdivStepsSpinBox->setMaximum(20);
     connect(subdivStepsSpinBox, &QSpinBox::valueChanged, [this](int numSteps) {
@@ -75,6 +86,28 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->updateBuffers();
     });
     vertLayout->addWidget(subdivStepsSpinBox);
+    auto *applySubdivButton = new QPushButton("Apply Subdivision");
+    applySubdivButton->setToolTip(
+            "<html><head/><body><p>If pressed, applies the subdivision.</body></html>"
+    );
+    connect(applySubdivButton, &QPushButton::pressed, [this] {
+        mainView_->getSubCurve()->applySubdivision();
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(applySubdivButton);
+
+    auto *tessellateCheckBox = new QCheckBox("Tessellate");
+    tessellateCheckBox->setToolTip(
+            "<html><head/><body><p>Enabling this will perform just a single subdivision step where each edge is sampled 2^(levels-1) times from the same conic. </p></body></html>"
+    );
+    tessellateCheckBox->setChecked(settings_->tessellate);
+    connect(tessellateCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->tessellate = toggled;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(tessellateCheckBox);
+
+    vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Vertex weights"));
     auto *edgeVertWeightSpinBox = new QDoubleSpinBox();
@@ -179,6 +212,17 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(circleNormsCheckBox);
 
+    auto *lengthWeightedCheckBox = new QCheckBox("Length Weighted Normals");
+    lengthWeightedCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, approximates the normals by taking into consideration the edge lengths.</body></html>"
+    );
+    lengthWeightedCheckBox->setChecked(settings_->areaWeightedKnot);
+    connect(lengthWeightedCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->areaWeightedKnot = toggled;
+        mainView_->recalculateNormals();
+    });
+    vertLayout->addWidget(lengthWeightedCheckBox);
+
     auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
     recalcNormsCheckBox->setToolTip(
             "<html><head/><body><p>If this option is enabled, the normals will be re-evaluated at every step. If this option is disabled, the vertex points will keep their normals. Any new edge points will obtain the normal of the conic they were sampled from.</p></body></html>"
@@ -192,7 +236,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *edgeSampleCheckBox = new QCheckBox("Edge Normal");
     edgeSampleCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, uses a ray perpendical to the edge to intersect with the conic and sample the new point from. If disabled, uses the average of the edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the middle of the edge.</p></body></html>"
+            "<html><head/><body><p>If enabled, uses a ray perpendicular to the edge to intersect with the conic and sample the new point from. If disabled, uses the average of the edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the middle of the edge.</p></body></html>"
     );
     edgeSampleCheckBox->setChecked(settings_->edgeTangentSample);
     connect(edgeSampleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
@@ -200,6 +244,27 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeSampleCheckBox);
+
+    auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
+    splitConvexityCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
+    );
+    splitConvexityCheckBox->setChecked(settings_->convexitySplit);
+    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->convexitySplit = toggled;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(splitConvexityCheckBox);
+
+    auto *insertKnotsButton = new QPushButton("Insert Knots");
+    insertKnotsButton->setToolTip(
+            "<html><head/><body><p>If pressed, inserts knot points to improve convexity properties.</body></html>"
+    );
+    connect(insertKnotsButton, &QPushButton::pressed, [this] {
+        mainView_->getSubCurve()->insertKnots();
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(insertKnotsButton);
 
 
     vertLayout->addStretch();
@@ -300,8 +365,11 @@ QMenu *MainWindow::getPresetMenu() {
         auto *newAction = new QAction(name, presetMenu);
         newAction->setShortcut(QKeySequence::fromString(QString("Ctrl+%1").arg(i)));
         connect(newAction, &QAction::triggered, [this, name]() {
+            presetName = name;
             mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(name)));
             presetLabel->setText(QString("<b>Preset:</b> %1").arg(name));
+            subdivStepsSpinBox->setValue(0);
+            closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
             mainView_->recalculateCurve();
         });
         presetMenu->addAction(newAction);
@@ -336,7 +404,7 @@ QMenu *MainWindow::getRenderMenu() {
 
     renderMenu->addSeparator();
 
-    auto *closedCurveAction = new QAction(QStringLiteral("Closed Curve"), renderMenu);
+    closedCurveAction = new QAction(QStringLiteral("Closed Curve"), renderMenu);
     closedCurveAction->setCheckable(true);
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {

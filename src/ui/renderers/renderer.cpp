@@ -3,7 +3,7 @@
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
-Renderer::Renderer() : gl(nullptr) {}
+Renderer::Renderer(Settings *settings) : gl(nullptr), settings(settings) {}
 
 /**
  * @brief Renderer::~Renderer Deconstructs the renderer by deleting all shaders.
@@ -16,9 +16,8 @@ Renderer::~Renderer() { qDeleteAll(shaders); }
  * @param f OpenGL functions pointer.
  * @param s Settings.
  */
-void Renderer::init(QOpenGLFunctions_4_1_Core *f, Settings *s) {
+void Renderer::init(QOpenGLFunctions_4_1_Core *f) {
     gl = f;
-    settings = s;
 
     initShaders();
     initBuffers();

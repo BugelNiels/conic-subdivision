@@ -31,6 +31,8 @@ namespace conics {
         SubdivisionCurve getEllipse(int numPoints, float width, float height);
 
         SubdivisionCurve getBlank();
+
+        SubdivisionCurve getLine();
     };
 
 } // conics

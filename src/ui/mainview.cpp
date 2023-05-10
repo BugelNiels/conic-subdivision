@@ -5,7 +5,8 @@
 #include <QMouseEvent>
 #include "core/settings.hpp"
 
-MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings) {
+MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
+                                                          cr_(settings) {
 
     subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve());
     QSurfaceFormat format;
@@ -46,16 +47,14 @@ void MainView::initializeGL() {
     glEnable(GL_DEPTH_TEST);
     // Default is GL_LESS
     glDepthFunc(GL_LEQUAL);
+    glEnable(GL_MULTISAMPLE);
 
     // grab the opengl context
     auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(this->context());
-    functions->glEnable(GL_MULTISAMPLE);
-
-    functions->glLineWidth(2);
-
     // initialize renderers here with the current context
-    cnr_.init(functions, settings_);
-    cr_.init(functions, settings_);
+    cnr_.init(functions);
+    cr_.init(functions);
+
     // update buffers
     updateBuffers();
 }
@@ -66,8 +65,6 @@ void MainView::resizeGL(int width, int height) {
     float halfHeight = height / 2.0f / settings_->sizeCorrection;
     projectMatrix.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 0, 1);
     settings_->projectionMatrix = projectMatrix;
-    int side = qMin(width, height);
-    glViewport((width - side) / 2, (height - side) / 2, side, side);
 }
 
 void MainView::subdivideCurve(int numSteps) {
@@ -146,9 +143,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
     if (subCurve_ == nullptr) {
         return;
     }
-
     QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
@@ -168,8 +163,9 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         }
         case Qt::RightButton: {
             // Add new control point
-            subCurve_->addPoint(scenePos);
-            settings_->selectedVertex = -1;
+            int idx = subCurve_->addPoint(scenePos);
+            settings_->selectedNormal = -1;
+            settings_->selectedVertex = idx;
             updateBuffers();
             break;
         }

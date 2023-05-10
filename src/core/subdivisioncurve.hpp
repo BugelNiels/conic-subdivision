@@ -32,11 +32,12 @@ public:
 
     int findClosestNormal(const QVector2D &p, const float maxDist);
 
-    void addPoint(QVector2D p);
+    int addPoint(QVector2D p);
 
     void flipNormals();
 
     void setVertexPosition(int idx, QVector2D p);
+
     void setNormalPosition(int idx, QVector2D p);
 
     void removePoint(int idx);
@@ -46,11 +47,14 @@ public:
     void reSubdivide();
 
     void recalculateNormals();
+
     void recalculateNormal(int idx);
 
     bool isClosed() const;
 
     void setClosed(bool closed);
+    void insertKnots();
+    void applySubdivision();
 
 private:
     int subdivisionLevel_;
@@ -68,6 +72,7 @@ private:
                    const QVector<QVector2D> &normals, int level);
 
     QVector<QVector2D> calcNormals(const QVector<QVector2D> &coords) const;
+
     void calcNormalAtIndex(const QVector<QVector2D> &coords, QVector<QVector2D> &normals, int i) const;
 
     int findInsertIdx(const QVector2D &p);
@@ -75,4 +80,10 @@ private:
     int getNextIdx(int idx);
 
     int getPrevIdx(int idx);
+
+    void knotSubdivide(int level);
+
+    void knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> &norms, QVector<bool> &customNorms);
+
+    void tessellate(const QVector<QVector2D> &points, const QVector<QVector2D> &normals, int level);
 };
