@@ -116,6 +116,9 @@ QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
     arma::mat U;
     arma::vec S;
     arma::mat V;
+
+    qDebug() << arma::cond(A);
+
 #pragma omp critical
     bool hasSolution = svd(U, S, V, A);
 
