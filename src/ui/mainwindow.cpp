@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     conics::ui::applyStylePreset(*settings_, conics::ui::getLightModePalette());
     resetView(false);
+    mainView_->setFocus();
 }
 
 void MainWindow::resetView(bool recalculate) {
@@ -211,6 +212,17 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(circleNormsCheckBox);
+
+    auto *normalizeNormsCheckBox = new QCheckBox("Normalize Normals");
+    normalizeNormsCheckBox->setToolTip(
+            "<html><head/><body><p>If disabled, does not normalize the normals found by the conic.</p></body></html>"
+    );
+    normalizeNormsCheckBox->setChecked(settings_->normalizeNormals);
+    connect(normalizeNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->normalizeNormals = toggled;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(normalizeNormsCheckBox);
 
     auto *lengthWeightedCheckBox = new QCheckBox("Length Weighted Normals");
     lengthWeightedCheckBox->setToolTip(

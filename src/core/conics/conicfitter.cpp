@@ -199,11 +199,11 @@ QVector<double> ConicFitter::vecToQVecEigen(const Eigen::VectorXd &res) const {
 }
 
 QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) const {
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeFullV);
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
     const auto& V = svd.matrixV();
-    Eigen::VectorXd eigenVec = V.col(V.cols() - 1);
-
-    if (svd.singularValues()(V.cols() - 1) > 1e-12) {
+    int idx = V.cols() - 1;
+    Eigen::VectorXd eigenVec = V.col(idx);
+    if (svd.singularValues()(idx) > 1e-12) {
         return vecToQVecEigen(eigenVec);
     }
     return QVector<double>();

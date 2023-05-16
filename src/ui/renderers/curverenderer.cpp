@@ -91,6 +91,8 @@ void CurveRenderer::draw() {
     shader->bind();
     shader->setUniformValue(shader->uniformLocation("visualize_normals"),
                             settings->visualizeNormals);
+    shader->setUniformValue(shader->uniformLocation("viewMatrix"),
+                            settings->viewMatrix);
 
     gl->glLineWidth(settings->curveLineWidth);
     QColor qCol = settings->style.smoothCurveCol;
@@ -107,7 +109,6 @@ void CurveRenderer::draw() {
 
     gl->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize_, GL_UNSIGNED_INT,
                        nullptr);
-    gl->glBindVertexArray(0);
 
     shader->release();
 }

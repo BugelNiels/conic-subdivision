@@ -36,6 +36,7 @@ typedef struct Settings {
     bool convexitySplit = true;
     bool areaWeightedKnot = false;
     bool tessellate = true;
+    bool normalizeNormals = true;
 
     // UI related constants
     float normalLength = 0.15;
@@ -49,6 +50,11 @@ typedef struct Settings {
 
     // UI Appearance
     QMatrix4x4 projectionMatrix;
+    QMatrix4x4 viewMatrix;
     conics::ui::StylePreset style;
+
+    // UI Controls
+    float zoomStrength = 1.2;
+    float dragSensitivity = 1;
 
 } Settings;

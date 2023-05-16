@@ -20,11 +20,11 @@ QMatrix4x4 coefsToMatrix(QVector<double> coefs) {
     return QMatrix4x4(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
 }
 
-Conic::Conic() : hasSolution_(false) { Q_.fill(0); }
+Conic::Conic(const Settings &settings) : hasSolution_(false), settings_(settings) { Q_.fill(0); }
 
 Conic::Conic(const QVector<QVector2D> &coords,
              const QVector<QVector2D> &normals, const Settings &settings)
-        : Conic() {
+        : Conic(settings) {
     hasSolution_ = fitConic(coords, normals, settings);
 }
 
@@ -69,7 +69,9 @@ QVector2D Conic::conicNormal(const QVector2D &p, const QVector2D &rd) const {
     float xn = QVector4D::dotProduct(Q_.row(0), p4);
     float yn = QVector4D::dotProduct(Q_.row(1), p4);
     QVector2D normal = QVector2D(xn, yn);
-    normal.normalize();
+    if (settings_.normalizeNormals) {
+        normal.normalize();
+    }
     if (QVector2D::dotProduct(normal, rd) < 0) {
         normal *= -1;
     }
@@ -124,7 +126,7 @@ Conic Conic::average(const Conic &other) const {
 }
 
 Conic Conic::operator+(const Conic &other) const {
-    Conic q;
+    Conic q(settings_);
     q.hasSolution_ = true;
     if (isValid() && other.isValid()) {
         q.Q_ = Q_ + other.Q_;

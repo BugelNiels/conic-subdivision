@@ -10,6 +10,7 @@ uniform vec3 normalColor;
 uniform vec3 lineColor;
 
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 in vec2 norm_vs[];
 out vec4 line_color;
 
@@ -20,9 +21,9 @@ out vec4 line_color;
  * @param b Point a
  */
 void emitLine(vec4 b, vec4 a) {
-  gl_Position = projectionMatrix * a;
+  gl_Position = projectionMatrix * viewMatrix * a;
   EmitVertex();
-  gl_Position = projectionMatrix * b;
+  gl_Position = projectionMatrix * viewMatrix * b;
   EmitVertex();
   EndPrimitive();
 }
@@ -30,7 +31,7 @@ void emitLine(vec4 b, vec4 a) {
 void emitNormal(vec4 a, vec4 b, vec4 c, vec2 norm) {
   // calculates the normal at b and then emits a line from b along its normal
 
-  vec4 norm4 = vec4(normalize(norm), 0, 0);
+  vec4 norm4 = vec4(norm, 0, 0);
 
   line_color = vec4(normalColor, 1);
 

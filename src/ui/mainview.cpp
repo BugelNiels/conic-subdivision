@@ -12,59 +12,52 @@ MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent),
     QSurfaceFormat format;
     format.setSamples(4);    // Set the number of samples used for multisampling
     setFormat(format);
+    resetViewMatrix();
+    setMouseTracking(true);
 }
 
 
 MainView::~MainView() {
     debugLogger_->stopLogging();
-
     delete debugLogger_;
 }
 
 void MainView::initializeGL() {
     initializeOpenGLFunctions();
-    qDebug() << ":: OpenGL initialized";
-
     debugLogger_ = new QOpenGLDebugLogger();
     connect(debugLogger_, SIGNAL(messageLogged(QOpenGLDebugMessage)), this, SLOT(onMessageLogged(QOpenGLDebugMessage)),
             Qt::DirectConnection);
 
     if (debugLogger_->initialize()) {
-        qDebug() << ":: Logging initialized";
         debugLogger_->startLogging(QOpenGLDebugLogger::SynchronousLogging);
         debugLogger_->enableMessages();
     }
 
-    // If the application crashes here, try setting "MESA_GL_VERSION_OVERRIDE
-    // = 4.1" and "MESA_GLSL_VERSION_OVERRIDE = 410" in Projects (left panel) ->
-    // Build Environment
-
-    QString glVersion;
-    glVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
-    qDebug() << ":: Using OpenGL" << qPrintable(glVersion);
-
-    // Enable depth buffer
     glEnable(GL_DEPTH_TEST);
-    // Default is GL_LESS
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_MULTISAMPLE);
 
     // grab the opengl context
     auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(this->context());
-    // initialize renderers here with the current context
     cnr_.init(functions);
     cr_.init(functions);
-
-    // update buffers
     updateBuffers();
+}
+
+void MainView::resetViewMatrix() {
+
+    settings_->viewMatrix.setToIdentity();
+    settings_->viewMatrix.scale(400);
+    update();
 }
 
 void MainView::resizeGL(int width, int height) {
     QMatrix4x4 projectMatrix;
-    float halfWidth = width / 2.0f / settings_->sizeCorrection;
-    float halfHeight = height / 2.0f / settings_->sizeCorrection;
+    float halfWidth = width / 2.0f;
+    float halfHeight = height / 2.0f;
     projectMatrix.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 0, 1);
     settings_->projectionMatrix = projectMatrix;
+    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
 }
 
 void MainView::subdivideCurve(int numSteps) {
@@ -119,58 +112,15 @@ void MainView::paintGL() {
  * @return A vector containing the normalized x and y screen coordinates.
  */
 QVector2D MainView::toNormalizedScreenCoordinates(float x, float y) {
-    int side = qMin(width(), height());
-    float xViewport = (width() - side) / 2.0f;
-    float yViewport = (height() - side) / 2.0f;
+    float xRatio = (x - 0) / width();
+    float yRatio = (y - 0) / height();
 
-    float xRatio = (x - xViewport) / side;
-    float yRatio = (y - yViewport) / side;
-    float xScene = (1 - xRatio) * -1 + xRatio * 1;
-    float yScene = yRatio * -1 + (1 - yRatio) * 1;
-
-    return {xScene, yScene};
+    float xScene = xRatio * 2.0f - 1.0f;
+    float yScene = 1.0f - yRatio * 2.0f;
+    QVector4D from = toWorldCoordsMatrix_ * QVector4D(xScene, yScene, 0, 1.0f);
+    return QVector2D(from);
 }
 
-/**
- * @brief MainView::mousePressEvent Handles presses by the mouse. Left mouse
- * button moves a point. Right mouse button adds a new point at the click
- * location.
- * @param event Mouse event.
- */
-void MainView::mousePressEvent(QMouseEvent *event) {
-    // In order to allow keyPressEvents:
-    setFocus();
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-    switch (event->buttons()) {
-        case Qt::LeftButton: {
-            if (event->modifiers().testFlag(Qt::ControlModifier)) {
-                // First attempt to select a normal. If unsuccessful, select a point
-                if (!attemptNormalSelect(scenePos)) {
-                    attemptVertexSelect(scenePos);
-                }
-
-            } else {
-                // First attempt to select a vertex. If unsuccessful, select a normal
-                if (!attemptVertexSelect(scenePos)) {
-                    attemptNormalSelect(scenePos);
-                }
-            }
-            update();
-            break;
-        }
-        case Qt::RightButton: {
-            // Add new control point
-            int idx = subCurve_->addPoint(scenePos);
-            settings_->selectedNormal = -1;
-            settings_->selectedVertex = idx;
-            updateBuffers();
-            break;
-        }
-    }
-}
 
 bool MainView::attemptVertexSelect(const QVector2D &scenePos) {
     settings_->selectedNormal = -1;
@@ -202,24 +152,99 @@ bool MainView::attemptNormalSelect(const QVector2D &scenePos) {
     return false;
 }
 
-/**
- * @brief MainView::mouseMoveEvent Handles the mouse moving. Used for changing
- * the position of the selected control point.
- * @param event Mouse event.
- */
+void MainView::translationUpdate(const QVector2D &scenePos, const QPointF &mousePos) {
+    if (!dragging_) {
+        dragging_ = true;
+        oldMouseCoords_ = scenePos;
+        return;
+    }
+    QVector2D translationUpdate = (scenePos - oldMouseCoords_) * settings_->dragSensitivity;
+    settings_->viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
+    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    oldMouseCoords_ = toNormalizedScreenCoordinates(mousePos.x(), mousePos.y());
+    update();
+}
+
+void MainView::mousePressEvent(QMouseEvent *event) {
+    // In order to allow keyPressEvents:
+    setFocus();
+    if (subCurve_ == nullptr) {
+        return;
+    }
+    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    switch (event->buttons()) {
+        case Qt::LeftButton: {
+            if (event->modifiers().testFlag(Qt::ControlModifier)) {
+                int idx = subCurve_->addPoint(scenePos);
+                settings_->selectedNormal = -1;
+                settings_->selectedVertex = idx;
+                updateBuffers();
+            } else {
+                // First attempt to select a vertex. If unsuccessful, select a normal
+                if (!attemptVertexSelect(scenePos)) {
+                    attemptNormalSelect(scenePos);
+                }
+            }
+            update();
+            break;
+        }
+        case Qt::RightButton: {
+            // Add new control point
+            int idx = subCurve_->addPoint(scenePos);
+            settings_->selectedNormal = -1;
+            settings_->selectedVertex = idx;
+            updateBuffers();
+            break;
+        }
+        case Qt::MiddleButton: {
+            setCursor(Qt::ClosedHandCursor);
+            break;
+        }
+    }
+}
+
 void MainView::mouseMoveEvent(QMouseEvent *event) {
-    if (settings_->selectedVertex > -1) {
-        QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-        // Update position of the control point
-        subCurve_->setVertexPosition(settings_->selectedVertex, scenePos);
-        updateBuffers();
+    QWidget::mouseMoveEvent(event);
+    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    if (event->buttons() == Qt::LeftButton && event->modifiers().testFlag(Qt::ShiftModifier)) {
+        setCursor(Qt::ClosedHandCursor);
+        translationUpdate(scenePos, event->position());
+        settings_->selectedVertex = -1;
+        settings_->selectedNormal = -1;
+        update();
+        return;
     }
-    if (settings_->selectedNormal > -1) {
-        QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-        // Update position of the control point
-        subCurve_->setNormalPosition(settings_->selectedNormal, scenePos);
-        updateBuffers();
+
+    switch (event->buttons()) {
+        case Qt::RightButton:
+        case Qt::LeftButton: {
+            if (settings_->selectedVertex > -1) {
+                setCursor(Qt::ClosedHandCursor);
+                // Update position of the control point
+                subCurve_->setVertexPosition(settings_->selectedVertex, scenePos);
+                updateBuffers();
+            }
+            if (settings_->selectedNormal > -1) {
+                setCursor(Qt::ClosedHandCursor);
+                // Update position of the control point
+                subCurve_->setNormalPosition(settings_->selectedNormal, scenePos);
+                updateBuffers();
+            }
+            break;
+        }
+        case Qt::MiddleButton: {
+            translationUpdate(scenePos, event->position());
+            break;
+        }
+        default: {
+            if (!attemptVertexSelect(scenePos)) {
+                attemptNormalSelect(scenePos);
+            }
+            updateCursor(event->modifiers());
+            update();
+        }
     }
+
 }
 
 /**
@@ -229,11 +254,19 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
  * @param event Key press event.
  */
 void MainView::keyPressEvent(QKeyEvent *event) {
+    QWidget::keyPressEvent(event);
     if (subCurve_ == nullptr) {
         return;
     }
     // Only works when the widget has focus!
     switch (event->key()) {
+        case Qt::Key_Shift:
+            break;
+        case Qt::Key_Control:
+            break;
+        case Qt::Key_R:
+            resetViewMatrix();
+            break;
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         case Qt::Key_X:
@@ -245,7 +278,69 @@ void MainView::keyPressEvent(QKeyEvent *event) {
             }
             break;
     }
+    updateCursor(event->modifiers());
 }
+
+void MainView::keyReleaseEvent(QKeyEvent *event) {
+    QWidget::keyReleaseEvent(event);
+    switch (event->key()) {
+        case Qt::Key_Shift:
+            dragging_ = false;
+            break;
+        case Qt::Key_Control:
+            break;
+    }
+    updateCursor(event->modifiers());
+}
+
+void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
+    QWidget::mouseDoubleClickEvent(event);
+    if (subCurve_ == nullptr || settings_->selectedNormal < 0) {
+        return;
+    }
+    subCurve_->recalculateNormal(settings_->selectedNormal);
+    recalculateCurve();
+}
+
+void MainView::wheelEvent(QWheelEvent *event) {
+    QWidget::wheelEvent(event);
+    float zoom = event->angleDelta().y() > 0 ? settings_->zoomStrength : 1.0f / settings_->zoomStrength;
+    QVector2D mouseNDC = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    settings_->viewMatrix.translate(mouseNDC.x(), mouseNDC.y());
+    settings_->viewMatrix.scale(zoom);
+    settings_->viewMatrix.translate(-mouseNDC.x(), -mouseNDC.y());
+    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    update();
+}
+
+void MainView::mouseReleaseEvent(QMouseEvent *event) {
+    QWidget::mouseReleaseEvent(event);
+    dragging_ = false;
+    updateCursor(event->modifiers());
+}
+
+void MainView::updateCursor(const Qt::KeyboardModifiers &flags) {
+    switch (flags) {
+        case Qt::ShiftModifier:
+            if (dragging_) {
+                setCursor(Qt::ClosedHandCursor);
+            } else {
+                setCursor(Qt::OpenHandCursor);
+            }
+            break;
+        case Qt::ControlModifier:
+            setCursor(Qt::CrossCursor);
+            break;
+        default:
+            if (settings_->selectedVertex > -1 || settings_->selectedNormal > -1) {
+                setCursor(Qt::OpenHandCursor);
+            } else {
+                unsetCursor();
+            }
+            break;
+    }
+}
+
 
 /**
  * @brief MainView::onMessageLogged Helper function for logging messages.
@@ -301,13 +396,4 @@ void MainView::recalculateNormals() {
 
 const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
     return subCurve_;
-}
-
-void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
-    QWidget::mouseDoubleClickEvent(event);
-    if(subCurve_ == nullptr || settings_->selectedNormal < 0) {
-        return;
-    }
-    subCurve_->recalculateNormal(settings_->selectedNormal);
-    recalculateCurve();
 }

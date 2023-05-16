@@ -8,7 +8,7 @@ class Settings;
 
 class Conic {
 public:
-    Conic();
+    Conic(const Settings &settings);
 
     Conic(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals,
           const Settings &settings);
@@ -36,4 +36,6 @@ private:
                   const QVector<QVector2D> &normals, const Settings &settings);
 
     QVector2D conicNormal(const QVector2D &p, const QVector2D &rd) const;
+
+    const Settings &settings_;
 };
