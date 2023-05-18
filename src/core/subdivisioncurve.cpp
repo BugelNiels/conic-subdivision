@@ -296,7 +296,8 @@ void SubdivisionCurve::subdivide(int level) {
         if (settings_->convexitySplit) {
             knotSubdivide(level);
         } else {
-            subdivide(netCoords_, netNormals_, level);
+            stability.resize(netCoords_.size());
+            subdivide(netCoords_, netNormals_, stability, level);
         }
     }
     subdivisionLevel_ = level;
@@ -310,11 +311,13 @@ void SubdivisionCurve::subdivide(int level) {
  * @param level The number of times the points should be subdivided
  */
 void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
-                                 const QVector<QVector2D> &normals, int level) {
+                                 const QVector<QVector2D> &normals,
+                                 const QVector<float> &stabilities, int level) {
     // base case
     if (level == 0) {
         curveCoords_ = points;
         curveNormals_ = normals;
+        stability = stabilities;
         return;
     }
     int n = points.size() * 2 - 1;
@@ -323,11 +326,13 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
     }
     QVector<QVector2D> newPoints(n);
     QVector<QVector2D> newNormals(n);
+    QVector<float> newStabilities(n);
 
     // set vertex points
     for (int i = 0; i < n; i += 2) {
         newPoints[i] = points[i / 2];
         newNormals[i] = normals[i / 2];
+        newStabilities[i] = stabilities[i / 2];
     }
     // set new points
     int patchSize = 6;
@@ -398,11 +403,12 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
 
         newPoints[i] = sampledPoint;
         newNormals[i] = sampledNormal;
+        newStabilities[i] = conic.getStability();
     }
     if (settings_->recalculateNormals) {
         newNormals = calcNormals(newPoints);
     }
-    subdivide(newPoints, newNormals, level - 1);
+    subdivide(newPoints, newNormals, newStabilities, level - 1);
 }
 
 void SubdivisionCurve::tessellate(const QVector<QVector2D> &points,
@@ -620,6 +626,12 @@ void SubdivisionCurve::knotSubdivide(int level) {
     QVector<QVector2D> norms;
     QVector<bool> customNorms;
     knotCurve(coords, norms, customNorms);
+    QVector<float> stabilities;
+    stabilities.resize(coords.size());
 
-    subdivide(coords, norms, level);
+    subdivide(coords, norms, stabilities, level);
+}
+
+QVector<float> SubdivisionCurve::getStabilityVals() const {
+    return stability;
 }

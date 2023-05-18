@@ -45,9 +45,9 @@ void MainView::initializeGL() {
 }
 
 void MainView::resetViewMatrix() {
-
     settings_->viewMatrix.setToIdentity();
     settings_->viewMatrix.scale(400);
+    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
     update();
 }
 

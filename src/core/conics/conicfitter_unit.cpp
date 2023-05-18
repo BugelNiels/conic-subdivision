@@ -211,3 +211,7 @@ QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
 
     return fitQuadricConstrained(coords, normals);
 }
+
+float UnitConicFitter::stability() {
+    return stability_;
+}

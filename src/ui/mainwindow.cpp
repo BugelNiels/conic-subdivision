@@ -433,6 +433,16 @@ QMenu *MainWindow::getRenderMenu() {
 
     renderMenu->addSeparator();
 
+    auto *visualizeStabilityAction = new QAction(QStringLiteral("Visualize Stability"), renderMenu);
+    visualizeStabilityAction->setCheckable(true);
+    visualizeStabilityAction->setChecked(settings_->visualizeStability);
+    visualizeStabilityAction->setShortcut(QKeySequence(Qt::Key_V));
+    connect(visualizeStabilityAction, &QAction::triggered, [this](bool toggled) {
+        settings_->visualizeStability = toggled;
+        mainView_->updateBuffers();
+    });
+    renderMenu->addAction(visualizeStabilityAction);
+
     auto *visualizeCurvatureAction = new QAction(QStringLiteral("Visualize Curvature"), renderMenu);
     visualizeCurvatureAction->setCheckable(true);
     visualizeCurvatureAction->setChecked(settings_->visualizeCurvature);

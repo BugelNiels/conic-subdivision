@@ -47,11 +47,13 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
                      const Settings &settings) {
     QVector<double> foundCoefs;
     if (settings.normalizedSolve) {
-        UnitConicFitter fitter = UnitConicFitter();
+        UnitConicFitter fitter;
         foundCoefs = fitter.fitConic(coords, normals, settings);
+        stability_ = fitter.stability();
     } else {
-        ConicFitter fitter = ConicFitter();
-        foundCoefs = fitter.fitConic(coords, normals, settings);
+        ConicFitter fitter(settings);
+        foundCoefs = fitter.fitConic(coords, normals);
+        stability_ = fitter.stability();
     }
     if (foundCoefs.isEmpty()) {
         return false;
@@ -69,9 +71,7 @@ QVector2D Conic::conicNormal(const QVector2D &p, const QVector2D &rd) const {
     float xn = QVector4D::dotProduct(Q_.row(0), p4);
     float yn = QVector4D::dotProduct(Q_.row(1), p4);
     QVector2D normal = QVector2D(xn, yn);
-    if (settings_.normalizeNormals) {
-        normal.normalize();
-    }
+    normal.normalize();
     if (QVector2D::dotProduct(normal, rd) < 0) {
         normal *= -1;
     }
@@ -148,4 +148,8 @@ void Conic::operator+=(const Conic &other) {
         Q_ = other.Q_;
         hasSolution_ = true;
     }
+}
+
+float Conic::getStability() {
+    return stability_;
 }

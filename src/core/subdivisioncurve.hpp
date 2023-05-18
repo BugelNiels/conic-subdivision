@@ -53,8 +53,12 @@ public:
     bool isClosed() const;
 
     void setClosed(bool closed);
+
     void insertKnots();
+
     void applySubdivision();
+
+    QVector<float> getStabilityVals() const;
 
 private:
     int subdivisionLevel_ = 0;
@@ -62,6 +66,7 @@ private:
 
     QVector<QVector2D> curveCoords_;
     QVector<QVector2D> curveNormals_;
+    QVector<float> stability;
     QVector<bool> customNormals_;
 
     QVector<QVector2D> netCoords_;
@@ -69,7 +74,8 @@ private:
     Settings *settings_ = nullptr;
 
     void subdivide(const QVector<QVector2D> &points,
-                   const QVector<QVector2D> &normals, int level);
+                   const QVector<QVector2D> &normals,
+                   const QVector<float> &stabilities, int level);
 
     QVector<QVector2D> calcNormals(const QVector<QVector2D> &coords) const;
 

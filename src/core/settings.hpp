@@ -16,7 +16,7 @@ typedef struct Settings {
     // View Settings
     bool visualizeNormals = false;
     bool visualizeCurvature = false;
-    bool outwardNormals = false;
+    bool visualizeStability = false;
     bool showControlPoints = true;
     bool showControlCurve = true;
     bool normalHandles = true;
@@ -36,19 +36,19 @@ typedef struct Settings {
     bool edgeTangentSample = true;
     bool convexitySplit = true;
     bool areaWeightedKnot = false;
-    bool tessellate = true;
-    bool normalizeNormals = true;
+    bool tessellate = false;
+    float knotTension = 0;
 
     // UI related constants
     float normalLength = 0.15;
     float sizeCorrection = 500; // Used to enlarge the curve coordinates to fit in screen coordinates
     float selectRadius = 0.05;
-    float hoverRadius = 0.05;
     float deselectRadius = 0.05;
     float drawPointRadius = 8.0f;
     float selectedPointRadius = 12.0f;
     float curveLineWidth = 2.0f;
     float controlLineWidth = 1.0f;
+
 
     // UI Appearance
     QMatrix4x4 projectionMatrix;
@@ -59,5 +59,4 @@ typedef struct Settings {
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
 
-    float knotTension = 0;
 } Settings;

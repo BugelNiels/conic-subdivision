@@ -6,13 +6,18 @@ const float norm_length = 0.1f;
 
 uniform bool visualize_normals;
 uniform bool visualize_curvature;
+uniform bool stability_colors;
+uniform sampler1D colorMap;
 
 uniform vec3 normalColor;
 uniform vec3 lineColor;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+
 in vec2 norm_vs[];
+in float stability_vs[];
+
 out vec4 line_color;
 
 bool calcNormals = false;
@@ -24,6 +29,15 @@ bool calcNormals = false;
  * @param b Point a
  */
 void emitLine(vec4 b, vec4 a) {
+    gl_Position = projectionMatrix * viewMatrix * a;
+    EmitVertex();
+    gl_Position = projectionMatrix * viewMatrix * b;
+    EmitVertex();
+    EndPrimitive();
+}
+
+void emitLine(vec4 b, vec4 a, float u) {
+    line_color = vec4(texture(colorMap, u).xyz, 1);
     gl_Position = projectionMatrix * viewMatrix * a;
     EmitVertex();
     gl_Position = projectionMatrix * viewMatrix * b;
@@ -76,13 +90,15 @@ void main() {
 
 
     // Emit the curve itself
-    // we are drawing most lines multiple times, but this ensures the lines
-    // from/to the first/last vertex are drawn properly
-    line_color = vec4(lineColor, 1);
-    //    emitLine(p0, p1);
-    emitLine(p1, p2);
-    //    emitLine(p2, p3);
+    if (stability_colors) {
+        emitLine(p1, p2, stability_vs[1]);
+        line_color = vec4(lineColor, 1);
+    } else {
+        line_color = vec4(lineColor, 1);
+        emitLine(p1, p2);
+    }
 
+    line_color = vec4(lineColor, 1);
     vec2 n1 = calcNormals ? calcNormal(p0, p1, p2) : -norm_vs[1];
     vec2 n2 = calcNormals ? calcNormal(p1, p2, p3) : -norm_vs[2];
     if (visualize_normals) {

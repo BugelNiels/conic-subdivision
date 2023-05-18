@@ -1,6 +1,7 @@
 #include "curverenderer.hpp"
 
 #include "core/settings.hpp"
+#include "util/colormap.hpp"
 
 
 CurveRenderer::CurveRenderer(Settings *settings) : Renderer(settings) {
@@ -11,7 +12,9 @@ CurveRenderer::~CurveRenderer() {
     gl->glDeleteVertexArrays(1, &vao_);
     gl->glDeleteBuffers(1, &vbo_coords_);
     gl->glDeleteBuffers(1, &vbo_norms_);
+    gl->glDeleteBuffers(1, &vbo_stab_);
     gl->glDeleteBuffers(1, &ibo_);
+    delete texture_;
 }
 
 void CurveRenderer::initShaders() {
@@ -36,8 +39,26 @@ void CurveRenderer::initBuffers() {
     gl->glEnableVertexAttribArray(1);
     gl->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+    gl->glGenBuffers(1, &vbo_stab_);
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_stab_);
+    gl->glEnableVertexAttribArray(2);
+    gl->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+
     gl->glGenBuffers(1, &ibo_);
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
+
+
+    ColorMap colMap;
+    auto colMapVals = colMap.getColorMap(settings->style.colorMapName);
+
+    texture_ = new QOpenGLTexture(QOpenGLTexture::Target1D);
+    texture_->setFormat(QOpenGLTexture::RGB32F);  // Adjust the format as needed
+    texture_->setSize(colMapVals.size());
+    texture_->allocateStorage(QOpenGLTexture::RGB, QOpenGLTexture::Float32);
+    texture_->setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, colMapVals.data());
+    texture_->setWrapMode(QOpenGLTexture::ClampToEdge);
+    texture_->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+    texture_->bind();
 
     // unbind
     gl->glBindVertexArray(0);
@@ -46,12 +67,16 @@ void CurveRenderer::initBuffers() {
 void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     QVector<QVector2D> coords;
     QVector<QVector2D> normals;
+    QVector<float> stability;
     if (sc.getSubdivLevel() == 0) {
         coords = sc.getNetCoords();
         normals = sc.getNetNormals();
+        stability.resize(coords.size());
+        stability.fill(0);
     } else {
         coords = sc.getCurveCoords();
         normals = sc.getCurveNormals();
+        stability = sc.getStabilityVals();
     }
     if (coords.size() == 0) {
         vboSize_ = 0;
@@ -66,6 +91,10 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     gl->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals.size(),
                      normals.data(), GL_DYNAMIC_DRAW);
 
+    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_stab_);
+    gl->glBufferData(GL_ARRAY_BUFFER, sizeof(float) * stability.size(),
+                     stability.data(), GL_DYNAMIC_DRAW);
+
     QVector<int> indices(coords.size() + 2);
     for (int i = 0; i < coords.size(); i++) {
         indices.append(i);
@@ -74,7 +103,7 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
         indices.prepend(coords.size() - 1);
         indices.append(0);
         indices.append(1);
-        if(coords.size() > 2) {
+        if (coords.size() > 2) {
             indices.append(2);
         }
     } else {
@@ -97,8 +126,12 @@ void CurveRenderer::draw() {
                             settings->visualizeNormals);
     shader->setUniformValue(shader->uniformLocation("visualize_curvature"),
                             settings->visualizeCurvature);
+    shader->setUniformValue(shader->uniformLocation("stability_colors"),
+                            settings->visualizeStability);
     shader->setUniformValue(shader->uniformLocation("viewMatrix"),
                             settings->viewMatrix);
+
+    shader->setUniformValue(shader->uniformLocation("colorMap"), 0);
 
     gl->glLineWidth(settings->curveLineWidth);
     QColor qCol = settings->style.smoothCurveCol;

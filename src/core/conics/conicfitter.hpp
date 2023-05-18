@@ -9,13 +9,15 @@
 
 class ConicFitter {
 public:
-    ConicFitter();
+    ConicFitter(const Settings &settings);
 
     QVector<double> fitConic(const QVector<QVector2D> &coords,
-                             const QVector<QVector2D> &normals,
-                             const Settings &settings);
+                             const QVector<QVector2D> &normals);
+    float stability();
 
 private:
+    const Settings& settings_;
+    float stability_ = 0;
     int numPoints_;
     int numNormals_;
     int numConstraints_;

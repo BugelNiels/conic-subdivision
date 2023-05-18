@@ -28,14 +28,17 @@ public:
 
     void operator+=(const Conic &other);
 
+    float getStability();
+
 private:
+    float stability_ = 0;
     QMatrix4x4 Q_;
     bool hasSolution_;
+    const Settings &settings_;
 
     bool fitConic(const QVector<QVector2D> &coords,
                   const QVector<QVector2D> &normals, const Settings &settings);
 
     QVector2D conicNormal(const QVector2D &p, const QVector2D &rd) const;
 
-    const Settings &settings_;
 };
