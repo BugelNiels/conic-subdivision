@@ -44,7 +44,7 @@ private:
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
     initAEigen(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals) const;
 
-    QVector<double> solveLinSystem(const Eigen::MatrixXd &A) const;
+    QVector<double> solveLinSystem(const Eigen::MatrixXd &A);
 
     QVector<double> vecToQVecEigen(const Eigen::VectorXd &res) const;
 };

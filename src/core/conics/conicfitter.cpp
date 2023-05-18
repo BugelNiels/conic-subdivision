@@ -3,7 +3,7 @@
 #include <Eigen/SVD>
 #include <Eigen/Eigen>
 
-#define ARMADILLO
+//#define ARMADILLO
 
 ConicFitter::ConicFitter(const Settings &settings) : settings_(settings) {}
 
@@ -110,7 +110,6 @@ QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
     arma::mat V;
 
     bool hasSolution = svd(U, S, V, A);
-
     if (hasSolution) {
         return vecToQVec(V.col(V.n_cols - 1));
     }
@@ -195,11 +194,13 @@ QVector<double> ConicFitter::vecToQVecEigen(const Eigen::VectorXd &res) const {
     return coefs;
 }
 
-QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) const {
+QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
     int idx = V.cols() - 1;
     Eigen::VectorXd eigenVec = V.col(idx);
+    stability_ = svd.singularValues()(0)
+                  / svd.singularValues()(svd.singularValues().size()-1);
     if (svd.singularValues()(idx) > 1e-12) {
         return vecToQVecEigen(eigenVec);
     }
@@ -227,7 +228,6 @@ QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
 #ifdef ARMADILLO
     auto A = initA(coords, normals);
     stability_ = arma::cond(A);
-    qDebug() << stability_;
     return solveLinSystem(initA(coords, normals));
 #else
     return solveLinSystem(initAEigen(coords, normals));
