@@ -57,7 +57,7 @@ public:
     void applySubdivision();
 
 private:
-    int subdivisionLevel_;
+    int subdivisionLevel_ = 0;
     bool closed_ = false;
 
     QVector<QVector2D> curveCoords_;
@@ -66,7 +66,7 @@ private:
 
     QVector<QVector2D> netCoords_;
     QVector<QVector2D> netNormals_;
-    Settings *settings_;
+    Settings *settings_ = nullptr;
 
     void subdivide(const QVector<QVector2D> &points,
                    const QVector<QVector2D> &normals, int level);

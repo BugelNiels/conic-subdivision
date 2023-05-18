@@ -14,6 +14,9 @@ uniform mat4 viewMatrix;
 in vec2 norm_vs[];
 out vec4 line_color;
 
+bool calcNormals = true;
+
+
 /**
  * Emits a line from point a to point b
  *
@@ -26,6 +29,25 @@ void emitLine(vec4 b, vec4 a) {
   gl_Position = projectionMatrix * viewMatrix * b;
   EmitVertex();
   EndPrimitive();
+}
+
+vec2 calcNormal(vec4 a, vec4 b, vec4 c) {
+  if (a == b) {
+    vec2 normal = c.xy - b.xy;
+    normal.x *= 1;
+    return normal.yx;
+  }
+  if (b == c) {
+    vec2 normal = b.xy - a.xy;
+    normal.x *= 1;
+    return normal.yx;
+  }
+  vec2 t1 = a.xy - b.xy;
+  vec2 t2 = b.xy - c.xy;
+
+  vec2 n = t1 + t2;
+  n.x *= -1;
+  return n.yx;
 }
 
 void emitNormal(vec4 a, vec4 b, vec4 c, vec2 norm) {
@@ -55,8 +77,14 @@ void main() {
   emitLine(p2, p3);
 
   if(visualize_normals) {
-    emitNormal(p0, p1, p2, norm_vs[1]);
-    emitNormal(p1, p2, p3, norm_vs[2]);
+    if(calcNormals) {
+
+      emitNormal(p0, p1, p2, calcNormal(p0, p1, p2));
+      emitNormal(p1, p2, p3, calcNormal(p1, p2, p3));
+    } else {
+      emitNormal(p0, p1, p2, norm_vs[1]);
+      emitNormal(p1, p2, p3, norm_vs[2]);
+    }
   }
 
 }

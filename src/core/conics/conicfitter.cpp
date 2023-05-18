@@ -3,8 +3,9 @@
 #include <Eigen/SVD>
 #include <Eigen/Eigen>
 
-ConicFitter::ConicFitter() {}
+#define ARMADILLO
 
+ConicFitter::ConicFitter() {}
 
 
 double ConicFitter::getPointWeight(int index) const {
