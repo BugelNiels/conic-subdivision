@@ -15,7 +15,8 @@ typedef struct Settings {
 
     // View Settings
     bool visualizeNormals = false;
-    bool outwardNormals = false;
+    bool visualizeCurvature = false;
+    bool visualizeStability = false;
     bool showControlPoints = true;
     bool showControlCurve = true;
     bool normalHandles = true;
@@ -35,7 +36,8 @@ typedef struct Settings {
     bool edgeTangentSample = true;
     bool convexitySplit = true;
     bool areaWeightedKnot = false;
-    bool tessellate = true;
+    bool tessellate = false;
+    float knotTension = 0;
 
     // UI related constants
     float normalLength = 0.15;
@@ -47,8 +49,14 @@ typedef struct Settings {
     float curveLineWidth = 2.0f;
     float controlLineWidth = 1.0f;
 
+
     // UI Appearance
     QMatrix4x4 projectionMatrix;
+    QMatrix4x4 viewMatrix;
     conics::ui::StylePreset style;
+
+    // UI Controls
+    float zoomStrength = 1.2;
+    float dragSensitivity = 1;
 
 } Settings;

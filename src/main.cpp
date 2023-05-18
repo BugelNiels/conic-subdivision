@@ -47,8 +47,8 @@ void test() {
     Settings settings;
     settings.pointWeight = 100000;
     settings.normalWeight = 100000;
-    ConicFitter fitter = ConicFitter();
-    QVector<double> foundCoefs = fitter.fitConic(coords, normals, settings);
+    ConicFitter fitter = ConicFitter(settings);
+    QVector<double> foundCoefs = fitter.fitConic(coords, normals);
     qDebug() << foundCoefs;
 }
 

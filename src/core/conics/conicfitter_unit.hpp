@@ -13,8 +13,10 @@ public:
     QVector<double> fitConic(const QVector<QVector2D> &coords,
                              const QVector<QVector2D> &normals,
                              const Settings &settings);
+    float stability();
 
 private:
+    float stability_ = 0;
     int numPoints_;
     int numNormals_;
     int numConstraints_;

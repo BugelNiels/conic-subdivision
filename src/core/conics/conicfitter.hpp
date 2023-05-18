@@ -2,19 +2,22 @@
 
 #include <QVector2D>
 #include <QVector>
-#include <armadillo>
 
 #include "src/core/settings.hpp"
+#include <armadillo>
+#include <Eigen/Core>
 
 class ConicFitter {
 public:
-    ConicFitter();
+    ConicFitter(const Settings &settings);
 
     QVector<double> fitConic(const QVector<QVector2D> &coords,
-                             const QVector<QVector2D> &normals,
-                             const Settings &settings);
+                             const QVector<QVector2D> &normals);
+    float stability();
 
 private:
+    const Settings& settings_;
+    float stability_ = 0;
     int numPoints_;
     int numNormals_;
     int numConstraints_;
@@ -37,4 +40,11 @@ private:
 
     arma::mat initA(const QVector<QVector2D> &coords,
                     const QVector<QVector2D> &normals) const;
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
+    initAEigen(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals) const;
+
+    QVector<double> solveLinSystem(const Eigen::MatrixXd &A) const;
+
+    QVector<double> vecToQVecEigen(const Eigen::VectorXd &res) const;
 };

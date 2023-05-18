@@ -39,8 +39,15 @@ protected:
 
     void mousePressEvent(QMouseEvent *event) override;
 
+    void keyReleaseEvent(QKeyEvent *event) override;
+
+    void mouseReleaseEvent(QMouseEvent *event) override;
+
     void mouseMoveEvent(QMouseEvent *event) override;
+
     void mouseDoubleClickEvent(QMouseEvent *event) override;
+
+    void wheelEvent(QWheelEvent *event) override;
 
     void keyPressEvent(QKeyEvent *event) override;
 
@@ -51,6 +58,8 @@ private:
 
     bool attemptVertexSelect(const QVector2D &scenePos);
 
+    void updateCursor(const Qt::KeyboardModifiers &flags);
+
     Settings *settings_;
     QOpenGLDebugLogger *debugLogger_;
 
@@ -59,9 +68,21 @@ private:
 
     std::shared_ptr<SubdivisionCurve> subCurve_;
 
+    bool dragging_ = false;
+
+
+    QVector2D oldMouseCoords_;
+    QMatrix4x4 toWorldCoordsMatrix_;
+
 private slots:
 
     void onMessageLogged(QOpenGLDebugMessage message);
+
+
+    void resetViewMatrix();
+
+    void translationUpdate(const QVector2D &scenePos, const QPointF &mousePos);
+
 
 };
 

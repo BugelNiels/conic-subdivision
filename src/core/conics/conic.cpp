@@ -20,11 +20,11 @@ QMatrix4x4 coefsToMatrix(QVector<double> coefs) {
     return QMatrix4x4(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
 }
 
-Conic::Conic() : hasSolution_(false) { Q_.fill(0); }
+Conic::Conic(const Settings &settings) : hasSolution_(false), settings_(settings) { Q_.fill(0); }
 
 Conic::Conic(const QVector<QVector2D> &coords,
              const QVector<QVector2D> &normals, const Settings &settings)
-        : Conic() {
+        : Conic(settings) {
     hasSolution_ = fitConic(coords, normals, settings);
 }
 
@@ -47,11 +47,13 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
                      const Settings &settings) {
     QVector<double> foundCoefs;
     if (settings.normalizedSolve) {
-        UnitConicFitter fitter = UnitConicFitter();
+        UnitConicFitter fitter;
         foundCoefs = fitter.fitConic(coords, normals, settings);
+        stability_ = fitter.stability();
     } else {
-        ConicFitter fitter = ConicFitter();
-        foundCoefs = fitter.fitConic(coords, normals, settings);
+        ConicFitter fitter(settings);
+        foundCoefs = fitter.fitConic(coords, normals);
+        stability_ = fitter.stability();
     }
     if (foundCoefs.isEmpty()) {
         return false;
@@ -124,7 +126,7 @@ Conic Conic::average(const Conic &other) const {
 }
 
 Conic Conic::operator+(const Conic &other) const {
-    Conic q;
+    Conic q(settings_);
     q.hasSolution_ = true;
     if (isValid() && other.isValid()) {
         q.Q_ = Q_ + other.Q_;
@@ -146,4 +148,8 @@ void Conic::operator+=(const Conic &other) {
         Q_ = other.Q_;
         hasSolution_ = true;
     }
+}
+
+float Conic::getStability() {
+    return stability_;
 }

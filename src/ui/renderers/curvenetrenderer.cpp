@@ -106,6 +106,8 @@ void CurveNetRenderer::draw() {
                      coords_.data(), GL_DYNAMIC_DRAW);
 
     shader->setUniformValue("projectionMatrix", settings->projectionMatrix);
+    shader->setUniformValue(shader->uniformLocation("viewMatrix"),
+                            settings->viewMatrix);
 
     // Control Curve
     if (settings->showControlCurve) {
@@ -150,8 +152,6 @@ void CurveNetRenderer::draw() {
             gl->glDrawArrays(GL_POINTS, settings->selectedNormal, 1);
         }
     }
-
-    gl->glBindVertexArray(0);
 
     shader->release();
 }
