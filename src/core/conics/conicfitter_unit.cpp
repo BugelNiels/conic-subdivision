@@ -124,18 +124,18 @@ arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
  * zeros, an empty vector is returned.
  */
 QVector<double> UnitConicFitter::vecToQVec(const arma::vec &res) const {
-    QVector<double> coefs;
+    QVector<double> coefficients;
     int numZeros = 0;
     for (int i = 0; i < numUnknowns_; i++) {
-        coefs.append(res(i));
+        coefficients.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
     if (numZeros == numUnknowns_) {
-        return QVector<double>();
+        return {};
     }
-    return coefs;
+    return coefficients;
 }
 
 QVector<double> UnitConicFitter::solveLinSystem(const arma::mat &A,
@@ -149,7 +149,7 @@ QVector<double> UnitConicFitter::solveLinSystem(const arma::mat &A,
     if (hasSolution) {
         return vecToQVec(result);
     }
-    return QVector<double>();
+    return {};
 }
 
 /**
@@ -212,6 +212,6 @@ QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
     return fitQuadricConstrained(coords, normals);
 }
 
-float UnitConicFitter::stability() {
+float UnitConicFitter::stability() const {
     return stability_;
 }

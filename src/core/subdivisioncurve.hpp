@@ -12,11 +12,12 @@ class Settings;
  */
 class SubdivisionCurve {
 public:
-    SubdivisionCurve();
 
-    explicit SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, bool closed = true);
+    explicit SubdivisionCurve(const Settings &settings);
 
-    SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals, bool closed = true);
+    explicit SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, bool closed = true);
+
+    SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, QVector<QVector2D> normals, bool closed = true);
 
     inline QVector<QVector2D> getNetCoords() { return netCoords_; }
 
@@ -26,11 +27,11 @@ public:
 
     inline QVector<QVector2D> getCurveNormals() { return curveNormals_; }
 
-    inline int getSubdivLevel() { return subdivisionLevel_; }
+    inline int getSubdivLevel() const { return subdivisionLevel_; }
 
-    int findClosestVertex(const QVector2D &p, const float maxDist);
+    int findClosestVertex(const QVector2D &p, float maxDist);
 
-    int findClosestNormal(const QVector2D &p, const float maxDist);
+    int findClosestNormal(const QVector2D &p, float maxDist);
 
     int addPoint(QVector2D p);
 
@@ -61,6 +62,8 @@ public:
     QVector<float> getStabilityVals() const;
 
 private:
+    const Settings &settings_;
+
     int subdivisionLevel_ = 0;
     bool closed_ = false;
 
@@ -71,7 +74,6 @@ private:
 
     QVector<QVector2D> netCoords_;
     QVector<QVector2D> netNormals_;
-    Settings *settings_ = nullptr;
 
     void subdivide(const QVector<QVector2D> &points,
                    const QVector<QVector2D> &normals,

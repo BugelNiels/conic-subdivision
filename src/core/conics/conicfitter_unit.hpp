@@ -13,7 +13,8 @@ public:
     QVector<double> fitConic(const QVector<QVector2D> &coords,
                              const QVector<QVector2D> &normals,
                              const Settings &settings);
-    float stability();
+
+    float stability() const;
 
 private:
     float stability_ = 0;
@@ -35,9 +36,6 @@ private:
 
     QVector<double> vecToQVec(const arma::vec &res) const;
 
-    QVector<double> solveLinSystem(const arma::mat &A) const;
-
-private:
     QVector<double> solveLinSystem(const arma::mat &A, const arma::mat &B) const;
 
     QVector<double> fitQuadricConstrained(

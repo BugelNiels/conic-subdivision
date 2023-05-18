@@ -33,7 +33,7 @@ conics::ui::StylePreset conics::ui::getDarkModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName= ColorMapName::KINDLMANN;
+    preset.colorMapName = ColorMapName::KINDLMANN;
     return preset;
 }
 
@@ -62,6 +62,6 @@ conics::ui::StylePreset conics::ui::getLightModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName= ColorMapName::SMOOTH_COOL_WARM;
+    preset.colorMapName = ColorMapName::SMOOTH_COOL_WARM;
     return preset;
 }

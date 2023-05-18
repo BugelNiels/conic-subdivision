@@ -14,15 +14,18 @@ class Settings;
  */
 class Renderer {
 public:
-    Renderer(Settings *settings);
-
-    Renderer(QOpenGLFunctions_4_1_Core *functions, Settings *settings);
+    explicit Renderer(const Settings &settings);
 
     virtual ~Renderer();
 
     void init(QOpenGLFunctions_4_1_Core *f);
 
 protected:
+    const Settings &settings_;
+
+    QMap<ShaderType, QOpenGLShaderProgram *> shaders_;
+    QOpenGLFunctions_4_1_Core *gl_ = nullptr;
+
     virtual void initShaders() = 0;
 
     virtual void initBuffers() = 0;
@@ -31,7 +34,4 @@ protected:
 
     QOpenGLShaderProgram *constructPolyLineShader() const;
 
-    QMap<ShaderType, QOpenGLShaderProgram *> shaders;
-    QOpenGLFunctions_4_1_Core *gl = nullptr;
-    Settings *settings;
 };

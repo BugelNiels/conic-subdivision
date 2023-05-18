@@ -1,22 +1,20 @@
 #include "conicpresets.hpp"
 
-conics::ConicPresets::ConicPresets(Settings *settings) : settings_(settings) {
+conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(settings) {
 
-    presets_["Blank"] = getBlank();
-    presets_["Line"] = getLine();
-    presets_["Step"] = getStair();
-    presets_["Star"] = getStar();
-    presets_["Pentagon"] = getPentagon();
-    presets_["Basis"] = getBasis();
-    presets_["G"] = getG();
-    presets_["Circle"] = getCircle(5, 0.5f);
-    presets_["Ellipse"] = getEllipse(5, 0.8f, 0.3f);
+    presets_["Blank"] = std::make_shared<SubdivisionCurve>(getBlank());
+    presets_["Line"] = std::make_shared<SubdivisionCurve>(getLine());
+    presets_["Step"] = std::make_shared<SubdivisionCurve>(getStair());
+    presets_["Star"] = std::make_shared<SubdivisionCurve>(getStar());
+    presets_["Pentagon"] = std::make_shared<SubdivisionCurve>(getPentagon());
+    presets_["Basis"] = std::make_shared<SubdivisionCurve>(getBasis());
+    presets_["G"] = std::make_shared<SubdivisionCurve>(getG());
+    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(5, 0.5f));
+    presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8f, 0.3f));
 }
 
 
-conics::ConicPresets::~ConicPresets() {
-
-}
+conics::ConicPresets::~ConicPresets() = default;
 
 SubdivisionCurve conics::ConicPresets::getBlank() {
     QVector<QVector2D> netCoords;
@@ -47,7 +45,7 @@ SubdivisionCurve conics::ConicPresets::getStar() {
     QVector<QVector2D> netCoords;
     int numPoints = 5;
     netCoords.reserve(numPoints * 2);
-    int radius = 1;
+    float radius = 1;
 
     for (int i = 0; i < numPoints; ++i) {
         // Outer points
@@ -58,8 +56,8 @@ SubdivisionCurve conics::ConicPresets::getStar() {
 
         // Inner points
         theta += M_PI / numPoints;
-        x = 0.3 * radius * std::cos(theta);
-        y = 0.3 * radius * std::sin(theta);
+        x = 0.3f * radius * std::cos(theta);
+        y = 0.3f * radius * std::sin(theta);
         netCoords.append(QVector2D(x, y));
     }
     return SubdivisionCurve(settings_, netCoords, true);
@@ -146,7 +144,7 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, float width, fl
 
 
 SubdivisionCurve conics::ConicPresets::getPreset(const QString &name) const {
-    return presets_[name];
+    return *presets_[name];
 }
 
 QList<QString> conics::ConicPresets::getPresetNames() const {

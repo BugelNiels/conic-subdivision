@@ -11,23 +11,26 @@
 #define MAX(A, B) (A) > (B) ? (A) : (B)
 #define EPSILON 0.0001
 
-/**
- * @brief SubdivisionCurve::SubdivisionCurve Creates a new subdivision curve.
- */
-SubdivisionCurve::SubdivisionCurve() = default;
+
+SubdivisionCurve::SubdivisionCurve(const Settings &settings) : closed_(true),
+                                                               settings_(settings) {
+
+}
 
 
-SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, bool closed) : closed_(closed),
-                                                                                                 netCoords_(std::move(
-                                                                                                         coords)),
-                                                                                                 settings_(settings) {
+SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, bool closed) : closed_(closed),
+                                                                                                       netCoords_(
+                                                                                                               std::move(
+                                                                                                                       coords)),
+                                                                                                       settings_(
+                                                                                                               settings) {
     netNormals_ = calcNormals(netCoords_);
     customNormals_.resize(netNormals_.size());
     customNormals_.fill(false);
 }
 
 
-SubdivisionCurve::SubdivisionCurve(Settings *settings, QVector<QVector2D> coords, QVector<QVector2D> normals,
+SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, QVector<QVector2D> normals,
                                    bool closed)
         : closed_(closed), netCoords_(std::move(coords)),
           netNormals_(std::move(normals)),
@@ -85,7 +88,7 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<QVector2D> &coords, QVect
     QVector2D a = coords[prevIdx];
     QVector2D b = coords[i];
     QVector2D c = coords[nextIdx];
-    if (settings_->circleNormals) {
+    if (settings_.circleNormals) {
         if (a == b) {
             QVector2D normal = c - b;
             normal.setX(normal.x() * -1);
@@ -108,13 +111,13 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<QVector2D> &coords, QVect
             QVector2D oscCircleCenter = QVector2D(ux, uy);
             normals[i] = (oscCircleCenter - b).normalized();
 
-            QVector2D check = calcNormal(a, b, c, settings_->areaWeightedKnot);
+            QVector2D check = calcNormal(a, b, c, settings_.areaWeightedKnot);
             if (QVector2D::dotProduct(check, normals[i]) < 0) {
                 normals[i] *= -1;
             }
         }
     } else {
-        normals[i] = calcNormal(a, b, c, settings_->areaWeightedKnot);
+        normals[i] = calcNormal(a, b, c, settings_.areaWeightedKnot);
     }
 }
 
@@ -248,14 +251,13 @@ int SubdivisionCurve::findInsertIdx(const QVector2D &p) {
     return ptIndex;
 }
 
-// Returns index of the point normal thingie
+// Returns index of the point normal handle
 int SubdivisionCurve::findClosestNormal(const QVector2D &p, const float maxDist) {
     int ptIndex = -1;
     float currentDist, minDist = 4;
 
-    // TODO: handle subdivided normals
     for (int k = 0; k < netCoords_.size(); k++) {
-        QVector2D normPos = netCoords_[k] + settings_->normalLength * netNormals_[k];
+        QVector2D normPos = netCoords_[k] + settings_.normalLength * netNormals_[k];
         currentDist = normPos.distanceToPoint(p);
         if (currentDist < minDist) {
             minDist = currentDist;
@@ -282,8 +284,8 @@ void SubdivisionCurve::subdivide(int level) {
         return;
     }
     // TODO: extract subdivision into seperate file/class
-    if (settings_->tessellate) {
-        if (settings_->convexitySplit) {
+    if (settings_.tessellate) {
+        if (settings_.convexitySplit) {
             QVector<QVector2D> coords;
             QVector<QVector2D> norms;
             QVector<bool> customNorms;
@@ -293,7 +295,7 @@ void SubdivisionCurve::subdivide(int level) {
             tessellate(netCoords_, netNormals_, level);
         }
     } else {
-        if (settings_->convexitySplit) {
+        if (settings_.convexitySplit) {
             knotSubdivide(level);
         } else {
             stability.resize(netCoords_.size());
@@ -378,14 +380,14 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
             patchNormals.append(normals[index]);
         }
 
-        Conic conic(patchCoords, patchNormals, *settings_);
+        Conic conic(patchCoords, patchNormals, settings_);
 
         int prevIdx = (i - 1 + n) % n;
         int nextIdx = (i + 1) % n;
 
         const QVector2D origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0f;
         QVector2D dir;
-        if (settings_->edgeTangentSample) {
+        if (settings_.edgeTangentSample) {
             dir = newPoints[prevIdx] - newPoints[nextIdx];
             dir.normalize();
             dir = {-dir.y(), dir.x()};
@@ -405,7 +407,7 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
         newNormals[i] = sampledNormal;
         newStabilities[i] = conic.getStability();
     }
-    if (settings_->recalculateNormals) {
+    if (settings_.recalculateNormals) {
         newNormals = calcNormals(newPoints);
     }
     subdivide(newPoints, newNormals, newStabilities, level - 1);
@@ -466,13 +468,13 @@ void SubdivisionCurve::tessellate(const QVector<QVector2D> &points,
             patchNormals.append(normals[index]);
         }
 
-        Conic conic(patchCoords, patchNormals, *settings_);
+        Conic conic(patchCoords, patchNormals, settings_);
 
         int prevIdx = i;
         int nextIdx = (i + 1 + n) % n;
 
         QVector2D dir;
-        if (settings_->edgeTangentSample) {
+        if (settings_.edgeTangentSample) {
             dir = points[prevIdx] - points[nextIdx];
             dir.normalize();
             dir = {-dir.y(), dir.x()};
@@ -590,7 +592,7 @@ void SubdivisionCurve::knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> 
             knotNormal *= -1;
             knotNormal.normalize();
 
-            knotNormal = (1 - settings_->knotTension) * knotNormal + settings_->knotTension * reflectVec;
+            knotNormal = (1 - settings_.knotTension) * knotNormal + settings_.knotTension * reflectVec;
             knotNormal.normalize();
 
             coords.append(midPoint);

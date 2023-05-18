@@ -27,8 +27,8 @@ double ConicFitter::getNormalWeight(int index) const {
 }
 
 
-inline arma::rowvec pointEq(const QVector2D &coord, int numUnkowns) {
-    arma::rowvec row = arma::zeros(1, numUnkowns);
+inline arma::rowvec pointEq(const QVector2D &coord, int numUnknowns) {
+    arma::rowvec row = arma::zeros(1, numUnknowns);
     double x = coord.x();
     double y = coord.y();
     row(0) = x * x;
@@ -90,18 +90,18 @@ arma::mat ConicFitter::initA(const QVector<QVector2D> &coords,
 }
 
 QVector<double> ConicFitter::vecToQVec(const arma::vec &res) const {
-    QVector<double> coefs;
+    QVector<double> coefficients;
     int numZeros = 0;
     for (int i = 0; i < numUnknowns_; i++) {
-        coefs.append(res(i));
+        coefficients.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
     if (numZeros == numUnknowns_) {
-        return QVector<double>();
+        return {};
     }
-    return coefs;
+    return coefficients;
 }
 
 QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
@@ -113,12 +113,12 @@ QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
     if (hasSolution) {
         return vecToQVec(V.col(V.n_cols - 1));
     }
-    return QVector<double>();
+    return {};
 }
 
 
-inline Eigen::RowVectorXd pointEqEigen(const QVector2D &coord, int numUnkowns) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnkowns);
+inline Eigen::RowVectorXd pointEqEigen(const QVector2D &coord, int numUnknowns) {
+    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
     double x = coord.x();
     double y = coord.y();
     row(0) = x * x;
@@ -180,37 +180,36 @@ Eigen::MatrixXd ConicFitter::initAEigen(const QVector<QVector2D> &coords,
 }
 
 QVector<double> ConicFitter::vecToQVecEigen(const Eigen::VectorXd &res) const {
-    QVector<double> coefs;
+    QVector<double> coefficients;
     int numZeros = 0;
     for (int i = 0; i < numUnknowns_; i++) {
-        coefs.append(res(i));
+        coefficients.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
     if (numZeros == numUnknowns_) {
-        return QVector<double>();
+        return {};
     }
-    return coefs;
+    return coefficients;
 }
 
 QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
-    int idx = V.cols() - 1;
+    int idx = int(V.cols() - 1);
     Eigen::VectorXd eigenVec = V.col(idx);
-    stability_ = svd.singularValues()(0)
-                  / svd.singularValues()(svd.singularValues().size()-1);
+    stability_ = float(svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1));
     if (svd.singularValues()(idx) > 1e-12) {
         return vecToQVecEigen(eigenVec);
     }
-    return QVector<double>();
+    return {};
 }
 
 QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
                                       const QVector<QVector2D> &normals) {
-    numPoints_ = coords.size();
-    numNormals_ = normals.size();
+    numPoints_ = int(coords.size());
+    numNormals_ = int(normals.size());
     if (settings_.outerNormalWeight == 0.0 || settings_.outerPointWeight == 0.0) {
         numNormals_ -= 2;
         numPoints_ -= 2;
@@ -235,12 +234,12 @@ QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
 }
 
 float ConicFitter::stability() {
-    float minVal = 10 * std::max(settings_.pointWeight, settings_.normalWeight);
+    float minVal = 10.0f * float(std::max(settings_.pointWeight, settings_.normalWeight));
     float maxVal = 1.0e9f + minVal;
-    float logMin = log10(minVal);
-    float logMax = log10(maxVal);
+    float logMin = std::log10(minVal);
+    float logMax = std::log10(maxVal);
 
-    float logValue = log10(stability_);
+    float logValue = std::log10(stability_);
 
     float mappedValue = (logValue - logMin) / (logMax - logMin);
     return std::clamp(mappedValue, 0.0f, 1.0f);

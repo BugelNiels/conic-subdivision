@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QSpinBox>
 #include "src/core/conics/conicpresets.hpp"
+#include "core/settings.hpp"
 
 class MainView;
 
@@ -18,7 +19,7 @@ public:
 private:
 
     conics::ConicPresets *presets_;
-    Settings *settings_;
+    Settings settings_;
     MainView *mainView_;
 
     QMenu *getPresetMenu();

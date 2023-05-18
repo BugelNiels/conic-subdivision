@@ -41,7 +41,7 @@ typedef struct Settings {
 
     // UI related constants
     float normalLength = 0.15;
-    float sizeCorrection = 500; // Used to enlarge the curve coordinates to fit in screen coordinates
+    float initialScale = 400; // Used to enlarge the curve coordinates to fit in screen coordinates
     float selectRadius = 0.05;
     float deselectRadius = 0.05;
     float drawPointRadius = 8.0f;

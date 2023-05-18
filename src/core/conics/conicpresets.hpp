@@ -9,16 +9,18 @@ namespace conics {
     class ConicPresets {
 
     public:
-        ConicPresets(Settings *settings);
+        explicit ConicPresets(const Settings &settings);
+
         ~ConicPresets();
 
-        SubdivisionCurve getPreset(const QString& name) const;
+        SubdivisionCurve getPreset(const QString &name) const;
+
         QList<QString> getPresetNames() const;
 
-
     private:
-        Settings *settings_;
-        QMap<QString, SubdivisionCurve> presets_;
+        const Settings &settings_;
+
+        QMap<QString, std::shared_ptr<SubdivisionCurve>> presets_;
 
         SubdivisionCurve getPentagon();
 
