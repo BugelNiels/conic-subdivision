@@ -13,6 +13,7 @@
 #include <QFileDialog>
 #include <QOpenGLPaintDevice>
 #include <QPushButton>
+#include <QSlider>
 
 #include "src/core/conics/conicpresets.hpp"
 #include "ui/stylepresets.hpp"
@@ -94,8 +95,21 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(applySubdivButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->applySubdivision();
         mainView_->recalculateCurve();
+        subdivStepsSpinBox->setValue(0);
     });
     vertLayout->addWidget(applySubdivButton);
+
+
+    auto *normSolveCheckBox = new QCheckBox("Normalized Solve");
+    normSolveCheckBox->setToolTip(
+            "<html><head/><body><p>Enabling this will try to fit a conic using the unit normal constraint. If this option is disabled, a separated scaling value for each normal is calculated.</p></body></html>"
+    );
+    normSolveCheckBox->setChecked(settings_->normalizedSolve);
+    connect(normSolveCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->normalizedSolve = toggled;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(normSolveCheckBox);
 
     auto *tessellateCheckBox = new QCheckBox("Tessellate");
     tessellateCheckBox->setToolTip(
@@ -107,6 +121,39 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(tessellateCheckBox);
+
+    vertLayout->addStretch();
+    auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
+    splitConvexityCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
+    );
+    splitConvexityCheckBox->setChecked(settings_->convexitySplit);
+    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_->convexitySplit = toggled;
+        mainView_->recalculateCurve();
+    });
+
+    auto *insertKnotsButton = new QPushButton("Insert Knots");
+    insertKnotsButton->setToolTip(
+            "<html><head/><body><p>If pressed, inserts knot points to improve convexity properties.</body></html>"
+    );
+    connect(insertKnotsButton, &QPushButton::pressed, [this] {
+        mainView_->getSubCurve()->insertKnots();
+        mainView_->recalculateCurve();
+    });
+    auto *tensionSlider = new QSlider(Qt::Horizontal);
+    tensionSlider->setToolTip(
+            "<html><head/><body><p>Changes how much the normals of newly inserted knot points gravitate to the normal orthogonal to the edge.</p></body></html>"
+    );
+    tensionSlider->setValue(settings_->knotTension * 100);
+    connect(tensionSlider, &QSlider::valueChanged, [this](int value) {
+        settings_->knotTension = value / 100.0f;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(splitConvexityCheckBox);
+    vertLayout->addWidget(new QLabel("Knot Tension:"));
+    vertLayout->addWidget(tensionSlider);
+    vertLayout->addWidget(insertKnotsButton);
 
     vertLayout->addStretch();
 
@@ -191,16 +238,6 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(outerNormWeightSpinBox);
 
     vertLayout->addStretch();
-    auto *normSolveCheckBox = new QCheckBox("Normalized Solve");
-    normSolveCheckBox->setToolTip(
-            "<html><head/><body><p>Enabling this will try to fit a conic using the unit normal constraint. If this option is disabled, a separated scaling value for each normal is calculated.</p></body></html>"
-    );
-    normSolveCheckBox->setChecked(settings_->normalizedSolve);
-    connect(normSolveCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_->normalizedSolve = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(normSolveCheckBox);
 
     auto *circleNormsCheckBox = new QCheckBox("Circle Normals");
     circleNormsCheckBox->setToolTip(
@@ -212,17 +249,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(circleNormsCheckBox);
-
-    auto *normalizeNormsCheckBox = new QCheckBox("Normalize Normals");
-    normalizeNormsCheckBox->setToolTip(
-            "<html><head/><body><p>If disabled, does not normalize the normals found by the conic.</p></body></html>"
-    );
-    normalizeNormsCheckBox->setChecked(settings_->normalizeNormals);
-    connect(normalizeNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_->normalizeNormals = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(normalizeNormsCheckBox);
 
     auto *lengthWeightedCheckBox = new QCheckBox("Length Weighted Normals");
     lengthWeightedCheckBox->setToolTip(
@@ -256,28 +282,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeSampleCheckBox);
-
-    auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
-    splitConvexityCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
-    );
-    splitConvexityCheckBox->setChecked(settings_->convexitySplit);
-    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_->convexitySplit = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(splitConvexityCheckBox);
-
-    auto *insertKnotsButton = new QPushButton("Insert Knots");
-    insertKnotsButton->setToolTip(
-            "<html><head/><body><p>If pressed, inserts knot points to improve convexity properties.</body></html>"
-    );
-    connect(insertKnotsButton, &QPushButton::pressed, [this] {
-        mainView_->getSubCurve()->insertKnots();
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(insertKnotsButton);
-
 
     vertLayout->addStretch();
     auto *dockWidget = new QDockWidget(this);
@@ -428,6 +432,16 @@ QMenu *MainWindow::getRenderMenu() {
     renderMenu->addAction(closedCurveAction);
 
     renderMenu->addSeparator();
+
+    auto *visualizeCurvatureAction = new QAction(QStringLiteral("Visualize Curvature"), renderMenu);
+    visualizeCurvatureAction->setCheckable(true);
+    visualizeCurvatureAction->setChecked(settings_->visualizeCurvature);
+    visualizeCurvatureAction->setShortcut(QKeySequence(Qt::Key_B));
+    connect(visualizeCurvatureAction, &QAction::triggered, [this](bool toggled) {
+        settings_->visualizeCurvature = toggled;
+        mainView_->updateBuffers();
+    });
+    renderMenu->addAction(visualizeCurvatureAction);
 
     auto *visualizeNormalsAction = new QAction(QStringLiteral("Visualize Normals"), renderMenu);
     visualizeNormalsAction->setCheckable(true);

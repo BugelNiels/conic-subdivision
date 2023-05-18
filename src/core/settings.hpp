@@ -15,6 +15,7 @@ typedef struct Settings {
 
     // View Settings
     bool visualizeNormals = false;
+    bool visualizeCurvature = false;
     bool outwardNormals = false;
     bool showControlPoints = true;
     bool showControlCurve = true;
@@ -42,6 +43,7 @@ typedef struct Settings {
     float normalLength = 0.15;
     float sizeCorrection = 500; // Used to enlarge the curve coordinates to fit in screen coordinates
     float selectRadius = 0.05;
+    float hoverRadius = 0.05;
     float deselectRadius = 0.05;
     float drawPointRadius = 8.0f;
     float selectedPointRadius = 12.0f;
@@ -57,4 +59,5 @@ typedef struct Settings {
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
 
+    float knotTension = 0;
 } Settings;

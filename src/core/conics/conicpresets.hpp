@@ -33,6 +33,10 @@ namespace conics {
         SubdivisionCurve getBlank();
 
         SubdivisionCurve getLine();
+
+        SubdivisionCurve getStair();
+
+        SubdivisionCurve getStar();
     };
 
 } // conics

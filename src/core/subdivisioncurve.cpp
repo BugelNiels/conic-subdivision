@@ -581,6 +581,10 @@ void SubdivisionCurve::knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> 
                        QVector2D::dotProduct(netNormals_[nextIdx], reflectVec) ? netNormals_[i] : netNormals_[nextIdx];
 
             QVector2D knotNormal = incident - 2 * (QVector2D::dotProduct(incident, reflectVec)) * reflectVec; // reflect
+            knotNormal *= -1;
+            knotNormal.normalize();
+
+            knotNormal = (1 - settings_->knotTension) * knotNormal + settings_->knotTension * reflectVec;
             knotNormal.normalize();
 
             coords.append(midPoint);
@@ -594,6 +598,7 @@ void SubdivisionCurve::applySubdivision() {
     netCoords_ = curveCoords_;
     netNormals_ = curveNormals_;
     customNormals_.resize(netCoords_.size());
+    subdivisionLevel_ = 0;
 }
 
 void SubdivisionCurve::insertKnots() {

@@ -109,9 +109,12 @@ QVector<double> ConicFitter::solveLinSystem(const arma::mat &A) const {
     arma::vec S;
     arma::mat V;
 
-    qDebug() << arma::cond(A);
+    float cond = arma::cond(A);
+    if(cond > 20000) {
+        // TODO: map to color map
+        qDebug() << cond;
+    }
 
-#pragma omp critical
     bool hasSolution = svd(U, S, V, A);
 
     if (hasSolution) {

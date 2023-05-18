@@ -4,6 +4,8 @@ conics::ConicPresets::ConicPresets(Settings *settings) : settings_(settings) {
 
     presets_["Blank"] = getBlank();
     presets_["Line"] = getLine();
+    presets_["Step"] = getStair();
+    presets_["Star"] = getStar();
     presets_["Pentagon"] = getPentagon();
     presets_["Basis"] = getBasis();
     presets_["G"] = getG();
@@ -26,6 +28,41 @@ SubdivisionCurve conics::ConicPresets::getLine() {
     netCoords.append(QVector2D(-0.75f, 0));
     netCoords.append(QVector2D(0.75f, 0));
     return SubdivisionCurve(settings_, netCoords, false);
+}
+
+SubdivisionCurve conics::ConicPresets::getStair() {
+    QVector<QVector2D> netCoords;
+    netCoords.append(QVector2D(-1, 1));
+    netCoords.append(QVector2D(1, 1));
+    netCoords.append(QVector2D(1, -1));
+    netCoords.append(QVector2D(0.3, -1));
+    netCoords.append(QVector2D(0.3, -.3));
+    netCoords.append(QVector2D(-0.3, -.3));
+    netCoords.append(QVector2D(-0.3, .3));
+    netCoords.append(QVector2D(-1, .3));
+    return SubdivisionCurve(settings_, netCoords, true);
+}
+
+SubdivisionCurve conics::ConicPresets::getStar() {
+    QVector<QVector2D> netCoords;
+    int numPoints = 5;
+    netCoords.reserve(numPoints * 2);
+    int radius = 1;
+
+    for (int i = 0; i < numPoints; ++i) {
+        // Outer points
+        float theta = i * (2.0f * M_PI / numPoints);
+        float x = radius * std::cos(theta);
+        float y = radius * std::sin(theta);
+        netCoords.append(QVector2D(x, y));
+
+        // Inner points
+        theta += M_PI / numPoints;
+        x = 0.3 * radius * std::cos(theta);
+        y = 0.3 * radius * std::sin(theta);
+        netCoords.append(QVector2D(x, y));
+    }
+    return SubdivisionCurve(settings_, netCoords, true);
 }
 
 SubdivisionCurve conics::ConicPresets::getPentagon() {

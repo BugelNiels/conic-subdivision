@@ -73,6 +73,10 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     if (sc.isClosed()) {
         indices.prepend(coords.size() - 1);
         indices.append(0);
+        indices.append(1);
+        if(coords.size() > 2) {
+            indices.append(2);
+        }
     } else {
         indices.prepend(0);
         indices.append(coords.size() - 1);
@@ -91,6 +95,8 @@ void CurveRenderer::draw() {
     shader->bind();
     shader->setUniformValue(shader->uniformLocation("visualize_normals"),
                             settings->visualizeNormals);
+    shader->setUniformValue(shader->uniformLocation("visualize_curvature"),
+                            settings->visualizeCurvature);
     shader->setUniformValue(shader->uniformLocation("viewMatrix"),
                             settings->viewMatrix);
 
