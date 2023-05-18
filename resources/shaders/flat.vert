@@ -4,13 +4,14 @@
 layout(location = 0) in vec2 vertcoords_clip_vs;
 
 uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
 
-flat out vec3 startPos;
-out vec3 vertPos;
+flat out vec2 startPos;
+out vec2 vertPos;
 
 void main() {
-    vec4 pos = projectionMatrix * vec4(vertcoords_clip_vs, 0.0, 1.0);
+    vec4 pos = projectionMatrix * viewMatrix * vec4(vertcoords_clip_vs, 0.0, 1.0);
     gl_Position = pos;
-    vertPos     = pos.xyz / pos.w;
-    startPos    = vertPos;
+    vertPos     = vertcoords_clip_vs;
+    startPos    = vertcoords_clip_vs;
 }

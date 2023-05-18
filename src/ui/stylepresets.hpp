@@ -2,6 +2,7 @@
 
 #include <QPalette>
 #include <QColor>
+#include "ui/renderers/util/colormap.hpp"
 
 class Settings;
 
@@ -15,6 +16,7 @@ namespace conics::ui {
         QColor selectedVertCol;
         QColor selectedNormCol;
         QColor normCol;
+        ColorMapName colorMapName;
 
         QPalette palette;
     } StylePreset;
