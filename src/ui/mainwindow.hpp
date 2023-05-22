@@ -17,6 +17,7 @@ public:
     ~MainWindow() override;
 
 private:
+    const int maxWeight = 10E8;
 
     conics::ConicPresets *presets_;
     Settings settings_;

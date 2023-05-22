@@ -258,8 +258,25 @@ void MainView::keyPressEvent(QKeyEvent *event) {
     if (subCurve_ == nullptr) {
         return;
     }
+    const float movementSpeed = 0.02;
     // Only works when the widget has focus!
     switch (event->key()) {
+        case Qt::Key_Up:
+            subCurve_->translate({0, movementSpeed});
+            updateBuffers();
+            break;
+        case Qt::Key_Down:
+            subCurve_->translate({0, -movementSpeed});
+            updateBuffers();
+            break;
+        case Qt::Key_Left:
+            subCurve_->translate({-movementSpeed, 0});
+            updateBuffers();
+            break;
+        case Qt::Key_Right:
+            subCurve_->translate({movementSpeed, 0});
+            updateBuffers();
+            break;
         case Qt::Key_Shift:
             break;
         case Qt::Key_Control:

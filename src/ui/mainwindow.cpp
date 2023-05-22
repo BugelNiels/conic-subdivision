@@ -160,7 +160,7 @@ QDockWidget *MainWindow::initSideMenu() {
     edgeVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     edgeVertWeightSpinBox->setMinimum(0);
-    edgeVertWeightSpinBox->setMaximum(100000);
+    edgeVertWeightSpinBox->setMaximum(maxWeight);
     edgeVertWeightSpinBox->setValue(settings_.pointWeight);
     connect(edgeVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
         settings_.pointWeight = newVal;
@@ -170,7 +170,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *midVertWeightSpinBox = new QDoubleSpinBox();
     midVertWeightSpinBox->setMinimum(0);
-    midVertWeightSpinBox->setMaximum(100000);
+    midVertWeightSpinBox->setMaximum(maxWeight);
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
@@ -183,7 +183,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *outerVertWeightSpinBox = new QDoubleSpinBox();
     outerVertWeightSpinBox->setMinimum(0);
-    outerVertWeightSpinBox->setMaximum(100000);
+    outerVertWeightSpinBox->setMaximum(maxWeight);
     outerVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the points <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
     );
@@ -198,7 +198,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(new QLabel("Normal weights"));
     auto *edgeNormWeightSpinBox = new QDoubleSpinBox();
     edgeNormWeightSpinBox->setMinimum(0);
-    edgeNormWeightSpinBox->setMaximum(100000);
+    edgeNormWeightSpinBox->setMaximum(maxWeight);
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>"
     );
@@ -211,7 +211,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *midNormWeightSpinBox = new QDoubleSpinBox();
     midNormWeightSpinBox->setMinimum(0);
-    midNormWeightSpinBox->setMaximum(100000);
+    midNormWeightSpinBox->setMaximum(maxWeight);
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
@@ -224,7 +224,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *outerNormWeightSpinBox = new QDoubleSpinBox();
     outerNormWeightSpinBox->setMinimum(0);
-    outerNormWeightSpinBox->setMaximum(100000);
+    outerNormWeightSpinBox->setMaximum(maxWeight);
     outerNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
     );
@@ -252,9 +252,9 @@ QDockWidget *MainWindow::initSideMenu() {
     lengthWeightedCheckBox->setToolTip(
             "<html><head/><body><p>If enabled, approximates the normals by taking into consideration the edge lengths.</body></html>"
     );
-    lengthWeightedCheckBox->setChecked(settings_.areaWeightedKnot);
+    lengthWeightedCheckBox->setChecked(settings_.areaWeightedNormals);
     connect(lengthWeightedCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.areaWeightedKnot = toggled;
+        settings_.areaWeightedNormals = toggled;
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(lengthWeightedCheckBox);

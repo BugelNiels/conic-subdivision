@@ -7,7 +7,7 @@
 
 #include "src/core/settings.hpp"
 
-#define EPSILON 0.000001f
+#define EPSILON 0.000000000001
 
 QMatrix4x4 coefsToMatrix(const QVector<double>& coefs) {
     double a, b, c, d, e, f;
@@ -99,7 +99,7 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
     double a = QVector4D::dotProduct(u, Q_ * u);
     double b = QVector4D::dotProduct(u, Q_ * p);
     double c = QVector4D::dotProduct(p, Q_ * p);
-    if (fabs(a) < EPSILON) {
+    if (std::fabs(a) < EPSILON) {
         t = -c / b;
         return true;
     }

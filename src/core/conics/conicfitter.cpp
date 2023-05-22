@@ -235,7 +235,7 @@ QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
 
 float ConicFitter::stability() {
     float minVal = 10.0f * float(std::max(settings_.pointWeight, settings_.normalWeight));
-    float maxVal = 1.0e9f + minVal;
+    float maxVal = 1.0e9f * minVal;
     float logMin = std::log10(minVal);
     float logMax = std::log10(maxVal);
 

@@ -61,6 +61,8 @@ public:
 
     QVector<float> getStabilityVals() const;
 
+    void translate(const QVector2D& translation);
+
 private:
     const Settings &settings_;
 

@@ -9,7 +9,7 @@
 
 #define MIN(A, B) (A) < (B) ? (A) : (B)
 #define MAX(A, B) (A) > (B) ? (A) : (B)
-#define EPSILON 0.0001
+#define EPSILON 0.00000001
 
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings) : closed_(true),
@@ -111,13 +111,13 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<QVector2D> &coords, QVect
             QVector2D oscCircleCenter = QVector2D(ux, uy);
             normals[i] = (oscCircleCenter - b).normalized();
 
-            QVector2D check = calcNormal(a, b, c, settings_.areaWeightedKnot);
+            QVector2D check = calcNormal(a, b, c, settings_.areaWeightedNormals);
             if (QVector2D::dotProduct(check, normals[i]) < 0) {
                 normals[i] *= -1;
             }
         }
     } else {
-        normals[i] = calcNormal(a, b, c, settings_.areaWeightedKnot);
+        normals[i] = calcNormal(a, b, c, settings_.areaWeightedNormals);
     }
 }
 
@@ -636,4 +636,11 @@ void SubdivisionCurve::knotSubdivide(int level) {
 
 QVector<float> SubdivisionCurve::getStabilityVals() const {
     return stability;
+}
+
+void SubdivisionCurve::translate(const QVector2D &translation) {
+    for(auto& c : netCoords_) {
+        c += translation;
+    }
+    reSubdivide();
 }

@@ -163,17 +163,15 @@ QVector<double> UnitConicFitter::fitQuadricConstrained(
     arma::mat A = initA(coords);
     arma::vec B = initB(normals);
 #if 0
-    arma::mat C = initC(coords, normals, numConstraints);
-    vec D = zeros(3 * numConstraints);
-    uword idx = 0;
-    for (int i = 0; i < numConstraints; i++) {
+    arma::mat C = initC(coords, normals, numConstraints_);
+    arma::vec D = arma::zeros(3 * numConstraints_);
+    arma::uword idx = 0;
+    for (int i = 0; i < numConstraints_; i++) {
       D(idx++) = 0;
       D(idx++) = normals[i].x();
       D(idx++) = normals[i].y();
     }
-  //  vec D = zeros(numConstraints * 3);
 #else
-
     arma::mat C = initC(coords, numConstraints_);
     arma::vec D = arma::zeros(C.n_rows);
 #endif
