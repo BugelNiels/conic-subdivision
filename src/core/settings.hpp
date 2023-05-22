@@ -22,8 +22,8 @@ typedef struct Settings {
     bool normalHandles = true;
 
     // Calculation Weights
-    double pointWeight = 1000.0;
-    double normalWeight = 100.0;
+    double pointWeight = 10000.0;
+    double normalWeight = 10000.0;
     double middlePointWeight = 2.0;
     double middleNormalWeight = 2.0;
     double outerPointWeight = 0.0;
@@ -35,13 +35,13 @@ typedef struct Settings {
     bool recalculateNormals = false;
     bool edgeTangentSample = true;
     bool convexitySplit = true;
-    bool areaWeightedKnot = false;
+    bool areaWeightedNormals = true;
     bool tessellate = false;
-    float knotTension = 0;
+    float knotTension = 0.8;
 
     // UI related constants
     float normalLength = 0.15;
-    float sizeCorrection = 500; // Used to enlarge the curve coordinates to fit in screen coordinates
+    float initialScale = 400; // Used to enlarge the curve coordinates to fit in screen coordinates
     float selectRadius = 0.05;
     float deselectRadius = 0.05;
     float drawPointRadius = 8.0f;

@@ -9,19 +9,20 @@
 
 class ConicFitter {
 public:
-    ConicFitter(const Settings &settings);
+    explicit ConicFitter(const Settings &settings);
 
     QVector<double> fitConic(const QVector<QVector2D> &coords,
                              const QVector<QVector2D> &normals);
+
     float stability();
 
 private:
-    const Settings& settings_;
+    const Settings &settings_;
     float stability_ = 0;
-    int numPoints_;
-    int numNormals_;
-    int numConstraints_;
-    int numEq_;
+    int numPoints_ = 0;
+    int numNormals_ = 0;
+    int numEq_ = 0;
+
     double pointWeight_ = 1.0;
     double normalWeight_ = 1.0;
     double middlePointWeight_ = 1.0;
@@ -44,7 +45,7 @@ private:
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
     initAEigen(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals) const;
 
-    QVector<double> solveLinSystem(const Eigen::MatrixXd &A) const;
+    QVector<double> solveLinSystem(const Eigen::MatrixXd &A);
 
     QVector<double> vecToQVecEigen(const Eigen::VectorXd &res) const;
 };

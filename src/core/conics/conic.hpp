@@ -8,7 +8,7 @@ class Settings;
 
 class Conic {
 public:
-    Conic(const Settings &settings);
+    explicit Conic(const Settings &settings);
 
     Conic(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals,
           const Settings &settings);
@@ -28,7 +28,7 @@ public:
 
     void operator+=(const Conic &other);
 
-    float getStability();
+    float getStability() const;
 
 private:
     float stability_ = 0;

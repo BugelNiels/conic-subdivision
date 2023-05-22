@@ -3,12 +3,12 @@
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
-Renderer::Renderer(Settings *settings) : gl(nullptr), settings(settings) {}
+Renderer::Renderer(const Settings &settings) : gl_(nullptr), settings_(settings) {}
 
 /**
  * @brief Renderer::~Renderer Deconstructs the renderer by deleting all shaders.
  */
-Renderer::~Renderer() { qDeleteAll(shaders); }
+Renderer::~Renderer() { qDeleteAll(shaders_); }
 
 /**
  * @brief Renderer::init Initialises the renderer with an OpenGL context and
@@ -17,7 +17,7 @@ Renderer::~Renderer() { qDeleteAll(shaders); }
  * @param s Settings.
  */
 void Renderer::init(QOpenGLFunctions_4_1_Core *f) {
-    gl = f;
+    gl_ = f;
 
     initShaders();
     initBuffers();
@@ -37,7 +37,7 @@ QOpenGLShaderProgram *Renderer::constructPolyLineShader() const {
     QString pathFrag = ":/shaders/polyline.frag";
 
     // we use the qt wrapper functions for shader objects
-    QOpenGLShaderProgram *shader = new QOpenGLShaderProgram();
+    auto *shader = new QOpenGLShaderProgram();
     shader->addShaderFromSourceFile(QOpenGLShader::Vertex, pathVert);
     shader->addShaderFromSourceFile(QOpenGLShader::Geometry, pathGeom);
     shader->addShaderFromSourceFile(QOpenGLShader::Fragment, pathFrag);
@@ -59,7 +59,7 @@ QOpenGLShaderProgram *Renderer::constructDefaultShader(
     QString pathFrag = ":/shaders/" + name + ".frag";
 
     // we use the qt wrapper functions for shader objects
-    QOpenGLShaderProgram *shader = new QOpenGLShaderProgram();
+    auto *shader = new QOpenGLShaderProgram();
     shader->addShaderFromSourceFile(QOpenGLShader::Vertex, pathVert);
     shader->addShaderFromSourceFile(QOpenGLShader::Fragment, pathFrag);
     shader->link();

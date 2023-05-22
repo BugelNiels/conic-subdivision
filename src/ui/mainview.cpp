@@ -5,10 +5,10 @@
 #include <QMouseEvent>
 #include "core/settings.hpp"
 
-MainView::MainView(Settings *settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
+MainView::MainView(Settings &settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
                                                           cr_(settings) {
 
-    subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve());
+    subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve(settings_));
     QSurfaceFormat format;
     format.setSamples(4);    // Set the number of samples used for multisampling
     setFormat(format);
@@ -45,9 +45,9 @@ void MainView::initializeGL() {
 }
 
 void MainView::resetViewMatrix() {
-    settings_->viewMatrix.setToIdentity();
-    settings_->viewMatrix.scale(400);
-    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    settings_.viewMatrix.setToIdentity();
+    settings_.viewMatrix.scale(settings_.initialScale);
+    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
     update();
 }
 
@@ -56,8 +56,8 @@ void MainView::resizeGL(int width, int height) {
     float halfWidth = width / 2.0f;
     float halfHeight = height / 2.0f;
     projectMatrix.ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 0, 1);
-    settings_->projectionMatrix = projectMatrix;
-    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    settings_.projectionMatrix = projectMatrix;
+    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
 }
 
 void MainView::subdivideCurve(int numSteps) {
@@ -94,7 +94,7 @@ void MainView::updateBuffers() {
  * @brief MainView::paintGL Draw call.
  */
 void MainView::paintGL() {
-    QColor bCol = settings_->style.backgroundCol;
+    QColor bCol = settings_.style.backgroundCol;
     glClearColor(bCol.redF(), bCol.greenF(), bCol.blueF(), 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -123,30 +123,30 @@ QVector2D MainView::toNormalizedScreenCoordinates(float x, float y) {
 
 
 bool MainView::attemptVertexSelect(const QVector2D &scenePos) {
-    settings_->selectedNormal = -1;
-    float maxDist = settings_->selectRadius;
-    if (settings_->selectedVertex != -1) {
+    settings_.selectedNormal = -1;
+    float maxDist = settings_.selectRadius;
+    if (settings_.selectedVertex != -1) {
         // Smaller click radius for easy de-selection of points
-        maxDist = settings_->deselectRadius;
+        maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_->selectedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
-    if (settings_->selectedVertex > -1) {
+    settings_.selectedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
+    if (settings_.selectedVertex > -1) {
         return true;
     }
     return false;
 }
 
 bool MainView::attemptNormalSelect(const QVector2D &scenePos) {
-    settings_->selectedVertex = -1;
-    float maxDist = settings_->selectRadius;
-    if (settings_->selectedNormal != -1) {
+    settings_.selectedVertex = -1;
+    float maxDist = settings_.selectRadius;
+    if (settings_.selectedNormal != -1) {
         // Smaller click radius for easy de-selection of points
-        maxDist = settings_->deselectRadius;
+        maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_->selectedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
-    if (settings_->selectedNormal > -1) {
+    settings_.selectedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
+    if (settings_.selectedNormal > -1) {
         return true;
     }
     return false;
@@ -158,9 +158,9 @@ void MainView::translationUpdate(const QVector2D &scenePos, const QPointF &mouse
         oldMouseCoords_ = scenePos;
         return;
     }
-    QVector2D translationUpdate = (scenePos - oldMouseCoords_) * settings_->dragSensitivity;
-    settings_->viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
-    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    QVector2D translationUpdate = (scenePos - oldMouseCoords_) * settings_.dragSensitivity;
+    settings_.viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
+    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
     oldMouseCoords_ = toNormalizedScreenCoordinates(mousePos.x(), mousePos.y());
     update();
 }
@@ -176,8 +176,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
                 int idx = subCurve_->addPoint(scenePos);
-                settings_->selectedNormal = -1;
-                settings_->selectedVertex = idx;
+                settings_.selectedNormal = -1;
+                settings_.selectedVertex = idx;
                 updateBuffers();
             } else {
                 // First attempt to select a vertex. If unsuccessful, select a normal
@@ -191,8 +191,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         case Qt::RightButton: {
             // Add new control point
             int idx = subCurve_->addPoint(scenePos);
-            settings_->selectedNormal = -1;
-            settings_->selectedVertex = idx;
+            settings_.selectedNormal = -1;
+            settings_.selectedVertex = idx;
             updateBuffers();
             break;
         }
@@ -209,8 +209,8 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
     if (event->buttons() == Qt::LeftButton && event->modifiers().testFlag(Qt::ShiftModifier)) {
         setCursor(Qt::ClosedHandCursor);
         translationUpdate(scenePos, event->position());
-        settings_->selectedVertex = -1;
-        settings_->selectedNormal = -1;
+        settings_.selectedVertex = -1;
+        settings_.selectedNormal = -1;
         update();
         return;
     }
@@ -218,16 +218,16 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
     switch (event->buttons()) {
         case Qt::RightButton:
         case Qt::LeftButton: {
-            if (settings_->selectedVertex > -1) {
+            if (settings_.selectedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                subCurve_->setVertexPosition(settings_->selectedVertex, scenePos);
+                subCurve_->setVertexPosition(settings_.selectedVertex, scenePos);
                 updateBuffers();
             }
-            if (settings_->selectedNormal > -1) {
+            if (settings_.selectedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                subCurve_->setNormalPosition(settings_->selectedNormal, scenePos);
+                subCurve_->setNormalPosition(settings_.selectedNormal, scenePos);
                 updateBuffers();
             }
             break;
@@ -258,8 +258,25 @@ void MainView::keyPressEvent(QKeyEvent *event) {
     if (subCurve_ == nullptr) {
         return;
     }
+    const float movementSpeed = 0.02;
     // Only works when the widget has focus!
     switch (event->key()) {
+        case Qt::Key_Up:
+            subCurve_->translate({0, movementSpeed});
+            updateBuffers();
+            break;
+        case Qt::Key_Down:
+            subCurve_->translate({0, -movementSpeed});
+            updateBuffers();
+            break;
+        case Qt::Key_Left:
+            subCurve_->translate({-movementSpeed, 0});
+            updateBuffers();
+            break;
+        case Qt::Key_Right:
+            subCurve_->translate({movementSpeed, 0});
+            updateBuffers();
+            break;
         case Qt::Key_Shift:
             break;
         case Qt::Key_Control:
@@ -270,10 +287,10 @@ void MainView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         case Qt::Key_X:
-            if (settings_->selectedVertex > -1) {
+            if (settings_.selectedVertex > -1) {
                 // Remove selected control point
-                subCurve_->removePoint(settings_->selectedVertex);
-                settings_->selectedVertex = -1;
+                subCurve_->removePoint(settings_.selectedVertex);
+                settings_.selectedVertex = -1;
                 updateBuffers();
             }
             break;
@@ -295,21 +312,21 @@ void MainView::keyReleaseEvent(QKeyEvent *event) {
 
 void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
     QWidget::mouseDoubleClickEvent(event);
-    if (subCurve_ == nullptr || settings_->selectedNormal < 0) {
+    if (subCurve_ == nullptr || settings_.selectedNormal < 0) {
         return;
     }
-    subCurve_->recalculateNormal(settings_->selectedNormal);
+    subCurve_->recalculateNormal(settings_.selectedNormal);
     recalculateCurve();
 }
 
 void MainView::wheelEvent(QWheelEvent *event) {
     QWidget::wheelEvent(event);
-    float zoom = event->angleDelta().y() > 0 ? settings_->zoomStrength : 1.0f / settings_->zoomStrength;
+    float zoom = event->angleDelta().y() > 0 ? settings_.zoomStrength : 1.0f / settings_.zoomStrength;
     QVector2D mouseNDC = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-    settings_->viewMatrix.translate(mouseNDC.x(), mouseNDC.y());
-    settings_->viewMatrix.scale(zoom);
-    settings_->viewMatrix.translate(-mouseNDC.x(), -mouseNDC.y());
-    toWorldCoordsMatrix_ = (settings_->projectionMatrix * settings_->viewMatrix).inverted();
+    settings_.viewMatrix.translate(mouseNDC.x(), mouseNDC.y());
+    settings_.viewMatrix.scale(zoom);
+    settings_.viewMatrix.translate(-mouseNDC.x(), -mouseNDC.y());
+    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
     update();
 }
 
@@ -332,7 +349,7 @@ void MainView::updateCursor(const Qt::KeyboardModifiers &flags) {
             setCursor(Qt::CrossCursor);
             break;
         default:
-            if (settings_->selectedVertex > -1 || settings_->selectedNormal > -1) {
+            if (settings_.selectedVertex > -1 || settings_.selectedNormal > -1) {
                 setCursor(Qt::OpenHandCursor);
             } else {
                 unsetCursor();
@@ -376,14 +393,6 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
 
 void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {
     subCurve_ = newSubCurve;
-}
-
-void MainView::flipCurveNorms() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    subCurve_->flipNormals();
-    recalculateCurve();
 }
 
 void MainView::recalculateNormals() {

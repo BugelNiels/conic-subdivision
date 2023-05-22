@@ -12,7 +12,7 @@ class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 Q_OBJECT
 
 public:
-    MainView(Settings *settings, QWidget *parent = nullptr);
+    explicit MainView(Settings &settings, QWidget *parent = nullptr);
 
     ~MainView() override;
 
@@ -25,8 +25,6 @@ public:
     void updateBuffers();
 
     void subdivideCurve(int numSteps);
-
-    void flipCurveNorms();
 
     void paintGL() override;
 
@@ -54,14 +52,10 @@ protected:
     void resizeGL(int width, int height) override;
 
 private:
-    bool attemptNormalSelect(const QVector2D &scenePos);
+    Settings &settings_;
 
-    bool attemptVertexSelect(const QVector2D &scenePos);
 
-    void updateCursor(const Qt::KeyboardModifiers &flags);
-
-    Settings *settings_;
-    QOpenGLDebugLogger *debugLogger_;
+    QOpenGLDebugLogger *debugLogger_ = nullptr;
 
     CurveNetRenderer cnr_;
     CurveRenderer cr_;
@@ -70,9 +64,14 @@ private:
 
     bool dragging_ = false;
 
-
     QVector2D oldMouseCoords_;
     QMatrix4x4 toWorldCoordsMatrix_;
+
+    bool attemptNormalSelect(const QVector2D &scenePos);
+
+    bool attemptVertexSelect(const QVector2D &scenePos);
+
+    void updateCursor(const Qt::KeyboardModifiers &flags);
 
 private slots:
 
@@ -82,7 +81,5 @@ private slots:
     void resetViewMatrix();
 
     void translationUpdate(const QVector2D &scenePos, const QPointF &mousePos);
-
-
 };
 

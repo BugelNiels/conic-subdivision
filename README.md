@@ -35,8 +35,8 @@ Or run via QtCreator.
 
 Settings:
 
-- Calculation settings can be found in the menu on the left;
-- View settings, such as which items to show/hide can be found in the top menu
+- Calculation settings_ can be found in the menu on the left;
+- View settings_, such as which items to show/hide can be found in the top menu
 - Presets can be found in the top menu
 - Light/dark mode can be enabled via the top right
 

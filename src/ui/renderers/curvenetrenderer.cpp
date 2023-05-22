@@ -2,7 +2,7 @@
 
 #include "core/settings.hpp"
 
-CurveNetRenderer::CurveNetRenderer(Settings *settings) : Renderer(settings) {
+CurveNetRenderer::CurveNetRenderer(const Settings &settings) : Renderer(settings) {
 
 }
 
@@ -11,10 +11,10 @@ CurveNetRenderer::CurveNetRenderer(Settings *settings) : Renderer(settings) {
  * net renderer.
  */
 CurveNetRenderer::~CurveNetRenderer() {
-    gl->glDeleteVertexArrays(1, &vao_);
-    gl->glDeleteBuffers(1, &vbo_coords_);
-    gl->glDeleteBuffers(1, &vbo_norms_);
-    gl->glDeleteBuffers(1, &ibo_);
+    gl_->glDeleteVertexArrays(1, &vao_);
+    gl_->glDeleteBuffers(1, &vbo_coords_);
+    gl_->glDeleteBuffers(1, &vbo_norms_);
+    gl_->glDeleteBuffers(1, &ibo_);
 }
 
 /**
@@ -23,7 +23,7 @@ CurveNetRenderer::~CurveNetRenderer() {
  * the flat shader.
  */
 void CurveNetRenderer::initShaders() {
-    shaders.insert(ShaderType::FLAT, constructDefaultShader("flat"));
+    shaders_.insert(ShaderType::FLAT, constructDefaultShader("flat"));
 }
 
 /**
@@ -33,20 +33,20 @@ void CurveNetRenderer::initBuffers() {
     // Pure OpenGL functions used here
 
     // create vao
-    gl->glGenVertexArrays(1, &vao_);
+    gl_->glGenVertexArrays(1, &vao_);
     // bind vao
-    gl->glBindVertexArray(vao_);
+    gl_->glBindVertexArray(vao_);
 
-    gl->glGenBuffers(1, &vbo_coords_);
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-    gl->glEnableVertexAttribArray(0);
-    gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    gl_->glGenBuffers(1, &vbo_coords_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
+    gl_->glEnableVertexAttribArray(0);
+    gl_->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl->glGenBuffers(1, &ibo_);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
+    gl_->glGenBuffers(1, &ibo_);
+    gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
     // unbind
-    gl->glBindVertexArray(0);
+    gl_->glBindVertexArray(0);
 }
 
 /**
@@ -63,7 +63,7 @@ void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
     }
     int size = coords_.size();
     for (int i = 0; i < size; i++) {
-        normals_[i] = (coords_[i] + settings->normalLength * normals_[i]);
+        normals_[i] = (coords_[i] + settings_.normalLength * normals_[i]);
     }
 
     QVector<int> indices(coords_.size() + 2);
@@ -78,9 +78,9 @@ void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
         indices.append(coords_.size() - 1);
     }
 
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
-                     indices.data(), GL_DYNAMIC_DRAW);
+    gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
+    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
+                      indices.data(), GL_DYNAMIC_DRAW);
 
     vboSize_ = indices.size();
 }
@@ -92,64 +92,64 @@ void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
  */
 void CurveNetRenderer::draw() {
     // Always renders the control net using the flat shader.
-    auto shader = shaders[ShaderType::FLAT];
+    auto shader = shaders_[ShaderType::FLAT];
     shader->bind();
 
-    if(vboSize_ == 0) {
+    if (vboSize_ == 0) {
         return;
     }
 
-    gl->glLineWidth(settings->controlLineWidth);
-    gl->glBindVertexArray(vao_);
-    gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-    gl->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords_.size(),
-                     coords_.data(), GL_DYNAMIC_DRAW);
+    gl_->glLineWidth(settings_.controlLineWidth);
+    gl_->glBindVertexArray(vao_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords_.size(),
+                      coords_.data(), GL_DYNAMIC_DRAW);
 
-    shader->setUniformValue("projectionMatrix", settings->projectionMatrix);
+    shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue(shader->uniformLocation("viewMatrix"),
-                            settings->viewMatrix);
+                            settings_.viewMatrix);
 
     // Control Curve
-    if (settings->showControlCurve) {
-        QColor qCol = settings->style.controlCurveCol;
+    if (settings_.showControlCurve) {
+        QColor qCol = settings_.style.controlCurveCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
-        gl->glDrawElements(GL_LINE_STRIP, vboSize_, GL_UNSIGNED_INT, nullptr);
+        gl_->glDrawElements(GL_LINE_STRIP, vboSize_, GL_UNSIGNED_INT, nullptr);
     }
     // Control points
-    if (settings->showControlPoints) {
-        QColor qCol = settings->style.controlPointCol;
+    if (settings_.showControlPoints) {
+        QColor qCol = settings_.style.controlPointCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
 
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
-        gl->glPointSize(settings->drawPointRadius);
-        gl->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
+        gl_->glPointSize(settings_.drawPointRadius);
+        gl_->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
     }
 
     // Highlight selected control point
-    if (settings->selectedVertex > -1) {
-        QColor qCol = settings->style.selectedVertCol;
+    if (settings_.selectedVertex > -1) {
+        QColor qCol = settings_.style.selectedVertCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
-        gl->glPointSize(settings->selectedPointRadius);
-        gl->glDrawArrays(GL_POINTS, settings->selectedVertex, 1);
+        gl_->glPointSize(settings_.selectedPointRadius);
+        gl_->glDrawArrays(GL_POINTS, settings_.selectedVertex, 1);
     }
 
-    if (settings->normalHandles) {
-        gl->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-        gl->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals_.size(),
-                         normals_.data(), GL_DYNAMIC_DRAW);
-        QColor qCol = settings->style.normCol;
+    if (settings_.normalHandles) {
+        gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
+        gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals_.size(),
+                          normals_.data(), GL_DYNAMIC_DRAW);
+        QColor qCol = settings_.style.normCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
-        gl->glPointSize(settings->drawPointRadius);
-        gl->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
-        if (settings->selectedNormal > -1) {
-            gl->glPointSize(settings->selectedPointRadius);
-            QColor secQCol = settings->style.selectedNormCol;
+        gl_->glPointSize(settings_.drawPointRadius);
+        gl_->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
+        if (settings_.selectedNormal > -1) {
+            gl_->glPointSize(settings_.selectedPointRadius);
+            QColor secQCol = settings_.style.selectedNormCol;
             QVector3D secCol(secQCol.redF(), secQCol.greenF(), secQCol.blueF());
             shader->setUniformValue(shader->uniformLocation("lineColor"), secCol);
-            gl->glDrawArrays(GL_POINTS, settings->selectedNormal, 1);
+            gl_->glDrawArrays(GL_POINTS, settings_.selectedNormal, 1);
         }
     }
 

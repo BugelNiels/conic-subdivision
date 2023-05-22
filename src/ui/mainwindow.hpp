@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QSpinBox>
 #include "src/core/conics/conicpresets.hpp"
+#include "core/settings.hpp"
 
 class MainView;
 
@@ -16,9 +17,10 @@ public:
     ~MainWindow() override;
 
 private:
+    const int maxWeight = 10E8;
 
     conics::ConicPresets *presets_;
-    Settings *settings_;
+    Settings settings_;
     MainView *mainView_;
 
     QMenu *getPresetMenu();

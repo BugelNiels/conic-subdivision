@@ -9,7 +9,7 @@
 
 class CurveRenderer : public Renderer {
 public:
-    CurveRenderer(Settings *settings);
+    explicit CurveRenderer(const Settings &settings);
 
     ~CurveRenderer() override;
 

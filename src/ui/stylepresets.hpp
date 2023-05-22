@@ -21,7 +21,7 @@ namespace conics::ui {
         QPalette palette;
     } StylePreset;
 
-    void applyStylePreset(Settings& settings, const StylePreset& preset);
+    void applyStylePreset(Settings &settings, const StylePreset &preset);
 
     StylePreset getDarkModePalette();
 

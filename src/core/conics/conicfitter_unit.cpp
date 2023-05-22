@@ -124,18 +124,18 @@ arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
  * zeros, an empty vector is returned.
  */
 QVector<double> UnitConicFitter::vecToQVec(const arma::vec &res) const {
-    QVector<double> coefs;
+    QVector<double> coefficients;
     int numZeros = 0;
     for (int i = 0; i < numUnknowns_; i++) {
-        coefs.append(res(i));
+        coefficients.append(res(i));
         if (res(i) == 0.0) {
             numZeros++;
         }
     }
     if (numZeros == numUnknowns_) {
-        return QVector<double>();
+        return {};
     }
-    return coefs;
+    return coefficients;
 }
 
 QVector<double> UnitConicFitter::solveLinSystem(const arma::mat &A,
@@ -149,7 +149,7 @@ QVector<double> UnitConicFitter::solveLinSystem(const arma::mat &A,
     if (hasSolution) {
         return vecToQVec(result);
     }
-    return QVector<double>();
+    return {};
 }
 
 /**
@@ -163,17 +163,15 @@ QVector<double> UnitConicFitter::fitQuadricConstrained(
     arma::mat A = initA(coords);
     arma::vec B = initB(normals);
 #if 0
-    arma::mat C = initC(coords, normals, numConstraints);
-    vec D = zeros(3 * numConstraints);
-    uword idx = 0;
-    for (int i = 0; i < numConstraints; i++) {
+    arma::mat C = initC(coords, normals, numConstraints_);
+    arma::vec D = arma::zeros(3 * numConstraints_);
+    arma::uword idx = 0;
+    for (int i = 0; i < numConstraints_; i++) {
       D(idx++) = 0;
       D(idx++) = normals[i].x();
       D(idx++) = normals[i].y();
     }
-  //  vec D = zeros(numConstraints * 3);
 #else
-
     arma::mat C = initC(coords, numConstraints_);
     arma::vec D = arma::zeros(C.n_rows);
 #endif
@@ -212,6 +210,6 @@ QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
     return fitQuadricConstrained(coords, normals);
 }
 
-float UnitConicFitter::stability() {
+float UnitConicFitter::stability() const {
     return stability_;
 }
