@@ -12,18 +12,17 @@
 #define EPSILON 0.0001
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings) : closed_(true),
-                                                               settings_(settings) {
+SubdivisionCurve::SubdivisionCurve(const Settings &settings)
+        : settings_(settings),
+          closed_(true) {
 
 }
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, bool closed) : closed_(closed),
-                                                                                                       netCoords_(
-                                                                                                               std::move(
-                                                                                                                       coords)),
-                                                                                                       settings_(
-                                                                                                               settings) {
+SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, bool closed)
+        : settings_(settings),
+          closed_(closed),
+          netCoords_(std::move(coords)) {
     netNormals_ = calcNormals(netCoords_);
     customNormals_.resize(netNormals_.size());
     customNormals_.fill(false);
@@ -32,9 +31,10 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> 
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, QVector<QVector2D> normals,
                                    bool closed)
-        : closed_(closed), netCoords_(std::move(coords)),
-          netNormals_(std::move(normals)),
-          settings_(settings) {
+        : settings_(settings),
+          closed_(closed),
+          netCoords_(std::move(coords)),
+          netNormals_(std::move(normals)) {
     customNormals_.resize(netNormals_.size());
     customNormals_.fill(false);
 }
