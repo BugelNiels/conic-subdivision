@@ -14,6 +14,7 @@
 #include <QOpenGLPaintDevice>
 #include <QPushButton>
 #include <QSlider>
+#include <QMessageBox>
 
 #include "src/core/conics/conicpresets.hpp"
 #include "ui/stylepresets.hpp"
@@ -328,36 +329,22 @@ QMenu *MainWindow::getFileMenu() {
     auto *saveAction = new QAction(QStringLiteral("Save"), fileMenu);
     saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(saveAction, &QAction::triggered, [this]() {
-        // TODO
-//        QPixmap pixmap(mainView->size());
-//        mainView->render(&pixmap);
-//
-//        QOpenGLFramebufferObject fbo(mainView->size());
-//        fbo.bind();
-//        QOpenGLPaintDevice d(mainView->size());
-//        QPainter painter(&d);
-//        painter.beginNativePainting();
-//        mainView->render(&painter);
-////        mainView->paintGL();
-//
-//        painter.endNativePainting();
-//        painter.end();
-//        fbo.release();
-//
-//        QImage image = fbo.toImage();
-////        return;
-//        QString filePath = QFileDialog::getSaveFileName(
-//                nullptr, "Save Image", "../images/",
-//                tr("Img Files (*.png *.jpg *.jpeg *.tiff *.tif *pgm *ppm)"));
-//
-//        if (filePath != "") {
-//            bool success = image.save(filePath);
-//            if (success) {
-//                QMessageBox::information(this, "Image Saved", filePath);
-//                return;
-//            }
-//        }
-//        QMessageBox::warning(this, "Failed to save image", filePath);
+        QString filePath = QFileDialog::getSaveFileName(
+                nullptr, "Save Image", "../images/",
+                tr("Img Files (*.png *.jpg *.jpeg *.tiff *.tif *pgm *ppm)"));
+        if (filePath != "") {
+            QPixmap pixmap(mainView_->size());
+            mainView_->render(&pixmap);
+            bool success = pixmap.toImage().save(filePath);
+            if (success) {
+                QMessageBox::information(this, "Image Saved", filePath);
+                return;
+            } else {
+                QMessageBox::warning(this, "Failed to save image", "Ensure you provided a file extension:\n:" + filePath);
+                return;
+            }
+        }
+        QMessageBox::warning(this, "Failed to save image", "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveAction);
 
