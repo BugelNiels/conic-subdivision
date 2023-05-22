@@ -26,8 +26,8 @@ typedef struct Settings {
     double normalWeight = 10000.0;
     double middlePointWeight = 2.0;
     double middleNormalWeight = 2.0;
-    double outerPointWeight = 0.0;
-    double outerNormalWeight = 0.0;
+    double outerPointWeight = 1.0;
+    double outerNormalWeight = 1.0;
 
     // Calculation settings
     bool normalizedSolve = false;
