@@ -395,9 +395,13 @@ void SubdivisionCurve::extractPatch(const QVector<QVector2D> &points, const QVec
         indices.append((pIdx + 1) % size);
         if (!startKnotPoint) {
             indices.append((pIdx - 1 + size) % size);
+        } else {
+            indices.append((pIdx + 2) % size);
         }
         if (!endKnotPoint) {
             indices.append((pIdx + 2) % size);
+        } else {
+            indices.append((pIdx - 1 + size) % size);
         }
     } else {
         indices.append(pIdx + 1);

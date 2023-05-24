@@ -87,9 +87,9 @@ bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
         normal = conicNormal(p, rd);
         return true;
     }
-#if 1
+#if 0
     printConic();
-    qDebug() << "Line((" << ro.x() << "," << ro.y() << "),(" << rd.x() << "," << rd.y() << "))";
+    qDebug() << "Line((" << ro.x() << "," << ro.y() << "),(" << ro.x() + rd.x() << "," << ro.y() +  rd.y() << "))";
 #endif
     return false;
 }
