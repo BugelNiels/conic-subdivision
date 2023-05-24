@@ -24,10 +24,8 @@ typedef struct Settings {
     // Calculation Weights
     double pointWeight = 10000.0;
     double normalWeight = 10000.0;
-    double middlePointWeight = 2.0;
-    double middleNormalWeight = 2.0;
-    double outerPointWeight = 1.0;
-    double outerNormalWeight = 1.0;
+    double middlePointWeight = 1.0;
+    double middleNormalWeight = 1.0;
 
     // Calculation settings
     bool normalizedSolve = false;
@@ -36,7 +34,8 @@ typedef struct Settings {
     bool edgeTangentSample = true;
     bool convexitySplit = true;
     bool areaWeightedNormals = true;
-    bool tessellate = false;
+    bool weightedKnotLocation = false;
+    bool gravitateSmallerAngles = true;
     float knotTension = 0.8;
 
     // UI related constants

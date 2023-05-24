@@ -37,8 +37,9 @@ private:
     const Settings &settings_;
 
     bool fitConic(const QVector<QVector2D> &coords,
-                  const QVector<QVector2D> &normals, const Settings &settings);
+                  const QVector<QVector2D> &normals);
 
     QVector2D conicNormal(const QVector2D &p, const QVector2D &rd) const;
 
+    void printConic() const;
 };
