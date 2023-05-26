@@ -27,8 +27,6 @@ private:
     double normalWeight_ = 1.0;
     double middlePointWeight_ = 1.0;
     double middleNormalWeight_ = 1.0;
-    double outerPointWeight_ = 1.0;
-    double outerNormalWeight_ = 1.0;
     int numUnknowns_;
 
     double getPointWeight(int index) const;

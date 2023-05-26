@@ -283,26 +283,25 @@ void SubdivisionCurve::subdivide(int level) {
     if (netCoords_.size() == 0) {
         return;
     }
-    // TODO: extract subdivision into seperate file/class
-    if (settings_.tessellate) {
-        if (settings_.convexitySplit) {
-            QVector<QVector2D> coords;
-            QVector<QVector2D> norms;
-            QVector<bool> customNorms;
-            knotCurve(coords, norms, customNorms);
-            tessellate(coords, norms, level);
-        } else {
-            tessellate(netCoords_, netNormals_, level);
-        }
+    if (settings_.convexitySplit) {
+
+        QVector<QVector2D> coords;
+        QVector<QVector2D> norms;
+        QVector<bool> customNorms;
+        knotCurve(coords, norms, customNorms);
+        QVector<float> stabilities;
+        stabilities.resize(coords.size());
+        subdivide(coords, norms, stabilities, level);
     } else {
-        if (settings_.convexitySplit) {
-            knotSubdivide(level);
-        } else {
-            stability.resize(netCoords_.size());
-            subdivide(netCoords_, netNormals_, stability, level);
-        }
+        stability.resize(netCoords_.size());
+        subdivide(netCoords_, netNormals_, stability, level);
     }
+
     subdivisionLevel_ = level;
+}
+
+bool arePointsCollinear(const QVector2D &p1, const QVector2D &p2, const QVector2D &p3) {
+    return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) == 0.0;
 }
 
 /**
@@ -343,44 +342,7 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
         QVector<QVector2D> patchCoords;
         QVector<QVector2D> patchNormals;
 
-        int pIdx = i / 2;
-
-        int size = points.size();
-
-        indices.clear();
-        indices.append(pIdx);
-        // p_2-p_1-p0-p1-p2-p3
-        if (closed_) {
-            indices.append((pIdx + 1) % size);
-            indices.append((pIdx + 2) % size);
-            indices.append((pIdx - 1 + size) % size);
-            indices.append((pIdx + 3) % size);
-            indices.append((pIdx - 2 + size) % size);
-        } else {
-            if (pIdx + 1 < points.size()) {
-                indices.append(pIdx + 1);
-                if (pIdx + 2 < points.size()) {
-                    indices.append(pIdx + 2);
-                }
-            }
-            if (pIdx - 1 >= 0) {
-                indices.append(pIdx - 1);
-                if (pIdx - 2 >= 0) {
-                    indices.append(pIdx - 2);
-                }
-            }
-
-            if (pIdx + 3 < points.size()) {
-                indices.append(pIdx + 3);
-            }
-        }
-
-        for (int index: indices) {
-            patchCoords.append(points[index]);
-            patchNormals.append(normals[index]);
-        }
-
-        Conic conic(patchCoords, patchNormals, settings_);
+        extractPatch(points, normals, indices, i, patchCoords, patchNormals);
 
         int prevIdx = (i - 1 + n) % n;
         int nextIdx = (i + 1) % n;
@@ -394,8 +356,10 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
         } else {
             dir = (newNormals[prevIdx] + newNormals[nextIdx]).normalized();
         }
+        Conic conic(patchCoords, patchNormals, settings_);
         QVector2D sampledPoint;
         QVector2D sampledNormal;
+
         const bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
 
         if (!valid) {
@@ -410,97 +374,48 @@ void SubdivisionCurve::subdivide(const QVector<QVector2D> &points,
     if (settings_.recalculateNormals) {
         newNormals = calcNormals(newPoints);
     }
+    knotIndices.clear();
     subdivide(newPoints, newNormals, newStabilities, level - 1);
 }
 
-void SubdivisionCurve::tessellate(const QVector<QVector2D> &points,
-                                  const QVector<QVector2D> &normals, int level) {
-    // base case
-    if (level == 0) {
-        curveCoords_ = points;
-        curveNormals_ = normals;
-        return;
-    }
-    int n = points.size();
-    QVector<QVector2D> newPoints;
-    QVector<QVector2D> newNormals;
-    int patchSize = 6;
-    QVector<int> indices(patchSize);
+void SubdivisionCurve::extractPatch(const QVector<QVector2D> &points, const QVector<QVector2D> &normals,
+                                    QVector<int> &indices, int i, QVector<QVector2D> &patchCoords,
+                                    QVector<QVector2D> &patchNormals) const {
+    int pIdx = i / 2;
 
-    for (int i = 0; i < n; i++) {
-        newPoints.append(points[i]);
-        newNormals.append(normals[i]);
+    int size = points.size();
 
-        QVector<QVector2D> patchCoords;
-        QVector<QVector2D> patchNormals;
-
-        int pIdx = i;
-
-        indices.clear();
-        indices.append(pIdx);
-        // p_2-p_1-p0-p1-p2-p3
-        if (closed_) {
-            indices.append((pIdx + 1) % n);
-            indices.append((pIdx + 2) % n);
-            indices.append((pIdx - 1 + n) % n);
-            indices.append((pIdx + 3) % n);
-            indices.append((pIdx - 2 + n) % n);
+    indices.clear();
+    // Two edge points
+    indices.append(pIdx);
+    // p_2-p_1-p0-p1-p2-p3
+    if (closed_) {
+        bool startKnotPoint = knotIndices.contains(pIdx);
+        bool endKnotPoint = knotIndices.contains((pIdx + 1) % size);
+        indices.append((pIdx + 1) % size);
+        if (!startKnotPoint) {
+            indices.append((pIdx - 1 + size) % size);
         } else {
-            if (pIdx + 1 < points.size()) {
-                indices.append(pIdx + 1);
-                if (pIdx + 2 < points.size()) {
-                    indices.append(pIdx + 2);
-                }
-            }
-            if (pIdx - 1 >= 0) {
-                indices.append(pIdx - 1);
-                if (pIdx - 2 >= 0) {
-                    indices.append(pIdx - 2);
-                }
-            }
-
-            if (pIdx + 3 < points.size()) {
-                indices.append(pIdx + 3);
-            }
+            indices.append((pIdx + 2) % size);
         }
-        for (int index: indices) {
-            patchCoords.append(points[index]);
-            patchNormals.append(normals[index]);
-        }
-
-        Conic conic(patchCoords, patchNormals, settings_);
-
-        int prevIdx = i;
-        int nextIdx = (i + 1 + n) % n;
-
-        QVector2D dir;
-        if (settings_.edgeTangentSample) {
-            dir = points[prevIdx] - points[nextIdx];
-            dir.normalize();
-            dir = {-dir.y(), dir.x()};
+        if (!endKnotPoint) {
+            indices.append((pIdx + 2) % size);
         } else {
-            dir = (normals[prevIdx] + normals[nextIdx]).normalized();
+            indices.append((pIdx - 1 + size) % size);
         }
-        int numInsertions = std::pow(2, level);
-        for (int k = 1; k < numInsertions; k++) {
-
-            float w = float(k) / float(numInsertions);
-            const QVector2D origin = (1.0f - w) * points[prevIdx] + w * points[nextIdx];
-            QVector2D sampledPoint;
-            QVector2D sampledNormal;
-            const bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
-
-            if (!valid) {
-                sampledPoint = origin;
-                sampledNormal = dir;
-            }
-            newPoints.append(sampledPoint);
-            newNormals.append(sampledNormal);
+    } else {
+        indices.append(pIdx + 1);
+        if (pIdx + 2 < size) {
+            indices.append(pIdx + 2);
         }
-
+        if (pIdx - 1 >= 0) {
+            indices.append(pIdx - 1);
+        }
     }
-    curveCoords_ = newPoints;
-    curveNormals_ = newNormals;
+    for (int index: indices) {
+        patchCoords.append(points[index]);
+        patchNormals.append(normals[index]);
+    }
 }
 
 void SubdivisionCurve::flipNormals() {
@@ -537,8 +452,7 @@ void SubdivisionCurve::setClosed(bool closed) {
     reSubdivide();
 }
 
-bool
-areInSameHalfPlane(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2, const QVector2D &v3, float &sign) {
+bool areInSameHalfPlane(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2, const QVector2D &v3) {
     QVector2D v1v3 = v3 - v1;
     QVector2D v1v0 = v0 - v1;
     if (v1v0.lengthSquared() == 0.0 || v1v3.lengthSquared() == 0) {
@@ -550,16 +464,21 @@ areInSameHalfPlane(const QVector2D &v0, const QVector2D &v1, const QVector2D &v2
     if (std::abs(dotProduct1) < EPSILON || std::abs(dotProduct2) < EPSILON) {
         return true;
     }
-    sign = dotProduct1 > 0 ? 1.0f : -1.0f;
+    float sign = dotProduct1 > 0 ? 1.0f : -1.0f;
     return dotProduct2 * sign >= 0;
 }
 
+template<typename T>
+T mix(const T &a, const T &b, float w) {
+    return (1.0f - w) * a + w * b;
+}
 
 void SubdivisionCurve::knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> &norms, QVector<bool> &customNorms) {
     int n = netCoords_.size();
     coords.reserve(n);
     norms.reserve(n);
     customNorms.reserve(n);
+    int idx = 0;
     for (int i = 0; i < n; i++) {
         const QVector2D &v0 = netCoords_[getPrevIdx(i)];
         const QVector2D &v1 = netCoords_[i];
@@ -569,24 +488,38 @@ void SubdivisionCurve::knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> 
         coords.append(v1);
         norms.append(netNormals_[i]);
         customNorms.append(customNormals_[i]);
+        idx++;
         if (v0 == v1 || v2 == v3 || v1 == v2) {
             continue;
         }
-        float sign;
-        if (!areInSameHalfPlane(v0, v1, v2, v3, sign)) {
-            QVector2D midPoint = (v1 + v2) / 2.0f;
-
-            QVector2D incident = (
-                    netNormals_[i]
-                    + netNormals_[nextIdx]
-            ).normalized();
-            incident *= -1;
-
+        if (!areInSameHalfPlane(v0, v1, v2, v3)) {
 
             QVector2D reflectVec = (v1 - v2).normalized();
             reflectVec = {-reflectVec.y(), reflectVec.x()};
-            incident = QVector2D::dotProduct(netNormals_[i], reflectVec) >
-                       QVector2D::dotProduct(netNormals_[nextIdx], reflectVec) ? netNormals_[i] : netNormals_[nextIdx];
+            float angle1 = QVector2D::dotProduct(netNormals_[i], reflectVec);
+            float angle2 = QVector2D::dotProduct(netNormals_[nextIdx], reflectVec);
+
+            float ratio = 0.5f;
+            if (settings_.weightedKnotLocation) {
+//                float l1 = (v0 - v1).length();
+//                float l2 = (v3 - v2).length();
+                angle1 = QVector2D::dotProduct((v0 - v1).normalized(), (v1 - v2).normalized());
+                angle2 = QVector2D::dotProduct((v3 - v2).normalized(), (v2 - v1).normalized());
+
+                float l1 = std::abs(std::acos(angle1));
+                float l2 = std::abs(std::acos(angle2));
+                if (settings_.gravitateSmallerAngles) {
+                    ratio = l1 / (l1 + l2);
+                } else {
+
+                    ratio = l2 / (l1 + l2);
+                }
+            }
+
+            QVector2D midPoint = mix(v1, v2, ratio);
+            QVector2D incident = mix(netNormals_[i], netNormals_[nextIdx], ratio).normalized();
+            incident *= -1;
+            incident = angle1 > angle2 ? netNormals_[i] : netNormals_[nextIdx];
 
             QVector2D knotNormal = incident - 2 * (QVector2D::dotProduct(incident, reflectVec)) * reflectVec; // reflect
             knotNormal *= -1;
@@ -594,10 +527,11 @@ void SubdivisionCurve::knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> 
 
             knotNormal = (1 - settings_.knotTension) * knotNormal + settings_.knotTension * reflectVec;
             knotNormal.normalize();
-
             coords.append(midPoint);
             norms.append(knotNormal);
             customNorms.append(true);
+            knotIndices.insert(idx);
+            idx++;
         }
     }
 }
@@ -610,8 +544,6 @@ void SubdivisionCurve::applySubdivision() {
 }
 
 void SubdivisionCurve::insertKnots() {
-    // For every edge
-
     QVector<QVector2D> coords;
     QVector<QVector2D> norms;
     QVector<bool> customNorms;
@@ -623,23 +555,12 @@ void SubdivisionCurve::insertKnots() {
 
 }
 
-void SubdivisionCurve::knotSubdivide(int level) {
-    QVector<QVector2D> coords;
-    QVector<QVector2D> norms;
-    QVector<bool> customNorms;
-    knotCurve(coords, norms, customNorms);
-    QVector<float> stabilities;
-    stabilities.resize(coords.size());
-
-    subdivide(coords, norms, stabilities, level);
-}
-
 QVector<float> SubdivisionCurve::getStabilityVals() const {
     return stability;
 }
 
 void SubdivisionCurve::translate(const QVector2D &translation) {
-    for(auto& c : netCoords_) {
+    for (auto &c: netCoords_) {
         c += translation;
     }
     reSubdivide();

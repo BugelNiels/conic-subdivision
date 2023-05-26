@@ -7,7 +7,7 @@
 
 #include "src/core/settings.hpp"
 
-#define EPSILON 0.000000000001
+#define EPSILON 0.0000000001
 
 QMatrix4x4 coefsToMatrix(const QVector<double>& coefs) {
     double a, b, c, d, e, f;
@@ -25,7 +25,7 @@ Conic::Conic(const Settings &settings) : hasSolution_(false), settings_(settings
 Conic::Conic(const QVector<QVector2D> &coords,
              const QVector<QVector2D> &normals, const Settings &settings)
         : Conic(settings) {
-    hasSolution_ = fitConic(coords, normals, settings);
+    hasSolution_ = fitConic(coords, normals);
 }
 
 void normalizeCoefs(QVector<double> &coefs) {
@@ -43,15 +43,14 @@ void normalizeCoefs(QVector<double> &coefs) {
  * @return True if a quadric was constructed successfully. False otherwise.
  */
 bool Conic::fitConic(const QVector<QVector2D> &coords,
-                     const QVector<QVector2D> &normals,
-                     const Settings &settings) {
+                     const QVector<QVector2D> &normals) {
     QVector<double> foundCoefs;
-    if (settings.normalizedSolve) {
+    if (settings_.normalizedSolve) {
         UnitConicFitter fitter;
-        foundCoefs = fitter.fitConic(coords, normals, settings);
+        foundCoefs = fitter.fitConic(coords, normals, settings_);
         stability_ = fitter.stability();
     } else {
-        ConicFitter fitter(settings);
+        ConicFitter fitter(settings_);
         foundCoefs = fitter.fitConic(coords, normals);
         stability_ = fitter.stability();
     }
@@ -60,7 +59,6 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
     }
     // unComment these two lines to see the found coefficients for every edge
 //      normalizeCoefs(foundCoefs);
-//      qDebug() << foundCoefs;
 
     Q_ = coefsToMatrix(foundCoefs);
     return true;
@@ -89,6 +87,10 @@ bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
         normal = conicNormal(p, rd);
         return true;
     }
+#if 0
+    printConic();
+    qDebug() << "Line((" << ro.x() << "," << ro.y() << "),(" << ro.x() + rd.x() << "," << ro.y() +  rd.y() << "))";
+#endif
     return false;
 }
 
@@ -101,6 +103,9 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
     double c = QVector4D::dotProduct(p, Q_ * p);
     if (std::fabs(a) < EPSILON) {
         t = -c / b;
+        if(std::isnan(t)) {
+            return false;
+        }
         return true;
     }
     double disc = b * b - a * c;
@@ -111,6 +116,15 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
     double root = std::sqrt(disc);
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
+//    if(t0 < 0) {
+//        if(t1 < 0) {
+//            return false;
+//        }
+//        t = t1;
+//        return true;
+//    }
+//    t = t0;
+//    return true;
     if (fabs(t0) < fabs(t1)) {
         t = t0;
     } else {
@@ -148,6 +162,25 @@ void Conic::operator+=(const Conic &other) {
         Q_ = other.Q_;
         hasSolution_ = true;
     }
+}
+
+void Conic::printConic() const {
+    qDebug() << "Conic:";
+    double A = Q_(0, 0);
+    double D = 2.0 * Q_(0, 1);
+    double E = Q_(1, 1);
+    double G = 2.0 * Q_(0, 2);
+    double B = 2.0 * Q_(1, 2);
+    double F = Q_(2, 2);
+
+    // Print the conic formula in Geogebra-compatible format
+    qDebug() << QString("%1*x^2 + %2*x*y + %3*y^2 + %4*x + %5*y + %6 = 0")
+            .arg(A)
+            .arg(D)
+            .arg(E)
+            .arg(G)
+            .arg(B)
+            .arg(F);
 }
 
 float Conic::getStability() const {

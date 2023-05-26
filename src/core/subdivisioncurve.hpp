@@ -3,6 +3,7 @@
 #include <QString>
 #include <QVector2D>
 #include <QVector>
+#include <QSet>
 
 class Settings;
 
@@ -73,6 +74,7 @@ private:
     QVector<QVector2D> curveNormals_;
     QVector<float> stability;
     QVector<bool> customNormals_;
+    QSet<int> knotIndices;
 
     QVector<QVector2D> netCoords_;
     QVector<QVector2D> netNormals_;
@@ -91,9 +93,8 @@ private:
 
     int getPrevIdx(int idx);
 
-    void knotSubdivide(int level);
-
     void knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> &norms, QVector<bool> &customNorms);
 
-    void tessellate(const QVector<QVector2D> &points, const QVector<QVector2D> &normals, int level);
+    void extractPatch(const QVector<QVector2D> &points, const QVector<QVector2D> &normals, QVector<int> &indices, int i,
+                      QVector<QVector2D> &patchCoords, QVector<QVector2D> &patchNormals) const;
 };

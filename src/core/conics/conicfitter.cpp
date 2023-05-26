@@ -14,7 +14,7 @@ double ConicFitter::getPointWeight(int index) const {
     } else if (index < 4) {
         return middlePointWeight_;
     }
-    return outerPointWeight_;
+    return 0;
 }
 
 double ConicFitter::getNormalWeight(int index) const {
@@ -23,7 +23,7 @@ double ConicFitter::getNormalWeight(int index) const {
     } else if (index < 4) {
         return middleNormalWeight_;
     }
-    return outerNormalWeight_;
+    return 0;
 }
 
 
@@ -195,33 +195,48 @@ QVector<double> ConicFitter::vecToQVecEigen(const Eigen::VectorXd &res) const {
 }
 
 QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
+#if 0
+    Eigen::MatrixXd MtM = A.transpose() * A;
+    Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(MtM);
+    Eigen::VectorXd eigenvalues = eigensolver.eigenvalues().real();
+    Eigen::MatrixXd eigenvectors = eigensolver.eigenvectors().real();
+
+    int minIndex;
+    double minValue = std::numeric_limits<double>::max();
+    for (int i = 0; i < eigenvalues.size(); ++i) {
+        double absValue = std::abs(eigenvalues(i));
+        if (absValue < minValue) {
+            minValue = absValue;
+            minIndex = i;
+        }
+    }
+
+    Eigen::VectorXd solution = eigenvectors.col(minIndex);
+    return vecToQVecEigen(solution);
+#else
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
     int idx = int(V.cols() - 1);
     Eigen::VectorXd eigenVec = V.col(idx);
     stability_ = float(svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1));
-    if (svd.singularValues()(idx) > 1e-12) {
+    if (svd.singularValues()(idx) > 1e-20) {
         return vecToQVecEigen(eigenVec);
     }
+
     return {};
+#endif
 }
 
 QVector<double> ConicFitter::fitConic(const QVector<QVector2D> &coords,
                                       const QVector<QVector2D> &normals) {
     numPoints_ = int(coords.size());
     numNormals_ = int(normals.size());
-    if (settings_.outerNormalWeight == 0.0 || settings_.outerPointWeight == 0.0) {
-        numNormals_ -= 2;
-        numPoints_ -= 2;
-    }
     numUnknowns_ = 6 + numNormals_;
 
     pointWeight_ = settings_.pointWeight;
     normalWeight_ = settings_.normalWeight;
     middlePointWeight_ = settings_.middlePointWeight;
     middleNormalWeight_ = settings_.middleNormalWeight;
-    outerPointWeight_ = settings_.outerPointWeight;
-    outerNormalWeight_ = settings_.outerNormalWeight;
 
     numEq_ = numPoints_ + numNormals_ * 2;
 #ifdef ARMADILLO

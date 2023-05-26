@@ -110,17 +110,6 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(normSolveCheckBox);
 
-    auto *tessellateCheckBox = new QCheckBox("Tessellate");
-    tessellateCheckBox->setToolTip(
-            "<html><head/><body><p>Enabling this will perform just a single subdivision step where each edge is sampled 2^(levels-1) times from the same conic. </p></body></html>"
-    );
-    tessellateCheckBox->setChecked(settings_.tessellate);
-    connect(tessellateCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.tessellate = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(tessellateCheckBox);
-
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
     splitConvexityCheckBox->setToolTip(
@@ -140,17 +129,43 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->getSubCurve()->insertKnots();
         mainView_->recalculateCurve();
     });
+
+    auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
+    gravitateAnglesCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, the weighted knot locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted knot points gravitate towards the vertex having the largest angle.</body></html>"
+    );
+    gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
+    connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.gravitateSmallerAngles = toggled;
+        mainView_->recalculateCurve();
+    });
+
+    auto *weightedKnotLocation = new QCheckBox("Weighted Knot Location");
+    weightedKnotLocation->setToolTip(
+            "<html><head/><body><p>If enabled, does not insert the knots in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
+    );
+    weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
+    connect(weightedKnotLocation, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.weightedKnotLocation = toggled;
+        mainView_->recalculateCurve();
+    });
+
+
+    auto* tensionLabel = new QLabel(QString("Knot Tension: %1").arg(settings_.knotTension));
     auto *tensionSlider = new QSlider(Qt::Horizontal);
     tensionSlider->setToolTip(
             "<html><head/><body><p>Changes how much the normals of newly inserted knot points gravitate to the normal orthogonal to the edge.</p></body></html>"
     );
     tensionSlider->setValue(settings_.knotTension * 100);
-    connect(tensionSlider, &QSlider::valueChanged, [this](int value) {
+    connect(tensionSlider, &QSlider::valueChanged, [this, tensionLabel](int value) {
         settings_.knotTension = value / 100.0f;
+        tensionLabel->setText(QString("Knot Tension: %1").arg(settings_.knotTension));
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(splitConvexityCheckBox);
-    vertLayout->addWidget(new QLabel("Knot Tension:"));
+    vertLayout->addWidget(weightedKnotLocation);
+    vertLayout->addWidget(gravitateAnglesCheckBox);
+    vertLayout->addWidget(tensionLabel);
     vertLayout->addWidget(tensionSlider);
     vertLayout->addWidget(insertKnotsButton);
 
@@ -181,19 +196,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midVertWeightSpinBox);
-
-    auto *outerVertWeightSpinBox = new QDoubleSpinBox();
-    outerVertWeightSpinBox->setMinimum(0);
-    outerVertWeightSpinBox->setMaximum(maxWeight);
-    outerVertWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the points <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
-    );
-    outerVertWeightSpinBox->setValue(settings_.outerPointWeight);
-    connect(outerVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.outerPointWeight = newVal;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(outerVertWeightSpinBox);
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Normal weights"));
@@ -222,20 +224,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midNormWeightSpinBox);
-
-    auto *outerNormWeightSpinBox = new QDoubleSpinBox();
-    outerNormWeightSpinBox->setMinimum(0);
-    outerNormWeightSpinBox->setMaximum(maxWeight);
-    outerNormWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p><span style=&quot; font-weight:600;&quot;>a</span>-b-<span style=&quot; font-weight:600;&quot;>c-</span>d-e-<span style=&quot; font-weight:600;&quot;>f</span></p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>a</span> and <span style=&quot; font-weight:600;&quot;>f </span>(the end points). </p></body></html>"
-    );
-    outerNormWeightSpinBox->setValue(settings_.outerNormalWeight);
-    connect(outerNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.outerNormalWeight = newVal;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(outerNormWeightSpinBox);
-
     vertLayout->addStretch();
 
     auto *circleNormsCheckBox = new QCheckBox("Circle Normals");

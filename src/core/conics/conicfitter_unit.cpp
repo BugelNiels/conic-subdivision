@@ -8,7 +8,7 @@ double UnitConicFitter::getPointWeight(int index) const {
     } else if (index < 4) {
         return middlePointWeight_;
     }
-    return outerPointWeight_;
+    return 0;
 }
 
 double UnitConicFitter::getNormalWeight(int index) const {
@@ -17,7 +17,7 @@ double UnitConicFitter::getNormalWeight(int index) const {
     } else if (index < 4) {
         return middleNormalWeight_;
     }
-    return outerNormalWeight_;
+    return 0;
 }
 
 inline arma::rowvec pointEq(const QVector2D &coord, int numUnkowns) {
@@ -200,8 +200,6 @@ QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
     normalWeight_ = settings.normalWeight;
     middlePointWeight_ = settings.middlePointWeight;
     middleNormalWeight_ = settings.middleNormalWeight;
-    outerPointWeight_ = settings.outerPointWeight;
-    outerNormalWeight_ = settings.outerNormalWeight;
 
     numEq_ = numPoints_ + numNormals_ * 2;
     numConstraints_ = 2;
