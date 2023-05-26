@@ -222,6 +222,7 @@ QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
     if (svd.singularValues()(idx) > 1e-20) {
         return vecToQVecEigen(eigenVec);
     }
+
     return {};
 #endif
 }
