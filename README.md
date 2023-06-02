@@ -46,3 +46,4 @@ Main view:
 - Right-clicking adds a new point
 - Double-clicking on a normal will reset it
 - Holding control favours normal selection over vertex selection when they are close together
+- Up/Down/Left/Right arrow keys can be used to translate the mesh.

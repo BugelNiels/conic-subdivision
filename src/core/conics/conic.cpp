@@ -9,7 +9,7 @@
 
 #define EPSILON 0.0000000001
 
-QMatrix4x4 coefsToMatrix(const QVector<double>& coefs) {
+Matrix4DD coefsToMatrix(const QVector<double>& coefs) {
     double a, b, c, d, e, f;
     a = coefs[0];        // A
     b = coefs[2] / 2.0;  // D
@@ -17,13 +17,13 @@ QMatrix4x4 coefsToMatrix(const QVector<double>& coefs) {
     d = coefs[3] / 2.0;  // G
     e = coefs[4] / 2.0;  // B
     f = coefs[5];        // F
-    return QMatrix4x4(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
+    return Matrix4DD(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
 }
 
-Conic::Conic(const Settings &settings) : hasSolution_(false), settings_(settings) { Q_.fill(0); }
+Conic::Conic(const Settings &settings) : settings_(settings) { Q_.fill(0); }
 
-Conic::Conic(const QVector<QVector2D> &coords,
-             const QVector<QVector2D> &normals, const Settings &settings)
+Conic::Conic(const QVector<Vector2DD> &coords,
+             const QVector<Vector2DD> &normals, const Settings &settings)
         : Conic(settings) {
     hasSolution_ = fitConic(coords, normals);
 }
@@ -42,8 +42,8 @@ void normalizeCoefs(QVector<double> &coefs) {
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-bool Conic::fitConic(const QVector<QVector2D> &coords,
-                     const QVector<QVector2D> &normals) {
+bool Conic::fitConic(const QVector<Vector2DD> &coords,
+                     const QVector<Vector2DD> &normals) {
     QVector<double> foundCoefs;
     if (settings_.normalizedSolve) {
         UnitConicFitter fitter;
@@ -57,27 +57,26 @@ bool Conic::fitConic(const QVector<QVector2D> &coords,
     if (foundCoefs.isEmpty()) {
         return false;
     }
-    // unComment these two lines to see the found coefficients for every edge
 //      normalizeCoefs(foundCoefs);
 
     Q_ = coefsToMatrix(foundCoefs);
     return true;
 }
 
-QVector2D Conic::conicNormal(const QVector2D &p, const QVector2D &rd) const {
-    QVector4D p4 = QVector4D(p, 1, 0);
-    float xn = QVector4D::dotProduct(Q_.row(0), p4);
-    float yn = QVector4D::dotProduct(Q_.row(1), p4);
-    QVector2D normal = QVector2D(xn, yn);
+Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
+    Vector4DD p4(p.x(), p.y(), 1, 0);
+    double xn = Q_.row(0).dot(p4);
+    double yn = Q_.row(1).dot(p4);
+    Vector2DD normal(xn, yn);
     normal.normalize();
-    if (QVector2D::dotProduct(normal, rd) < 0) {
+    if (normal.dot(rd) < 0) {
         normal *= -1;
     }
     return normal;
 }
 
-bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
-                   QVector2D &normal) const {
+bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
+                   Vector2DD &normal) const {
     if (!isValid()) {
         return false;
     }
@@ -94,13 +93,13 @@ bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
     return false;
 }
 
-bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
+bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
                        double &t) const {
-    QVector4D p = QVector4D(ro, 1, 0);
-    QVector4D u = QVector4D(rd, 0, 0);
-    double a = QVector4D::dotProduct(u, Q_ * u);
-    double b = QVector4D::dotProduct(u, Q_ * p);
-    double c = QVector4D::dotProduct(p, Q_ * p);
+    Vector4DD p(ro.x(), ro.y(), 1, 0);
+    Vector4DD u(rd.x(), rd.y(), 0, 0);
+    double a = u.dot(Q_ * u);
+    double b = u.dot(Q_ * p);
+    double c = p.dot(Q_ * p);
     if (std::fabs(a) < EPSILON) {
         t = -c / b;
         if(std::isnan(t)) {
@@ -116,15 +115,6 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
     double root = std::sqrt(disc);
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
-//    if(t0 < 0) {
-//        if(t1 < 0) {
-//            return false;
-//        }
-//        t = t1;
-//        return true;
-//    }
-//    t = t0;
-//    return true;
     if (fabs(t0) < fabs(t1)) {
         t = t0;
     } else {
@@ -183,6 +173,6 @@ void Conic::printConic() const {
             .arg(F);
 }
 
-float Conic::getStability() const {
+double Conic::getStability() const {
     return stability_;
 }
