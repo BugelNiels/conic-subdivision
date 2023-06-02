@@ -22,13 +22,12 @@ typedef struct Settings {
     bool normalHandles = true;
 
     // Calculation Weights
-    double pointWeight = 10000.0;
-    double normalWeight = 10000.0;
+    double pointWeight = 100000.0;
+    double normalWeight = 100000.0;
     double middlePointWeight = 1.0;
     double middleNormalWeight = 1.0;
 
     // Calculation settings
-    bool normalizedSolve = false;
     bool circleNormals = false;
     bool recalculateNormals = false;
     bool edgeTangentSample = true;
@@ -49,7 +48,10 @@ typedef struct Settings {
     float curveLineWidth = 2.0f;
     float controlLineWidth = 1.0f;
     int curvatureSign = 1;
+    float curvatureScale = 1.0f;
 
+    // For testing purposes
+    bool testToggle = false;
 
     // UI Appearance
     QMatrix4x4 projectionMatrix;

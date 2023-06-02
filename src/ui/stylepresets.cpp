@@ -22,6 +22,9 @@ conics::ui::StylePreset conics::ui::getDarkModePalette() {
     palette.setColor(QPalette::Highlight, QColor(75, 110, 175));        // Highlight color
     palette.setColor(QPalette::HighlightedText, QColor(239, 239, 239)); // Highlight text color
     palette.setColor(QPalette::PlaceholderText, QColor(150, 150, 150)); // PlaceHolder text color
+    palette.setColor(QPalette::Disabled, QPalette::Text, QColor(60, 60, 60));
+    palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(60, 60, 60));
+    palette.setColor(QPalette::Disabled, QPalette::Button, QColor(60, 60, 60));
 
     StylePreset preset;
     preset.palette = palette;
@@ -51,13 +54,16 @@ conics::ui::StylePreset conics::ui::getLightModePalette() {
     palette.setColor(QPalette::Highlight, QColor(75, 110, 175));         // Highlight color
     palette.setColor(QPalette::HighlightedText, QColor(255, 255, 255));  // Highlight text color
     palette.setColor(QPalette::PlaceholderText, QColor(170, 170, 170));  // Placeholder text color
+    palette.setColor(QPalette::Disabled, QPalette::Text, QColor(170, 170, 170));
+    palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(170, 170, 170));
+    palette.setColor(QPalette::Disabled, QPalette::Button, QColor(170, 170, 170));
 
     StylePreset preset;
     preset.palette = palette;
 
     preset.backgroundCol = QColor(255, 255, 255);
     preset.controlCurveCol = QColor(70, 70, 70);
-    preset.controlPointCol = QColor(255, 150, 150);
+    preset.controlPointCol = QColor(255, 100, 100);
     preset.smoothCurveCol = QColor(50, 50, 255);
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);

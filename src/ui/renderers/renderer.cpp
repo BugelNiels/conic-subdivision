@@ -1,6 +1,7 @@
 #include "renderer.hpp"
 #include "util/vector.hpp"
 
+
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
@@ -32,10 +33,17 @@ void Renderer::init(QOpenGLFunctions_4_1_Core *f) {
  * @param name Name of the shader.
  * @return The constructed shader.
  */
-QOpenGLShaderProgram *Renderer::constructPolyLineShader() const {
+QOpenGLShaderProgram *Renderer::constructPolyLineShader() {
+#ifdef SHADER_DOUBLE_PRECISION
+    QString pathVert = ":/shaders/double/polyline.vert";
+    QString pathGeom = ":/shaders/double/polyline_normals.geom";
+    QString pathFrag = ":/shaders/double/polyline.frag";
+
+#else
     QString pathVert = ":/shaders/polyline.vert";
     QString pathGeom = ":/shaders/polyline_normals.geom";
     QString pathFrag = ":/shaders/polyline.frag";
+#endif
 
     // we use the qt wrapper functions for shader objects
     auto *shader = new QOpenGLShaderProgram();
@@ -55,7 +63,7 @@ QOpenGLShaderProgram *Renderer::constructPolyLineShader() const {
  * @return The constructed shader.
  */
 QOpenGLShaderProgram *Renderer::constructDefaultShader(
-        const QString &name) const {
+        const QString &name) {
     QString pathVert = ":/shaders/" + name + ".vert";
     QString pathFrag = ":/shaders/" + name + ".frag";
 
@@ -67,10 +75,10 @@ QOpenGLShaderProgram *Renderer::constructDefaultShader(
     return shader;
 }
 
-QVector<QVector2D> Renderer::qVecToVec(const QVector<Vector2DD>& items) const {
+QVector<QVector2D> Renderer::qVecToVec(const QVector<Vector2DD> &items) {
     QVector<QVector2D> qItems;
     qItems.reserve(items.size());
-    for(auto& item : items) {
+    for (auto &item: items) {
         qItems.emplaceBack(QVector2D(float(item.x()), float(item.y())));
     }
     return qItems;

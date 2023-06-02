@@ -38,8 +38,8 @@ inline Eigen::RowVectorXd pointEqEigen(const Vector2DD &coord, int numUnknowns) 
 }
 
 inline Eigen::RowVectorXd normEqXEigen(const Vector2DD &coord, const Vector2DD &normal,
-                                       int numUnkowns, int normIdx) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnkowns);
+                                       int numUnknowns, int normIdx) {
+    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
     double x = coord.x();
     double y = coord.y();
     row(0) = 2 * x;  // A
@@ -53,12 +53,12 @@ inline Eigen::RowVectorXd normEqXEigen(const Vector2DD &coord, const Vector2DD &
 }
 
 inline Eigen::RowVectorXd normEqYEigen(const Vector2DD &coord, const Vector2DD &normal,
-                                       int numUnkowns, int normIdx) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnkowns);
+                                       int numUnknowns, int normIdx) {
+    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
     double x = coord.x();
     double y = coord.y();
     row(0) = 0;        // A
-    row(1) = 2 * y;  // B
+    row(1) = 2 * y;    // B
     row(2) = 2 * x;    // C
     row(3) = 0;        // E
     row(4) = 2;        // F
@@ -78,30 +78,15 @@ Eigen::MatrixXd ConicFitter::initAEigen(const QVector<Vector2DD> &coords,
     }
     for (int i = 0; i < numNormals_; i++) {
         double weight = getNormalWeight(i);
-        const Vector2DD& coord = coords[i];
-        const Vector2DD& normal = normals[i];
+        const Vector2DD &coord = coords[i];
+        const Vector2DD &normal = normals[i];
         A.row(rowIdx++) = normEqXEigen(coord, normal, numUnknowns_, i) * weight;
         A.row(rowIdx++) = normEqYEigen(coord, normal, numUnknowns_, i) * weight;
     }
     return A;
 }
 
-QVector<double> ConicFitter::vecToQVecEigen(const Eigen::VectorXd &res) const {
-    QVector<double> coefficients;
-    int numZeros = 0;
-    for (int i = 0; i < numUnknowns_; i++) {
-        coefficients.append(res(i));
-        if (res(i) == 0.0) {
-            numZeros++;
-        }
-    }
-    if (numZeros == numUnknowns_) {
-        return {};
-    }
-    return coefficients;
-}
-
-QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
+Eigen::VectorXd ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
 #if 0
     Eigen::MatrixXd MtM = A.transpose() * A;
     Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(MtM);
@@ -123,14 +108,12 @@ QVector<double> ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
 #else
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
-    int idx = int(V.cols() - 1);
-    Eigen::VectorXd eigenVec = V.col(idx);
     stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
-    return vecToQVecEigen(eigenVec);
+    return V.col(V.cols() - 1);
 #endif
 }
 
-QVector<double> ConicFitter::fitConic(const QVector<Vector2DD> &coords,
+Eigen::VectorXd ConicFitter::fitConic(const QVector<Vector2DD> &coords,
                                       const QVector<Vector2DD> &normals) {
     numPoints_ = int(coords.size());
     numNormals_ = int(normals.size());

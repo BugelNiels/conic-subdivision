@@ -10,9 +10,8 @@ CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {
 
 CurveRenderer::~CurveRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
-    gl_->glDeleteBuffers(1, &vbo_coords_);
-    gl_->glDeleteBuffers(1, &vbo_norms_);
-    gl_->glDeleteBuffers(1, &vbo_stab_);
+
+    gl_->glDeleteBuffers(numBuffers_, vbo_.data());
     gl_->glDeleteBuffers(1, &ibo_);
     delete texture_;
 }
@@ -28,21 +27,26 @@ void CurveRenderer::initBuffers() {
     gl_->glGenVertexArrays(1, &vao_);
     // bind vao
     gl_->glBindVertexArray(vao_);
+    vbo_.resize(numBuffers_);
+    gl_->glGenBuffers(numBuffers_, vbo_.data());
 
-    gl_->glGenBuffers(1, &vbo_coords_);
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
     gl_->glEnableVertexAttribArray(0);
     gl_->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl_->glGenBuffers(1, &vbo_norms_);
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
     gl_->glEnableVertexAttribArray(1);
     gl_->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl_->glGenBuffers(1, &vbo_stab_);
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_stab_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[2]);
     gl_->glEnableVertexAttribArray(2);
     gl_->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+#ifdef SHADER_DOUBLE_PRECISION
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[3]);
+    gl_->glEnableVertexAttribArray(3);
+    gl_->glVertexAttribPointer(3, 2, GL_DOUBLE, GL_FALSE, 0, nullptr);
+#endif
 
     gl_->glGenBuffers(1, &ibo_);
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
@@ -76,13 +80,13 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     } else {
         coords = qVecToVec(sc.getCurveCoords());
         normals = qVecToVec(sc.getCurveNormals());
-        const auto& stabVals = sc.getStabilityVals();
+        const auto &stabVals = sc.getStabilityVals();
         stability.reserve(stabVals.size());
-        for(const auto stabVal : stabVals) {
+        for (const auto stabVal: stabVals) {
             stability.append(float(stabVal));
         }
     }
-    for(auto& norm : normals) {
+    for (auto &norm: normals) {
         norm *= settings_.curvatureSign;
         norm.normalize();
     }
@@ -91,17 +95,30 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
         return;
     }
 
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[0]);
     gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords.size(),
                       coords.data(), GL_DYNAMIC_DRAW);
 
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_norms_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
     gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals.size(),
                       normals.data(), GL_DYNAMIC_DRAW);
-
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_stab_);
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[2]);
     gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(float) * stability.size(),
                       stability.data(), GL_DYNAMIC_DRAW);
+
+#ifdef SHADER_DOUBLE_PRECISION
+    const auto& coords_d = sc.getNetCoords();
+    QVector<double> temp;
+    for(const auto& coord : coords_d) {
+        temp.append(coord.x());
+        temp.append(coord.y());
+    }
+
+    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[3]);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(double) * temp.size(),
+                      temp.data(), GL_DYNAMIC_DRAW);
+#endif
+
 
     QVector<int> indices(coords.size() + 2);
     for (int i = 0; i < coords.size(); i++) {
@@ -138,6 +155,8 @@ void CurveRenderer::draw() {
                             settings_.visualizeStability);
     shader->setUniformValue(shader->uniformLocation("viewMatrix"),
                             settings_.viewMatrix);
+    shader->setUniformValue(shader->uniformLocation("curvatureScale"),
+                            settings_.curvatureScale);
 
     shader->setUniformValue(shader->uniformLocation("colorMap"), 0);
 

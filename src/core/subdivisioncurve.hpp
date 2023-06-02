@@ -19,7 +19,8 @@ public:
 
     explicit SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, bool closed = true);
 
-    SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, QVector<Vector2DD> normals, bool closed = true);
+    SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, QVector<Vector2DD> normals,
+                     bool closed = true);
 
     inline QVector<Vector2DD> getNetCoords() { return netCoords_; }
 
@@ -35,11 +36,11 @@ public:
 
     int findClosestNormal(const Vector2DD &p, double maxDist);
 
-    int addPoint(const Vector2DD& p);
+    int addPoint(const Vector2DD &p);
 
-    void setVertexPosition(int idx, const Vector2DD& p);
+    void setVertexPosition(int idx, const Vector2DD &p);
 
-    void setNormalPosition(int idx, const Vector2DD& p);
+    void setNormalPosition(int idx, const Vector2DD &p);
 
     void removePoint(int idx);
 
@@ -61,7 +62,7 @@ public:
 
     QVector<double> getStabilityVals() const;
 
-    void translate(const Vector2DD& translation);
+    void translate(const Vector2DD &translation);
 
 private:
     const Settings &settings_;

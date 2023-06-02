@@ -123,7 +123,7 @@ SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, double radius) {
         netCoords.append(Vector2DD(x, y));
         netNormals.append(Vector2DD(x, y).normalized());
     }
-    return SubdivisionCurve(settings_, netCoords, netNormals);
+    return {settings_, netCoords, netNormals};
 }
 
 SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, double height) {
@@ -141,7 +141,7 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, d
         const Vector2DD normal(ty, -tx);
         netNormals.append(normal.normalized());
     }
-    return SubdivisionCurve(settings_, netCoords, netNormals);
+    return {settings_, netCoords, netNormals};
 }
 
 

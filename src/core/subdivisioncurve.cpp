@@ -2,13 +2,8 @@
 
 #include <utility>
 
-#include "src/core/conics/conicfitter.hpp"
-
 #include "settings.hpp"
 #include "core/conics/conic.hpp"
-
-#define MIN(A, B) (A) < (B) ? (A) : (B)
-#define MAX(A, B) (A) > (B) ? (A) : (B)
 
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
@@ -65,25 +60,24 @@ Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
 QVector<Vector2DD> SubdivisionCurve::calcNormals(
         const QVector<Vector2DD> &coords) const {
     QVector<Vector2DD> normals;
-    int n = coords.size();
+    int n = int(coords.size());
     normals.resize(n);
     for (int i = 0; i < n; i++) {
         calcNormalAtIndex(coords, normals, i);
     }
-
     return normals;
 }
 
 void SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, QVector<Vector2DD> &normals, int i) const {
-    int n = normals.size();
+    int n = int(normals.size());
     int nextIdx;
     int prevIdx;
     if (closed_) {
         prevIdx = (i - 1 + n) % n;
         nextIdx = (i + 1) % n;
     } else {
-        prevIdx = MAX(0, i - 1);
-        nextIdx = MIN(i + 1, n - 1);
+        prevIdx = std::max(0, i - 1);
+        nextIdx = std::min(i + 1, n - 1);
     }
     Vector2DD a = coords[prevIdx];
     Vector2DD b = coords[i];
@@ -99,15 +93,15 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, QVect
             normals[i] = Vector2DD(normal.y(), normal.x()).normalized();
         } else {
             double d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) +
-                           c.x() * (a.y() - b.y()));
+                            c.x() * (a.y() - b.y()));
             double ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
-                        (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
-                        (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
-                       d;
+                         (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
+                         (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
+                        d;
             double uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
-                        (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
-                        (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
-                       d;
+                         (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
+                         (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
+                        d;
             Vector2DD oscCircleCenter = Vector2DD(ux, uy);
             normals[i] = (oscCircleCenter - b).normalized();
 
@@ -125,7 +119,7 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, QVect
  * @brief SubdivisionCurve::addPoint Adds a point to the control net.
  * @param p The point to add to the control net.
  */
-int SubdivisionCurve::addPoint(const Vector2DD& p) {
+int SubdivisionCurve::addPoint(const Vector2DD &p) {
     int idx = findInsertIdx(p);
     netCoords_.insert(idx, p);
     netNormals_.insert(idx, Vector2DD());
@@ -143,7 +137,7 @@ int SubdivisionCurve::addPoint(const Vector2DD& p) {
  * @param idx The index of the point to update the position of.
  * @param p The new position of the point.
  */
-void SubdivisionCurve::setVertexPosition(int idx, const Vector2DD& p) {
+void SubdivisionCurve::setVertexPosition(int idx, const Vector2DD &p) {
     netCoords_[idx] = p;
     if (!customNormals_[idx]) {
         recalculateNormal(idx);
@@ -159,7 +153,7 @@ void SubdivisionCurve::setVertexPosition(int idx, const Vector2DD& p) {
     reSubdivide();
 }
 
-void SubdivisionCurve::setNormalPosition(int idx, const Vector2DD& p) {
+void SubdivisionCurve::setNormalPosition(int idx, const Vector2DD &p) {
     netNormals_[idx] = p - netCoords_[idx];
     netNormals_[idx].normalize();
     customNormals_[idx] = true;
@@ -215,13 +209,13 @@ int SubdivisionCurve::findClosestVertex(const Vector2DD &p, const double maxDist
 }
 
 int SubdivisionCurve::getNextIdx(int idx) {
-    int n = netCoords_.size();
-    return closed_ ? (idx + 1) % n : MIN(idx + 1, n - 1);
+    int n = int(netCoords_.size());
+    return closed_ ? (idx + 1) % n : std::min(idx + 1, n - 1);
 }
 
 int SubdivisionCurve::getPrevIdx(int idx) {
-    int n = netCoords_.size();
-    return closed_ ? (idx - 1 + n) % n : MAX(idx - 1, 0);
+    int n = int(netCoords_.size());
+    return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
 double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
@@ -229,7 +223,7 @@ double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P
     Vector2DD AP = P - A;
     double AB_len2 = AB.squaredNorm();
     double t = AP.dot(AB) / AB_len2;
-    t = qMax(0.0, qMin(1.0, t)); // clamp to [0, 1]
+    t = std::max(0.0, std::min(1.0, t)); // clamp to [0, 1]
     Vector2DD Q = A + t * AB;
     return std::hypot(P.x() - Q.x(), P.y() - Q.y());
 }
@@ -280,7 +274,7 @@ void SubdivisionCurve::reSubdivide() {
  * @param level The number of times the curve should be subdivided
  */
 void SubdivisionCurve::subdivide(int level) {
-    if (netCoords_.size() == 0) {
+    if (int(netCoords_.size()) == 0) {
         return;
     }
     if (settings_.convexitySplit) {
@@ -321,7 +315,7 @@ void SubdivisionCurve::subdivide(const QVector<Vector2DD> &points,
         stability = stabilities;
         return;
     }
-    int n = points.size() * 2 - 1;
+    int n = int(points.size()) * 2 - 1;
     if (closed_) {
         n += 1;
     }
@@ -337,7 +331,8 @@ void SubdivisionCurve::subdivide(const QVector<Vector2DD> &points,
     }
     // set new points
     int patchSize = 6;
-    QVector<int> indices(patchSize);
+    QVector<int> indices;
+    indices.reserve(patchSize);
     for (int i = 1; i < n; i += 2) {
         QVector<Vector2DD> patchCoords;
         QVector<Vector2DD> patchNormals;
@@ -383,7 +378,7 @@ void SubdivisionCurve::extractPatch(const QVector<Vector2DD> &points, const QVec
                                     QVector<Vector2DD> &patchNormals) const {
     int pIdx = i / 2;
 
-    int size = points.size();
+    int size = int(points.size());
 
     indices.clear();
     // Two edge points
@@ -441,12 +436,13 @@ void SubdivisionCurve::setClosed(bool closed) {
         recalculateNormal(0);
     }
     if (!customNormals_[customNormals_.size() - 1]) {
-        recalculateNormal(customNormals_.size() - 1);
+        recalculateNormal(int(customNormals_.size()) - 1);
     }
     reSubdivide();
 }
 
-bool SubdivisionCurve::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) const {
+bool SubdivisionCurve::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2,
+                                          const Vector2DD &v3) const {
     Vector2DD v1v3 = v3 - v1;
     Vector2DD v1v0 = v0 - v1;
     if (v1v0.squaredNorm() == 0.0 || v1v3.squaredNorm() == 0) {
@@ -455,7 +451,7 @@ bool SubdivisionCurve::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &
     Vector2DD normal = Vector2DD(v2.y() - v1.y(), v1.x() - v2.x());
     double dotProduct1 = normal.dot(v1v3);
     double dotProduct2 = normal.dot(v1v0);
-    if (std::abs(dotProduct1) < settings_.epsilon || std::abs(dotProduct2) <  settings_.epsilon) {
+    if (std::abs(dotProduct1) < settings_.epsilon || std::abs(dotProduct2) < settings_.epsilon) {
         return true;
     }
     double sign = dotProduct1 > 0 ? 1.0 : -1.0;
@@ -468,7 +464,7 @@ T mix(const T &a, const T &b, double w) {
 }
 
 void SubdivisionCurve::knotCurve(QVector<Vector2DD> &coords, QVector<Vector2DD> &norms, QVector<bool> &customNorms) {
-    int n = netCoords_.size();
+    int n = int(netCoords_.size());
     coords.reserve(n);
     norms.reserve(n);
     customNorms.reserve(n);

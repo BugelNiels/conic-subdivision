@@ -5,6 +5,9 @@
         <file>shaders/polyline_normals.geom</file>
         <file>shaders/polyline.vert</file>
         <file>shaders/polyline.frag</file>
+        <file>shaders/double/polyline_normals.geom</file>
+        <file>shaders/double/polyline.vert</file>
+        <file>shaders/double/polyline.frag</file>
         <file>icons/theme.png</file>
     </qresource>
 </RCC>

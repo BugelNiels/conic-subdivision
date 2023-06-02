@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QMessageBox>
+#include <QRadioButton>
 
 #include "src/core/conics/conicpresets.hpp"
 #include "ui/stylepresets.hpp"
@@ -99,16 +100,40 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(applySubdivButton);
 
 
-    auto *normSolveCheckBox = new QCheckBox("Normalized Solve");
-    normSolveCheckBox->setToolTip(
-            "<html><head/><body><p>Enabling this will try to fit a conic using the unit normal constraint. If this option is disabled, a separated scaling value for each normal is calculated.</p></body></html>"
+    auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
+    gravitateAnglesCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, the weighted knot locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted knot points gravitate towards the vertex having the largest angle.</body></html>"
     );
-    normSolveCheckBox->setChecked(settings_.normalizedSolve);
-    connect(normSolveCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.normalizedSolve = toggled;
+    gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
+    gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
+    connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.gravitateSmallerAngles = toggled;
         mainView_->recalculateCurve();
     });
-    vertLayout->addWidget(normSolveCheckBox);
+
+    auto *weightedKnotLocation = new QCheckBox("Weighted Knot Location");
+    weightedKnotLocation->setToolTip(
+            "<html><head/><body><p>If enabled, does not insert the knots in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
+    );
+    weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
+    connect(weightedKnotLocation, &QCheckBox::toggled, [this, gravitateAnglesCheckBox](bool toggled) {
+        settings_.weightedKnotLocation = toggled;
+        gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
+        mainView_->recalculateCurve();
+    });
+
+
+    auto *tensionLabel = new QLabel(QString("Knot Tension: %1").arg(settings_.knotTension));
+    auto *tensionSlider = new QSlider(Qt::Horizontal);
+    tensionSlider->setToolTip(
+            "<html><head/><body><p>Changes how much the normals of newly inserted knot points gravitate to the normal orthogonal to the edge.</p></body></html>"
+    );
+    tensionSlider->setValue(settings_.knotTension * 100);
+    connect(tensionSlider, &QSlider::valueChanged, [this, tensionLabel](int value) {
+        settings_.knotTension = value / 100.0f;
+        tensionLabel->setText(QString("Knot Tension: %1").arg(settings_.knotTension));
+        mainView_->recalculateCurve();
+    });
 
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
@@ -116,8 +141,11 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
     );
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
-    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this, weightedKnotLocation, gravitateAnglesCheckBox, tensionSlider](bool toggled) {
         settings_.convexitySplit = toggled;
+        weightedKnotLocation->setEnabled(toggled);
+        gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedKnotLocation);
+        tensionSlider->setEnabled(toggled);
         mainView_->recalculateCurve();
     });
 
@@ -130,38 +158,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
 
-    auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
-    gravitateAnglesCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, the weighted knot locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted knot points gravitate towards the vertex having the largest angle.</body></html>"
-    );
-    gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
-    connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.gravitateSmallerAngles = toggled;
-        mainView_->recalculateCurve();
-    });
-
-    auto *weightedKnotLocation = new QCheckBox("Weighted Knot Location");
-    weightedKnotLocation->setToolTip(
-            "<html><head/><body><p>If enabled, does not insert the knots in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
-    );
-    weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
-    connect(weightedKnotLocation, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.weightedKnotLocation = toggled;
-        mainView_->recalculateCurve();
-    });
-
-
-    auto* tensionLabel = new QLabel(QString("Knot Tension: %1").arg(settings_.knotTension));
-    auto *tensionSlider = new QSlider(Qt::Horizontal);
-    tensionSlider->setToolTip(
-            "<html><head/><body><p>Changes how much the normals of newly inserted knot points gravitate to the normal orthogonal to the edge.</p></body></html>"
-    );
-    tensionSlider->setValue(settings_.knotTension * 100);
-    connect(tensionSlider, &QSlider::valueChanged, [this, tensionLabel](int value) {
-        settings_.knotTension = value / 100.0f;
-        tensionLabel->setText(QString("Knot Tension: %1").arg(settings_.knotTension));
-        mainView_->recalculateCurve();
-    });
     vertLayout->addWidget(splitConvexityCheckBox);
     vertLayout->addWidget(weightedKnotLocation);
     vertLayout->addWidget(gravitateAnglesCheckBox);
@@ -224,29 +220,53 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midNormWeightSpinBox);
+
+    vertLayout->addStretch();
+    auto *testToggleCheckBox = new QCheckBox("Test Toggle");
+    testToggleCheckBox->setChecked(settings_.testToggle);
+    connect(testToggleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.testToggle = toggled;
+        mainView_->recalculateCurve();
+    });
+    vertLayout->addWidget(testToggleCheckBox);
     vertLayout->addStretch();
 
-    auto *circleNormsCheckBox = new QCheckBox("Circle Normals");
-    circleNormsCheckBox->setToolTip(
-            "<html><head/><body><p>Estimate the normals using oscilating circles.</p></body></html>"
+    auto *regularNormalsRadioButton = new QRadioButton("Regular Normals");
+    regularNormalsRadioButton->setToolTip(
+            "<html><head/><body><p>If enabled, approximates the normals using half the angle between the two adjacent edges.</body></html>"
     );
-    circleNormsCheckBox->setChecked(settings_.circleNormals);
-    connect(circleNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.circleNormals = toggled;
+    regularNormalsRadioButton->setChecked(!settings_.areaWeightedNormals);
+    connect(regularNormalsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.areaWeightedNormals = false;
+        settings_.circleNormals = false;
         mainView_->recalculateNormals();
     });
-    vertLayout->addWidget(circleNormsCheckBox);
+    vertLayout->addWidget(regularNormalsRadioButton);
 
-    auto *lengthWeightedCheckBox = new QCheckBox("Length Weighted Normals");
-    lengthWeightedCheckBox->setToolTip(
+    auto *lengthWeightedRadioButton = new QRadioButton("Length Weighted Normals");
+    lengthWeightedRadioButton->setToolTip(
             "<html><head/><body><p>If enabled, approximates the normals by taking into consideration the edge lengths.</body></html>"
     );
-    lengthWeightedCheckBox->setChecked(settings_.areaWeightedNormals);
-    connect(lengthWeightedCheckBox, &QCheckBox::toggled, [this](bool toggled) {
+    lengthWeightedRadioButton->setChecked(settings_.areaWeightedNormals);
+    connect(lengthWeightedRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         settings_.areaWeightedNormals = toggled;
         mainView_->recalculateNormals();
     });
-    vertLayout->addWidget(lengthWeightedCheckBox);
+    vertLayout->addWidget(lengthWeightedRadioButton);
+
+    auto *circleNormsRadioButton = new QRadioButton("Circle Normals");
+    circleNormsRadioButton->setToolTip(
+            "<html><head/><body><p>Estimate the normals using oscilating circles.</p></body></html>"
+    );
+    circleNormsRadioButton->setChecked(settings_.circleNormals);
+    connect(circleNormsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
+        settings_.circleNormals = toggled;
+        mainView_->recalculateNormals();
+    });
+    vertLayout->addWidget(circleNormsRadioButton);
+
+
+    vertLayout->addStretch();
 
     auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
     recalcNormsCheckBox->setToolTip(
@@ -269,8 +289,23 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeSampleCheckBox);
-
     vertLayout->addStretch();
+
+    auto *curvatureScaleLabel = new QLabel("Curvature Scale");
+    auto *curvatureScaleSlider = new QSlider(Qt::Horizontal);
+    curvatureScaleSlider->setToolTip(
+            "<html><head/><body><p>Changes how long the curvature combs are.</p></body></html>"
+    );
+    curvatureScaleSlider->setValue(settings_.curvatureScale * 10);
+    connect(curvatureScaleSlider, &QSlider::valueChanged, [this](int value) {
+        settings_.curvatureScale = value / 10.0f;
+        mainView_->updateBuffers();
+    });
+    vertLayout->addWidget(curvatureScaleLabel);
+    vertLayout->addWidget(curvatureScaleSlider);
+    vertLayout->addStretch();
+
+
     auto *dockWidget = new QDockWidget(this);
     dockWidget->setWidget(sideMenu);
     dockWidget->setFeatures(
@@ -328,7 +363,8 @@ QMenu *MainWindow::getFileMenu() {
                 QMessageBox::information(this, "Image Saved", filePath);
                 return;
             } else {
-                QMessageBox::warning(this, "Failed to save image", "Ensure you provided a file extension:\n:" + filePath);
+                QMessageBox::warning(this, "Failed to save image",
+                                     "Ensure you provided a file extension:\n:" + filePath);
                 return;
             }
         }
