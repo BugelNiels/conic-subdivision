@@ -69,14 +69,22 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     QVector<QVector2D> normals;
     QVector<float> stability;
     if (sc.getSubdivLevel() == 0) {
-        coords = sc.getNetCoords();
-        normals = sc.getNetNormals();
+        coords = qVecToVec(sc.getNetCoords());
+        normals = qVecToVec(sc.getNetNormals());
         stability.resize(coords.size());
         stability.fill(0);
     } else {
-        coords = sc.getCurveCoords();
-        normals = sc.getCurveNormals();
-        stability = sc.getStabilityVals();
+        coords = qVecToVec(sc.getCurveCoords());
+        normals = qVecToVec(sc.getCurveNormals());
+        const auto& stabVals = sc.getStabilityVals();
+        stability.reserve(stabVals.size());
+        for(const auto stabVal : stabVals) {
+            stability.append(float(stabVal));
+        }
+    }
+    for(auto& norm : normals) {
+        norm *= settings_.curvatureSign;
+        norm.normalize();
     }
     if (coords.size() == 0) {
         vboSize_ = 0;

@@ -31,17 +31,15 @@ public:
 
     inline int getSubdivLevel() const { return subdivisionLevel_; }
 
-    int findClosestVertex(const Vector2DD &p, float maxDist);
+    int findClosestVertex(const Vector2DD &p, double maxDist);
 
-    int findClosestNormal(const Vector2DD &p, float maxDist);
+    int findClosestNormal(const Vector2DD &p, double maxDist);
 
-    int addPoint(Vector2DD p);
+    int addPoint(const Vector2DD& p);
 
-    void flipNormals();
+    void setVertexPosition(int idx, const Vector2DD& p);
 
-    void setVertexPosition(int idx, Vector2DD p);
-
-    void setNormalPosition(int idx, Vector2DD p);
+    void setNormalPosition(int idx, const Vector2DD& p);
 
     void removePoint(int idx);
 
@@ -98,4 +96,6 @@ private:
 
     void extractPatch(const QVector<Vector2DD> &points, const QVector<Vector2DD> &normals, QVector<int> &indices, int i,
                       QVector<Vector2DD> &patchCoords, QVector<Vector2DD> &patchNormals) const;
+
+    bool areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) const;
 };

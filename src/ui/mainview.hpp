@@ -5,6 +5,8 @@
 
 #include "ui/renderers/curvenetrenderer.hpp"
 #include "ui/renderers/curverenderer.hpp"
+#include "util/vector.hpp"
+
 
 class SubdivisionCurve;
 
@@ -33,7 +35,7 @@ public:
 protected:
     void initializeGL() override;
 
-    QVector2D toNormalizedScreenCoordinates(float x, float y);
+    Vector2DD toNormalizedScreenCoordinates(double x, double y);
 
     void mousePressEvent(QMouseEvent *event) override;
 
@@ -64,12 +66,12 @@ private:
 
     bool dragging_ = false;
 
-    QVector2D oldMouseCoords_;
+    Vector2DD oldMouseCoords_;
     QMatrix4x4 toWorldCoordsMatrix_;
 
-    bool attemptNormalSelect(const QVector2D &scenePos);
+    bool attemptNormalSelect(const Vector2DD &scenePos);
 
-    bool attemptVertexSelect(const QVector2D &scenePos);
+    bool attemptVertexSelect(const Vector2DD &scenePos);
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 
@@ -80,6 +82,6 @@ private slots:
 
     void resetViewMatrix();
 
-    void translationUpdate(const QVector2D &scenePos, const QPointF &mousePos);
+    void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
 };
 

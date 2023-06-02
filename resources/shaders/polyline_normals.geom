@@ -46,9 +46,13 @@ void emitLine(vec4 b, vec4 a, float u) {
 }
 
 float calcCurvature(vec4 a, vec4 b, vec4 c) {
-    float dotProduct = dot(c - b, a - b);
-    float angle = acos(dotProduct / (length(c - b) * length(a - b)));
-    float curvature = (2 * sin(angle) / length(c - a));
+    vec3 ab = a.xyz - b.xyz;
+    vec3 cb = c.xyz - b.xyz;
+
+    float normAB = length(ab);
+    float normCB = length(cb);
+
+    float curvature = 2.0 * length(cross(ab, cb)) / (normAB * normCB * (normAB + normCB));
     return curvature;
 }
 

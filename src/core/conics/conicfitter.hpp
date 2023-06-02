@@ -3,7 +3,6 @@
 #include <QVector>
 
 #include "src/core/settings.hpp"
-#include <armadillo>
 #include <Eigen/Core>
 #include "util/vector.hpp"
 
@@ -27,18 +26,11 @@ private:
     double normalWeight_ = 1.0;
     double middlePointWeight_ = 1.0;
     double middleNormalWeight_ = 1.0;
-    int numUnknowns_;
+    int numUnknowns_ = 0;
 
     double getPointWeight(int index) const;
 
     double getNormalWeight(int index) const;
-
-    QVector<double> vecToQVec(const arma::vec &res) const;
-
-    QVector<double> solveLinSystem(const arma::mat &A) const;
-
-    arma::mat initA(const QVector<Vector2DD> &coords,
-                    const QVector<Vector2DD> &normals) const;
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
     initAEigen(const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals) const;

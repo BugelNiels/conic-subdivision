@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "util/vector.hpp"
 
 /**
  * @brief Renderer::Renderer Creates a new renderer.
@@ -64,4 +65,13 @@ QOpenGLShaderProgram *Renderer::constructDefaultShader(
     shader->addShaderFromSourceFile(QOpenGLShader::Fragment, pathFrag);
     shader->link();
     return shader;
+}
+
+QVector<QVector2D> Renderer::qVecToVec(const QVector<Vector2DD>& items) const {
+    QVector<QVector2D> qItems;
+    qItems.reserve(items.size());
+    for(auto& item : items) {
+        qItems.emplaceBack(QVector2D(float(item.x()), float(item.y())));
+    }
+    return qItems;
 }

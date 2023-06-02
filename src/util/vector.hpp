@@ -7,3 +7,4 @@ using Vector3DD = Eigen::Vector3d;
 using Vector4DD = Eigen::Vector4d;
 
 using Matrix4DD = Eigen::Matrix4d;
+using Matrix3DD = Eigen::Matrix3d;

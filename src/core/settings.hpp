@@ -36,7 +36,8 @@ typedef struct Settings {
     bool areaWeightedNormals = true;
     bool weightedKnotLocation = false;
     bool gravitateSmallerAngles = true;
-    float knotTension = 0.8;
+    double knotTension = 0.8;
+    double epsilon = 1e-20;
 
     // UI related constants
     float normalLength = 0.15;
@@ -47,6 +48,7 @@ typedef struct Settings {
     float selectedPointRadius = 12.0f;
     float curveLineWidth = 2.0f;
     float controlLineWidth = 1.0f;
+    int curvatureSign = 1;
 
 
     // UI Appearance
@@ -57,5 +59,6 @@ typedef struct Settings {
     // UI Controls
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
+
 
 } Settings;

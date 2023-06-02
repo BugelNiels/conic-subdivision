@@ -7,17 +7,17 @@
 
 #include "src/core/settings.hpp"
 
-#define EPSILON 0.0000000001
-
-Matrix4DD coefsToMatrix(const QVector<double>& coefs) {
+Matrix3DD coefsToMatrix(const QVector<double> &coefs) {
     double a, b, c, d, e, f;
-    a = coefs[0];        // A
-    b = coefs[2] / 2.0;  // D
-    c = coefs[1];        // E
-    d = coefs[3] / 2.0;  // G
-    e = coefs[4] / 2.0;  // B
-    f = coefs[5];        // F
-    return Matrix4DD(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
+    a = coefs[0];           // A
+    b = coefs[2];           // D
+    c = coefs[1];           // E
+    d = coefs[3];           // G
+    e = coefs[4];           // B
+    f = coefs[5];           // F
+    Matrix3DD matrix;
+    matrix << a, b, d, b, c, e, d, e, f;
+    return matrix;
 }
 
 Conic::Conic(const Settings &settings) : settings_(settings) { Q_.fill(0); }
@@ -29,7 +29,12 @@ Conic::Conic(const QVector<Vector2DD> &coords,
 }
 
 void normalizeCoefs(QVector<double> &coefs) {
-    double fac = 1 / coefs[0];
+    double sum = 0;
+    for (double &coef: coefs) {
+        sum += coef;
+    }
+
+    double fac = 1 / sum;
     for (double &coef: coefs) {
         coef *= fac;
     }
@@ -57,21 +62,21 @@ bool Conic::fitConic(const QVector<Vector2DD> &coords,
     if (foundCoefs.isEmpty()) {
         return false;
     }
-//      normalizeCoefs(foundCoefs);
+//    normalizeCoefs(foundCoefs);
 
     Q_ = coefsToMatrix(foundCoefs);
     return true;
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
-    Vector4DD p4(p.x(), p.y(), 1, 0);
-    double xn = Q_.row(0).dot(p4);
-    double yn = Q_.row(1).dot(p4);
+    Vector3DD p3(p.x(), p.y(), 1);
+    double xn = Q_.row(0).dot(p3);
+    double yn = Q_.row(1).dot(p3);
     Vector2DD normal(xn, yn);
-    normal.normalize();
     if (normal.dot(rd) < 0) {
         normal *= -1;
     }
+//    normal.normalize();
     return normal;
 }
 
@@ -95,14 +100,15 @@ bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
 
 bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
                        double &t) const {
-    Vector4DD p(ro.x(), ro.y(), 1, 0);
-    Vector4DD u(rd.x(), rd.y(), 0, 0);
+    Vector3DD p(ro.x(), ro.y(), 1);
+    Vector3DD u(rd.x(), rd.y(), 0);
     double a = u.dot(Q_ * u);
     double b = u.dot(Q_ * p);
     double c = p.dot(Q_ * p);
-    if (std::fabs(a) < EPSILON) {
+
+    if (std::fabs(a) < settings_.epsilon) {
         t = -c / b;
-        if(std::isnan(t)) {
+        if (std::isnan(t)) {
             return false;
         }
         return true;
@@ -115,43 +121,12 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
     double root = std::sqrt(disc);
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
-    if (fabs(t0) < fabs(t1)) {
+    if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;
     } else {
         t = t1;
     }
     return true;
-}
-
-Conic Conic::average(const Conic &other) const {
-    Conic q = *this + other;
-    q.Q_ /= 2.0;
-    return q;
-}
-
-Conic Conic::operator+(const Conic &other) const {
-    Conic q(settings_);
-    q.hasSolution_ = true;
-    if (isValid() && other.isValid()) {
-        q.Q_ = Q_ + other.Q_;
-    } else if (other.isValid()) {
-        q.Q_ = other.Q_;
-    } else if (isValid()) {
-        q.Q_ = Q_;
-    } else {
-        q.hasSolution_ = false;
-    }
-    return q;
-}
-
-void Conic::operator+=(const Conic &other) {
-    if (isValid() && other.isValid()) {
-        Q_ = (Q_ + other.Q_);
-        hasSolution_ = true;
-    } else if (other.isValid()) {
-        Q_ = other.Q_;
-        hasSolution_ = true;
-    }
 }
 
 void Conic::printConic() const {

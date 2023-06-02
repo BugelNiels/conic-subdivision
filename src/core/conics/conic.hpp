@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QMatrix4x4>
 #include <QVector>
 #include "util/vector.hpp"
 
@@ -20,21 +19,13 @@ public:
 
     inline bool isValid() const { return hasSolution_; }
 
-    inline Matrix4DD getCoefficients() const { return Q_; }
-
-    Conic average(const Conic &other) const;
-
-    Conic operator+(const Conic &other) const;
-
-    void operator+=(const Conic &other);
-
     double getStability() const;
 
 private:
-    double stability_ = 0;
-    Matrix4DD Q_;
-    bool hasSolution_ = false;
     const Settings &settings_;
+    Matrix3DD Q_;
+    double stability_ = 0;
+    bool hasSolution_ = false;
 
     bool fitConic(const QVector<Vector2DD> &coords,
                   const QVector<Vector2DD> &normals);

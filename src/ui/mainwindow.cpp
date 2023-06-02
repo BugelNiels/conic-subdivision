@@ -446,11 +446,12 @@ QMenu *MainWindow::getRenderMenu() {
     });
     renderMenu->addAction(normalHandlesAction);
 
-//    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), renderMenu);
-//    flipNormals->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
-//    connect(flipNormals, &QAction::triggered, [this]() {
-//        mainView_->flipCurveNorms();
-//    });
-//    renderMenu->addAction(flipNormals);
+    auto *flipNormals = new QAction(QStringLiteral("Flip Normals"), renderMenu);
+    flipNormals->setShortcut(QKeySequence(Qt::ALT | Qt::Key_N));
+    connect(flipNormals, &QAction::triggered, [this]() {
+        settings_.curvatureSign *= -1;
+        mainView_->updateBuffers();
+    });
+    renderMenu->addAction(flipNormals);
     return renderMenu;
 }

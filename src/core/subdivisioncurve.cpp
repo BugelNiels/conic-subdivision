@@ -9,7 +9,6 @@
 
 #define MIN(A, B) (A) < (B) ? (A) : (B)
 #define MAX(A, B) (A) > (B) ? (A) : (B)
-#define EPSILON 0.00000001
 
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
@@ -126,7 +125,7 @@ void SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, QVect
  * @brief SubdivisionCurve::addPoint Adds a point to the control net.
  * @param p The point to add to the control net.
  */
-int SubdivisionCurve::addPoint(Vector2DD p) {
+int SubdivisionCurve::addPoint(const Vector2DD& p) {
     int idx = findInsertIdx(p);
     netCoords_.insert(idx, p);
     netNormals_.insert(idx, Vector2DD());
@@ -144,7 +143,7 @@ int SubdivisionCurve::addPoint(Vector2DD p) {
  * @param idx The index of the point to update the position of.
  * @param p The new position of the point.
  */
-void SubdivisionCurve::setVertexPosition(int idx, Vector2DD p) {
+void SubdivisionCurve::setVertexPosition(int idx, const Vector2DD& p) {
     netCoords_[idx] = p;
     if (!customNormals_[idx]) {
         recalculateNormal(idx);
@@ -160,7 +159,7 @@ void SubdivisionCurve::setVertexPosition(int idx, Vector2DD p) {
     reSubdivide();
 }
 
-void SubdivisionCurve::setNormalPosition(int idx, Vector2DD p) {
+void SubdivisionCurve::setNormalPosition(int idx, const Vector2DD& p) {
     netNormals_[idx] = p - netCoords_[idx];
     netNormals_[idx].normalize();
     customNormals_[idx] = true;
@@ -197,9 +196,9 @@ void SubdivisionCurve::removePoint(int idx) {
  * @return The index of the closest point to the provided point. Returns -1 if
  * no point was found within the maximum distance.
  */
-int SubdivisionCurve::findClosestVertex(const Vector2DD &p, const float maxDist) {
+int SubdivisionCurve::findClosestVertex(const Vector2DD &p, const double maxDist) {
     int ptIndex = -1;
-    double currentDist, minDist = std::numeric_limits<float>::infinity();
+    double currentDist, minDist = std::numeric_limits<double>::infinity();
 
     for (int k = 0; k < netCoords_.size(); k++) {
         currentDist = (netCoords_[k] - p).norm();
@@ -225,12 +224,12 @@ int SubdivisionCurve::getPrevIdx(int idx) {
     return closed_ ? (idx - 1 + n) % n : MAX(idx - 1, 0);
 }
 
-float distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
+double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
     Vector2DD AB = B - A;
     Vector2DD AP = P - A;
-    float AB_len2 = AB.squaredNorm();
-    float t = AP.dot(AB) / AB_len2;
-    t = qMax(0.0f, qMin(1.0f, t)); // clamp to [0, 1]
+    double AB_len2 = AB.squaredNorm();
+    double t = AP.dot(AB) / AB_len2;
+    t = qMax(0.0, qMin(1.0, t)); // clamp to [0, 1]
     Vector2DD Q = A + t * AB;
     return std::hypot(P.x() - Q.x(), P.y() - Q.y());
 }
@@ -240,7 +239,7 @@ int SubdivisionCurve::findInsertIdx(const Vector2DD &p) {
         return 0;
     }
     int ptIndex = -1;
-    float currentDist, minDist = std::numeric_limits<float>::infinity();
+    double currentDist, minDist = std::numeric_limits<double>::infinity();
 
     for (int k = 0; k < netCoords_.size(); k++) {
         currentDist = distanceToEdge(netCoords_[k], netCoords_[getPrevIdx(k)], p);
@@ -253,7 +252,7 @@ int SubdivisionCurve::findInsertIdx(const Vector2DD &p) {
 }
 
 // Returns index of the point normal handle
-int SubdivisionCurve::findClosestNormal(const Vector2DD &p, const float maxDist) {
+int SubdivisionCurve::findClosestNormal(const Vector2DD &p, const double maxDist) {
     int ptIndex = -1;
     double currentDist, minDist = 4;
 
@@ -348,15 +347,15 @@ void SubdivisionCurve::subdivide(const QVector<Vector2DD> &points,
         int prevIdx = (i - 1 + n) % n;
         int nextIdx = (i + 1) % n;
 
-        const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0f;
+        const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0;
         Vector2DD dir;
         if (settings_.edgeTangentSample) {
             dir = newPoints[prevIdx] - newPoints[nextIdx];
-            dir.normalize();
             dir = {-dir.y(), dir.x()};
         } else {
-            dir = (newNormals[prevIdx] + newNormals[nextIdx]).normalized();
+            dir = newNormals[prevIdx] + newNormals[nextIdx];
         }
+        // Note that dir is not normalized!
         Conic conic(patchCoords, patchNormals, settings_);
         Vector2DD sampledPoint;
         Vector2DD sampledNormal;
@@ -419,12 +418,6 @@ void SubdivisionCurve::extractPatch(const QVector<Vector2DD> &points, const QVec
     }
 }
 
-void SubdivisionCurve::flipNormals() {
-    for (auto &n: netNormals_) {
-        n *= -1;
-    }
-}
-
 void SubdivisionCurve::recalculateNormals() {
     netNormals_ = calcNormals(netCoords_);
     for (int i = 0; i < netNormals_.size(); i++) {
@@ -453,7 +446,7 @@ void SubdivisionCurve::setClosed(bool closed) {
     reSubdivide();
 }
 
-bool areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) {
+bool SubdivisionCurve::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) const {
     Vector2DD v1v3 = v3 - v1;
     Vector2DD v1v0 = v0 - v1;
     if (v1v0.squaredNorm() == 0.0 || v1v3.squaredNorm() == 0) {
@@ -462,16 +455,16 @@ bool areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2D
     Vector2DD normal = Vector2DD(v2.y() - v1.y(), v1.x() - v2.x());
     double dotProduct1 = normal.dot(v1v3);
     double dotProduct2 = normal.dot(v1v0);
-    if (std::abs(dotProduct1) < EPSILON || std::abs(dotProduct2) < EPSILON) {
+    if (std::abs(dotProduct1) < settings_.epsilon || std::abs(dotProduct2) <  settings_.epsilon) {
         return true;
     }
-    float sign = dotProduct1 > 0 ? 1.0f : -1.0f;
+    double sign = dotProduct1 > 0 ? 1.0 : -1.0;
     return dotProduct2 * sign >= 0;
 }
 
 template<typename T>
-T mix(const T &a, const T &b, float w) {
-    return (1.0f - w) * a + w * b;
+T mix(const T &a, const T &b, double w) {
+    return (1.0 - w) * a + w * b;
 }
 
 void SubdivisionCurve::knotCurve(QVector<Vector2DD> &coords, QVector<Vector2DD> &norms, QVector<bool> &customNorms) {
@@ -500,10 +493,8 @@ void SubdivisionCurve::knotCurve(QVector<Vector2DD> &coords, QVector<Vector2DD> 
             double angle1 = netNormals_[i].dot(reflectVec);
             double angle2 = netNormals_[nextIdx].dot(reflectVec);
 
-            double ratio = 0.5f;
+            double ratio = 0.5;
             if (settings_.weightedKnotLocation) {
-//                float l1 = (v0 - v1).length();
-//                float l2 = (v3 - v2).length();
                 angle1 = (v0 - v1).normalized().dot((v1 - v2).normalized());
                 angle2 = (v3 - v2).normalized().dot((v2 - v1).normalized());
 

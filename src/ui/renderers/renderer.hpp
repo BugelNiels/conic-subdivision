@@ -4,6 +4,7 @@
 #include <QOpenGLShaderProgram>
 
 #include "shadertypes.hpp"
+#include "util/vector.hpp"
 
 class Settings;
 
@@ -34,4 +35,5 @@ protected:
 
     QOpenGLShaderProgram *constructPolyLineShader() const;
 
+    QVector<QVector2D> qVecToVec(const QVector<Vector2DD> &items) const;
 };
