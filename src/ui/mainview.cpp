@@ -3,6 +3,7 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include "src/core/subdivisioncurve.hpp"
 #include <QMouseEvent>
+#include <utility>
 #include "core/settings.hpp"
 
 MainView::MainView(Settings &settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
@@ -111,18 +112,18 @@ void MainView::paintGL() {
  * @param y Y coordinate.
  * @return A vector containing the normalized x and y screen coordinates.
  */
-QVector2D MainView::toNormalizedScreenCoordinates(float x, float y) {
-    float xRatio = (x - 0) / width();
-    float yRatio = (y - 0) / height();
+Vector2DD MainView::toNormalizedScreenCoordinates(double x, double y) {
+    double xRatio = (x - 0) / width();
+    double yRatio = (y - 0) / height();
 
-    float xScene = xRatio * 2.0f - 1.0f;
-    float yScene = 1.0f - yRatio * 2.0f;
+    double xScene = xRatio * 2.0f - 1.0f;
+    double yScene = 1.0f - yRatio * 2.0f;
     QVector4D from = toWorldCoordsMatrix_ * QVector4D(xScene, yScene, 0, 1.0f);
-    return QVector2D(from);
+    return Vector2DD(from.x(), from.y());
 }
 
 
-bool MainView::attemptVertexSelect(const QVector2D &scenePos) {
+bool MainView::attemptVertexSelect(const Vector2DD &scenePos) {
     settings_.selectedNormal = -1;
     float maxDist = settings_.selectRadius;
     if (settings_.selectedVertex != -1) {
@@ -137,7 +138,7 @@ bool MainView::attemptVertexSelect(const QVector2D &scenePos) {
     return false;
 }
 
-bool MainView::attemptNormalSelect(const QVector2D &scenePos) {
+bool MainView::attemptNormalSelect(const Vector2DD &scenePos) {
     settings_.selectedVertex = -1;
     float maxDist = settings_.selectRadius;
     if (settings_.selectedNormal != -1) {
@@ -152,13 +153,13 @@ bool MainView::attemptNormalSelect(const QVector2D &scenePos) {
     return false;
 }
 
-void MainView::translationUpdate(const QVector2D &scenePos, const QPointF &mousePos) {
+void MainView::translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos) {
     if (!dragging_) {
         dragging_ = true;
         oldMouseCoords_ = scenePos;
         return;
     }
-    QVector2D translationUpdate = (scenePos - oldMouseCoords_) * settings_.dragSensitivity;
+    Vector2DD translationUpdate = (scenePos - oldMouseCoords_) * settings_.dragSensitivity;
     settings_.viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
     toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
     oldMouseCoords_ = toNormalizedScreenCoordinates(mousePos.x(), mousePos.y());
@@ -171,7 +172,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
     if (subCurve_ == nullptr) {
         return;
     }
-    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
@@ -205,7 +206,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
 
 void MainView::mouseMoveEvent(QMouseEvent *event) {
     QWidget::mouseMoveEvent(event);
-    QVector2D scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
     if (event->buttons() == Qt::LeftButton && event->modifiers().testFlag(Qt::ShiftModifier)) {
         setCursor(Qt::ClosedHandCursor);
         translationUpdate(scenePos, event->position());
@@ -322,7 +323,7 @@ void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
 void MainView::wheelEvent(QWheelEvent *event) {
     QWidget::wheelEvent(event);
     float zoom = event->angleDelta().y() > 0 ? settings_.zoomStrength : 1.0f / settings_.zoomStrength;
-    QVector2D mouseNDC = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    Vector2DD mouseNDC = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
     settings_.viewMatrix.translate(mouseNDC.x(), mouseNDC.y());
     settings_.viewMatrix.scale(zoom);
     settings_.viewMatrix.translate(-mouseNDC.x(), -mouseNDC.y());
@@ -392,7 +393,7 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
 }
 
 void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {
-    subCurve_ = newSubCurve;
+    subCurve_ = std::move(newSubCurve);
 }
 
 void MainView::recalculateNormals() {

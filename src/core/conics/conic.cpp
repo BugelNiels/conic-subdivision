@@ -3,36 +3,26 @@
 #include <cmath>
 
 #include "conicfitter.hpp"
-#include "conicfitter_unit.hpp"
 
 #include "src/core/settings.hpp"
 
-#define EPSILON 0.0000000001
-
-QMatrix4x4 coefsToMatrix(const QVector<double>& coefs) {
+Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     double a, b, c, d, e, f;
-    a = coefs[0];        // A
-    b = coefs[2] / 2.0;  // D
-    c = coefs[1];        // E
-    d = coefs[3] / 2.0;  // G
-    e = coefs[4] / 2.0;  // B
-    f = coefs[5];        // F
-    return QMatrix4x4(a, b, d, 0, b, c, e, 0, d, e, f, 0, 0, 0, 0, 0);
+    a = coefs[0];           // A - x*x
+    b = coefs[2];           // C - x*y
+    c = coefs[1];           // B - y*y
+    d = coefs[3];           // D - x
+    e = coefs[4];           // E - y
+    f = coefs[5];           // F - constant
+    Matrix3DD matrix;
+    matrix << a, b, d, b, c, e, d, e, f;
+    return matrix;
 }
 
-Conic::Conic(const Settings &settings) : hasSolution_(false), settings_(settings) { Q_.fill(0); }
-
-Conic::Conic(const QVector<QVector2D> &coords,
-             const QVector<QVector2D> &normals, const Settings &settings)
-        : Conic(settings) {
-    hasSolution_ = fitConic(coords, normals);
-}
-
-void normalizeCoefs(QVector<double> &coefs) {
-    double fac = 1 / coefs[0];
-    for (double &coef: coefs) {
-        coef *= fac;
-    }
+Conic::Conic(const QVector<Vector2DD> &coords,
+             const QVector<Vector2DD> &normals, const Settings &settings)
+        : settings_(settings) {
+    Q_ = fitConic(coords, normals);
 }
 
 /**
@@ -42,45 +32,27 @@ void normalizeCoefs(QVector<double> &coefs) {
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-bool Conic::fitConic(const QVector<QVector2D> &coords,
-                     const QVector<QVector2D> &normals) {
-    QVector<double> foundCoefs;
-    if (settings_.normalizedSolve) {
-        UnitConicFitter fitter;
-        foundCoefs = fitter.fitConic(coords, normals, settings_);
-        stability_ = fitter.stability();
-    } else {
-        ConicFitter fitter(settings_);
-        foundCoefs = fitter.fitConic(coords, normals);
-        stability_ = fitter.stability();
-    }
-    if (foundCoefs.isEmpty()) {
-        return false;
-    }
-    // unComment these two lines to see the found coefficients for every edge
-//      normalizeCoefs(foundCoefs);
-
-    Q_ = coefsToMatrix(foundCoefs);
-    return true;
+Matrix3DD Conic::fitConic(const QVector<Vector2DD> &coords,
+                          const QVector<Vector2DD> &normals) {
+    ConicFitter fitter(settings_);
+    Eigen::VectorXd foundCoefs = fitter.fitConic(coords, normals);
+    stability_ = fitter.stability();
+    return coefsToMatrix(foundCoefs);
 }
 
-QVector2D Conic::conicNormal(const QVector2D &p, const QVector2D &rd) const {
-    QVector4D p4 = QVector4D(p, 1, 0);
-    float xn = QVector4D::dotProduct(Q_.row(0), p4);
-    float yn = QVector4D::dotProduct(Q_.row(1), p4);
-    QVector2D normal = QVector2D(xn, yn);
-    normal.normalize();
-    if (QVector2D::dotProduct(normal, rd) < 0) {
+Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
+    Vector3DD p3(p.x(), p.y(), 1);
+    double xn = Q_.row(0).dot(p3);
+    double yn = Q_.row(1).dot(p3);
+    Vector2DD normal(xn, yn);
+    if (normal.dot(rd) < 0.0) {
         normal *= -1;
     }
     return normal;
 }
 
-bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
-                   QVector2D &normal) const {
-    if (!isValid()) {
-        return false;
-    }
+bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
+                   Vector2DD &normal) const {
     double t;
     if (intersects(ro, rd, t)) {
         p = ro + t * rd;
@@ -94,38 +66,51 @@ bool Conic::sample(const QVector2D &ro, const QVector2D &rd, QVector2D &p,
     return false;
 }
 
-bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
+/*
+  diff_of_products() computes a*b-c*d with a maximum error <= 1.5 ulp
+
+  Claude-Pierre Jeannerod, Nicolas Louvet, and Jean-Michel Muller,
+  "Further Analysis of Kahan's Algorithm for the Accurate Computation
+  of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284,
+  Oct. 2013, pp. 2245-2264
+*/
+double diff_of_products(double a, double b, double c, double d) {
+    double w = d * c;
+    double e = fma(-d, c, w);
+    double f = fma(a, b, -w);
+    return f + e;
+}
+
+bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
                        double &t) const {
-    QVector4D p = QVector4D(ro, 1, 0);
-    QVector4D u = QVector4D(rd, 0, 0);
-    double a = QVector4D::dotProduct(u, Q_ * u);
-    double b = QVector4D::dotProduct(u, Q_ * p);
-    double c = QVector4D::dotProduct(p, Q_ * p);
-    if (std::fabs(a) < EPSILON) {
+    Vector3DD p(ro.x(), ro.y(), 1);
+    Vector3DD u(rd.x(), rd.y(), 0);
+    // Technically, b = p.dot(Q_ * u) + u.dot(Q_ * p);
+    // However, since Q_ is symmetric, p.dot(Q_ * u) = u.dot(Q_ * p)
+    // As such, b = 2 * u.dot(Q_ * p)
+    // Because of this, we can remove the 4 in the discriminant calculation ((2b)^2 - 4ac = b^2 - ac
+    // And we can also remove the 2 from the "/2a" part of the quadratic formula:
+    // -2b+-sqrt(disc)/2a = -b+-sqrt(disc)/a
+
+    double a = u.dot(Q_ * u);
+    double b = u.dot(Q_ * p);
+    double c = p.dot(Q_ * p);
+
+    if (std::fabs(a) < settings_.epsilon) {
         t = -c / b;
-        if(std::isnan(t)) {
+        if (std::isnan(t)) {
             return false;
         }
         return true;
     }
-    double disc = b * b - a * c;
+    double disc = diff_of_products(b, b, a, c);
     if (disc < 0.0) {
         return false;
     }
-
     double root = std::sqrt(disc);
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
-//    if(t0 < 0) {
-//        if(t1 < 0) {
-//            return false;
-//        }
-//        t = t1;
-//        return true;
-//    }
-//    t = t0;
-//    return true;
-    if (fabs(t0) < fabs(t1)) {
+    if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;
     } else {
         t = t1;
@@ -133,44 +118,13 @@ bool Conic::intersects(const QVector2D &ro, const QVector2D &rd,
     return true;
 }
 
-Conic Conic::average(const Conic &other) const {
-    Conic q = *this + other;
-    q.Q_ /= 2.0;
-    return q;
-}
-
-Conic Conic::operator+(const Conic &other) const {
-    Conic q(settings_);
-    q.hasSolution_ = true;
-    if (isValid() && other.isValid()) {
-        q.Q_ = Q_ + other.Q_;
-    } else if (other.isValid()) {
-        q.Q_ = other.Q_;
-    } else if (isValid()) {
-        q.Q_ = Q_;
-    } else {
-        q.hasSolution_ = false;
-    }
-    return q;
-}
-
-void Conic::operator+=(const Conic &other) {
-    if (isValid() && other.isValid()) {
-        Q_ = (Q_ + other.Q_);
-        hasSolution_ = true;
-    } else if (other.isValid()) {
-        Q_ = other.Q_;
-        hasSolution_ = true;
-    }
-}
-
 void Conic::printConic() const {
     qDebug() << "Conic:";
     double A = Q_(0, 0);
-    double D = 2.0 * Q_(0, 1);
+    double D = Q_(0, 1);
     double E = Q_(1, 1);
-    double G = 2.0 * Q_(0, 2);
-    double B = 2.0 * Q_(1, 2);
+    double G = Q_(0, 2);
+    double B = Q_(1, 2);
     double F = Q_(2, 2);
 
     // Print the conic formula in Geogebra-compatible format
@@ -183,6 +137,6 @@ void Conic::printConic() const {
             .arg(F);
 }
 
-float Conic::getStability() const {
+double Conic::getStability() const {
     return stability_;
 }

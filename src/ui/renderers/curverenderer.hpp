@@ -23,7 +23,14 @@ protected:
     void initBuffers() override;
 
 private:
-    GLuint vao_, vbo_coords_, vbo_norms_, vbo_stab_, ibo_;
+#ifdef SHADER_DOUBLE_PRECISION
+    int numBuffers_ = 4;
+#else
+    int numBuffers_ = 3;
+#endif
+
+    GLuint vao_, ibo_;
+    QVector<GLuint> vbo_;
     QOpenGLTexture *texture_;
     int vboSize_ = 0;
 };

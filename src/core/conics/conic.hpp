@@ -1,45 +1,31 @@
 #pragma once
 
-#include <QMatrix4x4>
-#include <QVector2D>
 #include <QVector>
+#include "util/vector.hpp"
 
 class Settings;
 
 class Conic {
 public:
-    explicit Conic(const Settings &settings);
-
-    Conic(const QVector<QVector2D> &coords, const QVector<QVector2D> &normals,
+    Conic(const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals,
           const Settings &settings);
 
-    bool sample(const QVector2D &origin, const QVector2D &direction,
-                QVector2D &point, QVector2D &normal) const;
+    bool sample(const Vector2DD &origin, const Vector2DD &direction,
+                Vector2DD &point, Vector2DD &normal) const;
 
-    bool intersects(const QVector2D &ro, const QVector2D &rd, double &t) const;
+    bool intersects(const Vector2DD &ro, const Vector2DD &rd, double &t) const;
 
-    inline bool isValid() const { return hasSolution_; }
-
-    inline QMatrix4x4 getCoefficients() const { return Q_; }
-
-    Conic average(const Conic &other) const;
-
-    Conic operator+(const Conic &other) const;
-
-    void operator+=(const Conic &other);
-
-    float getStability() const;
+    double getStability() const;
 
 private:
-    float stability_ = 0;
-    QMatrix4x4 Q_;
-    bool hasSolution_;
     const Settings &settings_;
+    Matrix3DD Q_;
+    double stability_ = 0;
 
-    bool fitConic(const QVector<QVector2D> &coords,
-                  const QVector<QVector2D> &normals);
+    Matrix3DD fitConic(const QVector<Vector2DD> &coords,
+                       const QVector<Vector2DD> &normals);
 
-    QVector2D conicNormal(const QVector2D &p, const QVector2D &rd) const;
+    Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
 
     void printConic() const;
 };

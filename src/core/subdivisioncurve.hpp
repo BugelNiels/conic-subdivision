@@ -1,11 +1,12 @@
 #pragma once
 
 #include <QString>
-#include <QVector2D>
 #include <QVector>
 #include <QSet>
+#include "util/vector.hpp"
 
 class Settings;
+
 
 /**
  * @brief The SubdivisionCurve class contains the data of a 2D subdivision
@@ -16,31 +17,30 @@ public:
 
     explicit SubdivisionCurve(const Settings &settings);
 
-    explicit SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, bool closed = true);
+    explicit SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, bool closed = true);
 
-    SubdivisionCurve(const Settings &settings, QVector<QVector2D> coords, QVector<QVector2D> normals, bool closed = true);
+    SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, QVector<Vector2DD> normals,
+                     bool closed = true);
 
-    inline QVector<QVector2D> getNetCoords() { return netCoords_; }
+    inline QVector<Vector2DD> getNetCoords() { return netCoords_; }
 
-    inline QVector<QVector2D> getNetNormals() { return netNormals_; }
+    inline QVector<Vector2DD> getNetNormals() { return netNormals_; }
 
-    inline QVector<QVector2D> getCurveCoords() { return curveCoords_; }
+    inline QVector<Vector2DD> getCurveCoords() { return curveCoords_; }
 
-    inline QVector<QVector2D> getCurveNormals() { return curveNormals_; }
+    inline QVector<Vector2DD> getCurveNormals() { return curveNormals_; }
 
     inline int getSubdivLevel() const { return subdivisionLevel_; }
 
-    int findClosestVertex(const QVector2D &p, float maxDist);
+    int findClosestVertex(const Vector2DD &p, double maxDist);
 
-    int findClosestNormal(const QVector2D &p, float maxDist);
+    int findClosestNormal(const Vector2DD &p, double maxDist);
 
-    int addPoint(QVector2D p);
+    int addPoint(const Vector2DD &p);
 
-    void flipNormals();
+    void setVertexPosition(int idx, const Vector2DD &p);
 
-    void setVertexPosition(int idx, QVector2D p);
-
-    void setNormalPosition(int idx, QVector2D p);
+    void setNormalPosition(int idx, const Vector2DD &p);
 
     void removePoint(int idx);
 
@@ -60,9 +60,9 @@ public:
 
     void applySubdivision();
 
-    QVector<float> getStabilityVals() const;
+    QVector<double> getStabilityVals() const;
 
-    void translate(const QVector2D& translation);
+    void translate(const Vector2DD &translation);
 
 private:
     const Settings &settings_;
@@ -70,31 +70,33 @@ private:
     int subdivisionLevel_ = 0;
     bool closed_ = false;
 
-    QVector<QVector2D> curveCoords_;
-    QVector<QVector2D> curveNormals_;
-    QVector<float> stability;
+    QVector<Vector2DD> curveCoords_;
+    QVector<Vector2DD> curveNormals_;
+    QVector<double> stability;
     QVector<bool> customNormals_;
     QSet<int> knotIndices;
 
-    QVector<QVector2D> netCoords_;
-    QVector<QVector2D> netNormals_;
+    QVector<Vector2DD> netCoords_;
+    QVector<Vector2DD> netNormals_;
 
-    void subdivide(const QVector<QVector2D> &points,
-                   const QVector<QVector2D> &normals,
-                   const QVector<float> &stabilities, int level);
+    void subdivide(const QVector<Vector2DD> &points,
+                   const QVector<Vector2DD> &normals,
+                   const QVector<double> &stabilities, int level);
 
-    QVector<QVector2D> calcNormals(const QVector<QVector2D> &coords) const;
+    QVector<Vector2DD> calcNormals(const QVector<Vector2DD> &coords) const;
 
-    void calcNormalAtIndex(const QVector<QVector2D> &coords, QVector<QVector2D> &normals, int i) const;
+    void calcNormalAtIndex(const QVector<Vector2DD> &coords, QVector<Vector2DD> &normals, int i) const;
 
-    int findInsertIdx(const QVector2D &p);
+    int findInsertIdx(const Vector2DD &p);
 
     int getNextIdx(int idx);
 
     int getPrevIdx(int idx);
 
-    void knotCurve(QVector<QVector2D> &coords, QVector<QVector2D> &norms, QVector<bool> &customNorms);
+    void knotCurve(QVector<Vector2DD> &coords, QVector<Vector2DD> &norms, QVector<bool> &customNorms);
 
-    void extractPatch(const QVector<QVector2D> &points, const QVector<QVector2D> &normals, QVector<int> &indices, int i,
-                      QVector<QVector2D> &patchCoords, QVector<QVector2D> &patchNormals) const;
+    void extractPatch(const QVector<Vector2DD> &points, const QVector<Vector2DD> &normals, QVector<int> &indices, int i,
+                      QVector<Vector2DD> &patchCoords, QVector<Vector2DD> &patchNormals) const;
+
+    bool areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) const;
 };

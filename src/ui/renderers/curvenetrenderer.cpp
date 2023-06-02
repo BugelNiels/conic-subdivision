@@ -55,15 +55,15 @@ void CurveNetRenderer::initBuffers() {
  * buffer(s) with.
  */
 void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
-    coords_ = sc.getNetCoords();
-    normals_ = sc.getNetNormals();
+    coords_ = qVecToVec(sc.getNetCoords());
+    normals_ = qVecToVec(sc.getNetNormals());
     if (coords_.size() == 0) {
         vboSize_ = 0;
         return;
     }
     int size = coords_.size();
     for (int i = 0; i < size; i++) {
-        normals_[i] = (coords_[i] + settings_.normalLength * normals_[i]);
+        normals_[i] = (coords_[i] + settings_.normalLength * normals_[i].normalized());
     }
 
     QVector<int> indices(coords_.size() + 2);

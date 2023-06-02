@@ -1,5 +1,7 @@
 #include "conicpresets.hpp"
 
+#include "util/vector.hpp"
+
 conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(settings) {
 
     presets_["Blank"] = std::make_shared<SubdivisionCurve>(getBlank());
@@ -9,137 +11,137 @@ conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(setting
     presets_["Pentagon"] = std::make_shared<SubdivisionCurve>(getPentagon());
     presets_["Basis"] = std::make_shared<SubdivisionCurve>(getBasis());
     presets_["G"] = std::make_shared<SubdivisionCurve>(getG());
-    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(5, 0.5f));
-    presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8f, 0.3f));
+    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(4, 0.5));
+    presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8, 0.3));
 }
 
 
 conics::ConicPresets::~ConicPresets() = default;
 
 SubdivisionCurve conics::ConicPresets::getBlank() {
-    QVector<QVector2D> netCoords;
+    QVector<Vector2DD> netCoords;
     return SubdivisionCurve(settings_, netCoords, true);
 }
 
 SubdivisionCurve conics::ConicPresets::getLine() {
-    QVector<QVector2D> netCoords;
-    netCoords.append(QVector2D(-0.75f, 0));
-    netCoords.append(QVector2D(0.75f, 0));
+    QVector<Vector2DD> netCoords;
+    netCoords.append(Vector2DD(-0.75, 0));
+    netCoords.append(Vector2DD(0.75, 0));
     return SubdivisionCurve(settings_, netCoords, false);
 }
 
 SubdivisionCurve conics::ConicPresets::getStair() {
-    QVector<QVector2D> netCoords;
-    netCoords.append(QVector2D(-1, 1));
-    netCoords.append(QVector2D(1, 1));
-    netCoords.append(QVector2D(1, -1));
-    netCoords.append(QVector2D(0.3, -1));
-    netCoords.append(QVector2D(0.3, -.3));
-    netCoords.append(QVector2D(-0.3, -.3));
-    netCoords.append(QVector2D(-0.3, .3));
-    netCoords.append(QVector2D(-1, .3));
+    QVector<Vector2DD> netCoords;
+    netCoords.append(Vector2DD(-1, 1));
+    netCoords.append(Vector2DD(1, 1));
+    netCoords.append(Vector2DD(1, -1));
+    netCoords.append(Vector2DD(0.3, -1));
+    netCoords.append(Vector2DD(0.3, -.3));
+    netCoords.append(Vector2DD(-0.3, -.3));
+    netCoords.append(Vector2DD(-0.3, .3));
+    netCoords.append(Vector2DD(-1, .3));
     return SubdivisionCurve(settings_, netCoords, true);
 }
 
 SubdivisionCurve conics::ConicPresets::getStar() {
-    QVector<QVector2D> netCoords;
+    QVector<Vector2DD> netCoords;
     int numPoints = 5;
     netCoords.reserve(numPoints * 2);
-    float radius = 1;
+    double radius = 1;
 
     for (int i = 0; i < numPoints; ++i) {
         // Outer points
-        float theta = i * (2.0f * M_PI / numPoints);
-        float x = radius * std::cos(theta);
-        float y = radius * std::sin(theta);
-        netCoords.append(QVector2D(x, y));
+        double theta = i * (2.0 * M_PI / numPoints);
+        double x = radius * std::cos(theta);
+        double y = radius * std::sin(theta);
+        netCoords.append(Vector2DD(x, y));
 
         // Inner points
         theta += M_PI / numPoints;
-        x = 0.3f * radius * std::cos(theta);
-        y = 0.3f * radius * std::sin(theta);
-        netCoords.append(QVector2D(x, y));
+        x = 0.3 * radius * std::cos(theta);
+        y = 0.3 * radius * std::sin(theta);
+        netCoords.append(Vector2DD(x, y));
     }
     return SubdivisionCurve(settings_, netCoords, true);
 }
 
 SubdivisionCurve conics::ConicPresets::getPentagon() {
-    QVector<QVector2D> netCoords;
+    QVector<Vector2DD> netCoords;
     netCoords.reserve(5);
-    netCoords.append(QVector2D(-0.25f, -0.5f));
-    netCoords.append(QVector2D(-0.75f, 0.0f));
-    netCoords.append(QVector2D(-0.25f, 0.75f));
-    netCoords.append(QVector2D(0.75f, 0.5f));
-    netCoords.append(QVector2D(0.5f, -0.75f));
+    netCoords.append(Vector2DD(-0.25, -0.5));
+    netCoords.append(Vector2DD(-0.75, 0.0));
+    netCoords.append(Vector2DD(-0.25, 0.75));
+    netCoords.append(Vector2DD(0.75, 0.5));
+    netCoords.append(Vector2DD(0.5, -0.75));
     return SubdivisionCurve(settings_, netCoords);
 }
 
 SubdivisionCurve conics::ConicPresets::getBasis() {
-    QVector<QVector2D> netCoords;
+    QVector<Vector2DD> netCoords;
     netCoords.reserve(9);
-    netCoords.append(QVector2D(-1.0f, -0.25f));
-    netCoords.append(QVector2D(-0.75f, -0.25f));
-    netCoords.append(QVector2D(-0.5f, -0.25f));
-    netCoords.append(QVector2D(-0.25f, -0.25f));
-    netCoords.append(QVector2D(0.0f, 0.50f));
-    netCoords.append(QVector2D(0.25f, -0.25f));
-    netCoords.append(QVector2D(0.5f, -0.25f));
-    netCoords.append(QVector2D(0.75f, -0.25f));
-    netCoords.append(QVector2D(1.0f, -0.25f));
+    netCoords.append(Vector2DD(-1.0, -0.25));
+    netCoords.append(Vector2DD(-0.75, -0.25));
+    netCoords.append(Vector2DD(-0.5, -0.25));
+    netCoords.append(Vector2DD(-0.25, -0.25));
+    netCoords.append(Vector2DD(0.0, 0.50));
+    netCoords.append(Vector2DD(0.25, -0.25));
+    netCoords.append(Vector2DD(0.5, -0.25));
+    netCoords.append(Vector2DD(0.75, -0.25));
+    netCoords.append(Vector2DD(1.0, -0.25));
     return SubdivisionCurve(settings_, netCoords, false);
 }
 
 SubdivisionCurve conics::ConicPresets::getG() {
-    QVector<QVector2D> netCoords;
+    QVector<Vector2DD> netCoords;
     netCoords.reserve(14);
-    netCoords.append(QVector2D(0.75f, 0.35f));
-    netCoords.append(QVector2D(0.75f, 0.75f));
-    netCoords.append(QVector2D(-0.75f, 0.75f));
-    netCoords.append(QVector2D(-0.75f, -0.75f));
-    netCoords.append(QVector2D(0.75f, -0.75f));
-    netCoords.append(QVector2D(0.75f, 0.0f));
-    netCoords.append(QVector2D(0.0f, 0.0f));
-    netCoords.append(QVector2D(0.0f, -0.2f));
-    netCoords.append(QVector2D(0.55f, -0.2f));
-    netCoords.append(QVector2D(0.55f, -0.55f));
-    netCoords.append(QVector2D(-0.55f, -0.55f));
-    netCoords.append(QVector2D(-0.55f, 0.55f));
-    netCoords.append(QVector2D(0.55f, 0.55f));
-    netCoords.append(QVector2D(0.55f, 0.35f));
+    netCoords.append(Vector2DD(0.75, 0.35));
+    netCoords.append(Vector2DD(0.75, 0.75));
+    netCoords.append(Vector2DD(-0.75, 0.75));
+    netCoords.append(Vector2DD(-0.75, -0.75));
+    netCoords.append(Vector2DD(0.75, -0.75));
+    netCoords.append(Vector2DD(0.75, 0.0));
+    netCoords.append(Vector2DD(0.0, 0.0));
+    netCoords.append(Vector2DD(0.0, -0.2));
+    netCoords.append(Vector2DD(0.55, -0.2));
+    netCoords.append(Vector2DD(0.55, -0.55));
+    netCoords.append(Vector2DD(-0.55, -0.55));
+    netCoords.append(Vector2DD(-0.55, 0.55));
+    netCoords.append(Vector2DD(0.55, 0.55));
+    netCoords.append(Vector2DD(0.55, 0.35));
     return SubdivisionCurve(settings_, netCoords);
 }
 
-SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, float radius) {
-    QVector<QVector2D> netCoords;
-    QVector<QVector2D> netNormals;
+SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, double radius) {
+    QVector<Vector2DD> netCoords;
+    QVector<Vector2DD> netNormals;
     netCoords.reserve(numPoints);
 
     for (int i = 0; i < numPoints; ++i) {
-        const float theta = i * (2.0f * M_PI / numPoints);
-        const float x = radius * std::cos(theta);
-        const float y = radius * std::sin(theta);
-        netCoords.append(QVector2D(x, y));
-        netNormals.append(QVector2D(x, y).normalized());
+        const double theta = i * (2.0 * M_PI / numPoints);
+        const double x = radius * std::cos(theta);
+        const double y = radius * std::sin(theta);
+        netCoords.append(Vector2DD(x, y));
+        netNormals.append(Vector2DD(x, y).normalized());
     }
-    return SubdivisionCurve(settings_, netCoords, netNormals);
+    return {settings_, netCoords, netNormals};
 }
 
-SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, float width, float height) {
-    QVector<QVector2D> netCoords;
-    QVector<QVector2D> netNormals;
+SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, double height) {
+    QVector<Vector2DD> netCoords;
+    QVector<Vector2DD> netNormals;
     netCoords.reserve(numPoints);
 
     for (int i = 0; i < numPoints; ++i) {
-        const float theta = i * (2.0f * M_PI / numPoints);
-        const float x = width * std::cos(theta);
-        const float y = height * std::sin(theta);
-        netCoords.append(QVector2D(x, y));
-        const float tx = -width * std::sin(theta);
-        const float ty = height * std::cos(theta);
-        const QVector2D normal(ty, -tx);
+        const double theta = i * (2.0 * M_PI / numPoints);
+        const double x = width * std::cos(theta);
+        const double y = height * std::sin(theta);
+        netCoords.append(Vector2DD(x, y));
+        const double tx = -width * std::sin(theta);
+        const double ty = height * std::cos(theta);
+        const Vector2DD normal(ty, -tx);
         netNormals.append(normal.normalized());
     }
-    return SubdivisionCurve(settings_, netCoords, netNormals);
+    return {settings_, netCoords, netNormals};
 }
 
 

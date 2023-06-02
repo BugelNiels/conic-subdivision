@@ -9,8 +9,6 @@ You need the following to be able to compile and run the project:
 
 * [CMake](https://cmake.org/)
 * [Qt 6.2+](https://www.qt.io/)
-* [Armadillo](http://arma.sourceforge.net/)
-    * [Useful installation guide](https://www.uio.no/studier/emner/matnat/fys/FYS4411/v13/guides/installing-armadillo/)
 * [Eigen]() sudo apt-get install libeigen3-dev
 
 

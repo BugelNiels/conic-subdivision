@@ -28,7 +28,7 @@ public:
 
     QVector<QVector3D> &getColorMap(ColorMapName name);
 
-    inline int getNumColorMaps() { return colorMaps.size(); }
+    inline int getNumColorMaps() { return int(colorMaps.size()); }
 
 private:
     QMap<ColorMapName, QVector<QVector3D>> colorMaps;
