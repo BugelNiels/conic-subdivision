@@ -11,7 +11,7 @@ uniform vec3 lineColor;
 void main() {
   vec2  dir  = (vertPos -startPos );
   float dist = length(dir);
-  if (sin(dist * 150) > 0) {
+  if (sin(dist * 80) > 0) {
     discard;
   }
   fColor = vec4(lineColor, 1);

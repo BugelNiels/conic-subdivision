@@ -9,7 +9,7 @@ conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(setting
     presets_["Pentagon"] = std::make_shared<SubdivisionCurve>(getPentagon());
     presets_["Basis"] = std::make_shared<SubdivisionCurve>(getBasis());
     presets_["G"] = std::make_shared<SubdivisionCurve>(getG());
-    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(5, 0.5f));
+    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(4, 0.5f));
     presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8f, 0.3f));
 }
 
