@@ -20,7 +20,7 @@ double UnitConicFitter::getNormalWeight(int index) const {
     return 0;
 }
 
-inline arma::rowvec pointEq(const QVector2D &coord, int numUnkowns) {
+inline arma::rowvec pointEq(const Vector2DD &coord, int numUnkowns) {
     arma::rowvec row(numUnkowns);
     double x = coord.x();
     double y = coord.y();
@@ -33,7 +33,7 @@ inline arma::rowvec pointEq(const QVector2D &coord, int numUnkowns) {
     return row;
 }
 
-inline arma::rowvec normEqX(const QVector2D &coord, int numUnkowns) {
+inline arma::rowvec normEqX(const Vector2DD &coord, int numUnkowns) {
     arma::rowvec row(numUnkowns);
     double x = coord.x();
     double y = coord.y();
@@ -46,7 +46,7 @@ inline arma::rowvec normEqX(const QVector2D &coord, int numUnkowns) {
     return row;
 }
 
-inline arma::rowvec normEqY(const QVector2D &coord, int numUnkowns) {
+inline arma::rowvec normEqY(const Vector2DD &coord, int numUnkowns) {
     arma::rowvec row(numUnkowns);
     double x = coord.x();
     double y = coord.y();
@@ -59,7 +59,7 @@ inline arma::rowvec normEqY(const QVector2D &coord, int numUnkowns) {
     return row;
 }
 
-arma::mat UnitConicFitter::initA(const QVector<QVector2D> &coords) const {
+arma::mat UnitConicFitter::initA(const QVector<Vector2DD> &coords) const {
     arma::mat A(numEq_, numUnknowns_);
 
     arma::uword rowIdx = 0;
@@ -69,7 +69,7 @@ arma::mat UnitConicFitter::initA(const QVector<QVector2D> &coords) const {
     }
     for (int i = 0; i < numNormals_; i++) {
         float weight = getNormalWeight(i);
-        QVector2D coord = coords[i];
+        Vector2DD coord = coords[i];
         A.row(rowIdx++) = normEqX(coord, numUnknowns_) * weight;
         A.row(rowIdx++) = normEqY(coord, numUnknowns_) * weight;
     }
@@ -81,7 +81,7 @@ arma::mat UnitConicFitter::initA(const QVector<QVector2D> &coords) const {
  * @param normals The expected normals for the normal equations.
  * @return Vector B.
  */
-arma::vec UnitConicFitter::initB(const QVector<QVector2D> &normals) const {
+arma::vec UnitConicFitter::initB(const QVector<Vector2DD> &normals) const {
     arma::vec B = arma::zeros(numEq_);
     arma::uword eqIdx = numPoints_;
     for (int i = 0; i < numNormals_; i++) {
@@ -92,8 +92,8 @@ arma::vec UnitConicFitter::initB(const QVector<QVector2D> &normals) const {
     return B;
 }
 
-arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
-                                 const QVector<QVector2D> &normals,
+arma::mat UnitConicFitter::initC(const QVector<Vector2DD> &coords,
+                                 const QVector<Vector2DD> &normals,
                                  int numConstraints) const {
     arma::mat C(3 * numConstraints, numUnknowns_);
 
@@ -106,7 +106,7 @@ arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
     return C;
 }
 
-arma::mat UnitConicFitter::initC(const QVector<QVector2D> &coords,
+arma::mat UnitConicFitter::initC(const QVector<Vector2DD> &coords,
                                  int numConstraints) const {
     arma::mat C(numConstraints, numUnknowns_);
 
@@ -159,7 +159,7 @@ QVector<double> UnitConicFitter::solveLinSystem(const arma::mat &A,
  * @return The quadric coefficients. Empty if no quadric was found.
  */
 QVector<double> UnitConicFitter::fitQuadricConstrained(
-        const QVector<QVector2D> &coords, const QVector<QVector2D> &normals) const {
+        const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals) const {
     arma::mat A = initA(coords);
     arma::vec B = initB(normals);
 #if 0
@@ -191,8 +191,8 @@ QVector<double> UnitConicFitter::fitQuadricConstrained(
     return solveLinSystem(Q, eqTo);
 }
 
-QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
-                                          const QVector<QVector2D> &normals,
+QVector<double> UnitConicFitter::fitConic(const QVector<Vector2DD> &coords,
+                                          const QVector<Vector2DD> &normals,
                                           const Settings &settings) {
     numPoints_ = coords.size();
     numNormals_ = normals.size();
@@ -208,6 +208,6 @@ QVector<double> UnitConicFitter::fitConic(const QVector<QVector2D> &coords,
     return fitQuadricConstrained(coords, normals);
 }
 
-float UnitConicFitter::stability() const {
+double UnitConicFitter::stability() const {
     return stability_;
 }

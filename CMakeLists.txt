@@ -24,7 +24,7 @@ file(GLOB_RECURSE H_HEADERS src/*.hpp)
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
         ${CPP_SOURCES} ${H_HEADERS}
         resources/resources.qrc
-        )
+        src/util/vector.hpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt::Core
