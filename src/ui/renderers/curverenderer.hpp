@@ -30,7 +30,7 @@ private:
 #endif
 
     GLuint vao_, ibo_;
-    QVector<GLuint> vbo_;
+    std::vector<GLuint> vbo_;
     QOpenGLTexture *texture_;
     int vboSize_ = 0;
 };

@@ -19,8 +19,8 @@ Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     return matrix;
 }
 
-Conic::Conic(const QVector<Vector2DD> &coords,
-             const QVector<Vector2DD> &normals, const Settings &settings)
+Conic::Conic(const std::vector<Vector2DD> &coords,
+             const std::vector<Vector2DD> &normals, const Settings &settings)
         : settings_(settings) {
     Q_ = fitConic(coords, normals);
 }
@@ -32,8 +32,8 @@ Conic::Conic(const QVector<Vector2DD> &coords,
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-Matrix3DD Conic::fitConic(const QVector<Vector2DD> &coords,
-                          const QVector<Vector2DD> &normals) {
+Matrix3DD Conic::fitConic(const std::vector<Vector2DD> &coords,
+                          const std::vector<Vector2DD> &normals) {
     ConicFitter fitter(settings_);
     Eigen::VectorXd foundCoefs = fitter.fitConic(coords, normals);
     stability_ = fitter.stability();

@@ -69,21 +69,21 @@ void CurveRenderer::initBuffers() {
 }
 
 void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
-    QVector<QVector2D> coords;
-    QVector<QVector2D> normals;
-    QVector<float> stability;
+    std::vector<QVector2D> coords;
+    std::vector<QVector2D> normals;
+    std::vector<float> stability;
     if (sc.getSubdivLevel() == 0) {
         coords = qVecToVec(sc.getNetCoords());
         normals = qVecToVec(sc.getNetNormals());
         stability.resize(coords.size());
-        stability.fill(0);
+        std::fill(stability.begin(), stability.end(), 0);
     } else {
         coords = qVecToVec(sc.getCurveCoords());
         normals = qVecToVec(sc.getCurveNormals());
         const auto &stabVals = sc.getStabilityVals();
         stability.reserve(stabVals.size());
         for (const auto stabVal: stabVals) {
-            stability.append(float(stabVal));
+            stability.emplace_back(float(stabVal));
         }
     }
     for (auto &norm: normals) {
@@ -115,18 +115,17 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
 
 
     int coordSize = coords.size();
-    QVector<int> indices;
+    std::vector<int> indices;
     indices.reserve(coordSize + 2);
+    indices.emplace_back(sc.isClosed() ? coordSize - 1 : 0);
     for (int i = 0; i < coordSize; i++) {
-        indices.append(i);
+        indices.emplace_back(i);
     }
     if (sc.isClosed()) {
-        indices.prepend(coordSize - 1);
-        indices.append(0);
-        indices.append(1);
+        indices.emplace_back(0);
+        indices.emplace_back(1);
     } else {
-        indices.prepend(0);
-        indices.append(coordSize - 1);
+        indices.emplace_back(coordSize - 1);
     }
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);

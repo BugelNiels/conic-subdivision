@@ -23,7 +23,7 @@ ColorMap::ColorMap() {
  * @param name The name of the color map.
  * @return A collection containing (r,g,b) triples .
  */
-QVector<QVector3D> &ColorMap::getColorMap(ColorMapName name) {
+std::vector<QVector3D> &ColorMap::getColorMap(ColorMapName name) {
     return colorMaps[name];
 }
 
@@ -33,7 +33,7 @@ QVector<QVector3D> &ColorMap::getColorMap(ColorMapName name) {
  * https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html
  * @return The float color table of the Turbo color map.
  */
-QVector<QVector3D> ColorMap::getTurboRainbowColorMap() {
+std::vector<QVector3D> ColorMap::getTurboRainbowColorMap() {
     return {{0.18995f, 0.07176f, 0.23217f},
             {0.19483f, 0.08339f, 0.26149f},
             {0.19956f, 0.09498f, 0.29024f},
@@ -297,7 +297,7 @@ QVector<QVector3D> ColorMap::getTurboRainbowColorMap() {
  * https://www.kennethmoreland.com/color-advice/
  * @return The float color table of the Plasma color map.
  */
-QVector<QVector3D> ColorMap::getPlasmaColorMap() {
+std::vector<QVector3D> ColorMap::getPlasmaColorMap() {
     return {{0.0503820534705988, 0.0298017364997418,   0.527975101049518},
             {0.0754419189341975, 0.0271962894963463,   0.538043855258978},
             {0.0965348194717788, 0.0251502940974922,   0.547170514725576},
@@ -433,7 +433,7 @@ QVector<QVector3D> ColorMap::getPlasmaColorMap() {
  * See https://www.kennethmoreland.com/color-advice/
  * @return The float color table of the Black Body color map.
  */
-QVector<QVector3D> ColorMap::getBlackBodyColorMap() {
+std::vector<QVector3D> ColorMap::getBlackBodyColorMap() {
     return {{0,                  0,                  0},
             {0.0261803783604202, 0.0075369634711579, 0.00422261516182739},
             {0.0512866885842237, 0.0150739269423158, 0.00844523032365482},
@@ -569,7 +569,7 @@ QVector<QVector3D> ColorMap::getBlackBodyColorMap() {
  * https://www.kennethmoreland.com/color-advice/
  * @return The float color table of the Inferno color map.
  */
-QVector<QVector3D> ColorMap::getInfernoColorMap() {
+std::vector<QVector3D> ColorMap::getInfernoColorMap() {
     return {{0.00146199558117158, 0.000465991391911493, 0.0138660057751158},
             {0.00330886178516739, 0.00225801728862176,  0.0242917573952516},
             {0.00603240133648115, 0.00471479872554565,  0.0386955221637519},
@@ -705,7 +705,7 @@ QVector<QVector3D> ColorMap::getInfernoColorMap() {
  * https://www.kennethmoreland.com/color-advice/
  * @return The float color table of the Kindlmann color map.
  */
-QVector<QVector3D> ColorMap::getKindlmannColorMap() {
+std::vector<QVector3D> ColorMap::getKindlmannColorMap() {
     return {{0,                  0,                   0},
             {0.0357689934173209, 0.00177405988635909, 0.0330692191763235},
             {0.0660770289636816, 0.00315661288569394, 0.0648740012660153},
@@ -841,7 +841,7 @@ QVector<QVector3D> ColorMap::getKindlmannColorMap() {
  * color map. See https://www.kennethmoreland.com/color-advice/
  * @return The float color table of the Smooth Cool Warm color map.
  */
-QVector<QVector3D> ColorMap::getSmoothCoolWarmColorMap() {
+std::vector<QVector3D> ColorMap::getSmoothCoolWarmColorMap() {
     return {{0.229999503869523, 0.298998934049376,  0.754000138575591},
             {0.239087156672913, 0.312772270464055,  0.766409551625626},
             {0.248241145785104, 0.326495667871175,  0.778568806443882},
@@ -977,7 +977,7 @@ QVector<QVector3D> ColorMap::getSmoothCoolWarmColorMap() {
  * https://www.ncl.ucar.edu/Document/Graphics/ColorTables/MPL_cool.shtml
  * @return The float color table of the MPL Cool color map.
  */
-QVector<QVector3D> ColorMap::getMPLCoolColorMap() {
+std::vector<QVector3D> ColorMap::getMPLCoolColorMap() {
     return {{0.003922, 0.996078, 1.000000},
             {0.011765, 0.988235, 1.000000},
             {0.019608, 0.980392, 1.000000},
@@ -1113,7 +1113,7 @@ QVector<QVector3D> ColorMap::getMPLCoolColorMap() {
  * See https://www.ncl.ucar.edu/Document/Graphics/ColorTables/cmocean_deep.shtml
  * @return The float color table of the Ocean Deep color map.
  */
-QVector<QVector3D> ColorMap::getOceanDeepColorMap() {
+std::vector<QVector3D> ColorMap::getOceanDeepColorMap() {
     return {
             {0.992156862745098, 0.996078431372549, 0.8},
             {0.984313725490196, 0.992156862745098, 0.796078431372549},
@@ -1379,7 +1379,7 @@ QVector<QVector3D> ColorMap::getOceanDeepColorMap() {
  * See https://www.ncl.ucar.edu/Document/Graphics/ColorTables/cmp_haxby.shtml
  * @return The float color table of the CMP Haxby color map.
  */
-QVector<QVector3D> ColorMap::getCMPHaxbyColorMap() {
+std::vector<QVector3D> ColorMap::getCMPHaxbyColorMap() {
     return {{0.145098039215686, 0.223529411764706, 0.686274509803922},
             {0.145098039215686, 0.266666666666667, 0.733333333333333},
             {0.149019607843137, 0.309803921568627, 0.780392156862745},

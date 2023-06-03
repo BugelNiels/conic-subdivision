@@ -22,7 +22,7 @@ SubdivisionCurve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
         return SubdivisionCurve(settings_);
     }
 
-    QVector<Vector2DD> coords, normals;
+    std::vector<Vector2DD> coords, normals;
     QMap<int, int> lineSegments;
     QTextStream in(&file);
     while (!in.atEnd()) {
@@ -39,14 +39,14 @@ SubdivisionCurve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
                 Vector2DD vertex;
                 vertex.x() = parts[1].toFloat();
                 vertex.y() = parts[2].toFloat();
-                coords.append(vertex);
+                coords.emplace_back(vertex);
             }
         } else if (type == "vn") {
             if (parts.size() >= 4) {
                 Vector2DD normal;
                 normal.x() = parts[1].toFloat();
                 normal.y() = parts[2].toFloat();
-                normals.append(normal);
+                normals.emplace_back(normal);
             }
         } else if (type == "l") {
             // Indices start at 1, so offset here immediately
@@ -55,14 +55,14 @@ SubdivisionCurve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
             insertLineSegment(lineSegments, startIdx, endIdx);
         }
     }
-    QVector<Vector2DD> orderedVertices;
+    std::vector<Vector2DD> orderedVertices;
     int startVertex = lineSegments.firstKey();
     int currentVertex = startVertex;
 
     bool closed = false;
 
     while (!lineSegments.isEmpty()) {
-        orderedVertices.append(coords[currentVertex]);
+        orderedVertices.emplace_back(coords[currentVertex]);
         int nextVertex = lineSegments.take(currentVertex);
         if (nextVertex == startVertex) {
             closed = true;

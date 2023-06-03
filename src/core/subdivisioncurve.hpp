@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QString>
-#include <QVector>
 #include <QSet>
 #include "util/vector.hpp"
 #include "core/subdivision/conicsubdivider.hpp"
@@ -18,18 +17,18 @@ public:
 
     explicit SubdivisionCurve(const Settings &settings);
 
-    explicit SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, bool closed = true);
+    explicit SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, bool closed = true);
 
-    SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, QVector<Vector2DD> normals,
+    SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, std::vector<Vector2DD> normals,
                      bool closed = true);
 
-    inline const QVector<Vector2DD>& getNetCoords() const { return netCoords_; }
+    inline const std::vector<Vector2DD>& getNetCoords() const { return netCoords_; }
 
-    inline const QVector<Vector2DD>& getNetNormals() const { return netNormals_; }
+    inline const std::vector<Vector2DD>& getNetNormals() const { return netNormals_; }
 
-    inline const QVector<Vector2DD>& getCurveCoords() const { return curveCoords_; }
+    inline const std::vector<Vector2DD>& getCurveCoords() const { return curveCoords_; }
 
-    inline const QVector<Vector2DD>& getCurveNormals() const { return curveNormals_; }
+    inline const std::vector<Vector2DD>& getCurveNormals() const { return curveNormals_; }
 
     inline int getSubdivLevel() const { return subdivisionLevel_; }
 
@@ -61,7 +60,7 @@ public:
 
     void applySubdivision();
 
-    QVector<double> getStabilityVals() const;
+    std::vector<double> getStabilityVals() const;
 
     void translate(const Vector2DD &translation);
 
@@ -72,18 +71,18 @@ private:
     int subdivisionLevel_ = 0;
     bool closed_ = false;
 
-    QVector<Vector2DD> curveCoords_;
-    QVector<Vector2DD> curveNormals_;
-    QVector<bool> customNormals_;
+    std::vector<Vector2DD> curveCoords_;
+    std::vector<Vector2DD> curveNormals_;
+    std::vector<bool> customNormals_;
     QSet<int> knotIndices_;
 
-    QVector<Vector2DD> netCoords_;
-    QVector<Vector2DD> netNormals_;
+    std::vector<Vector2DD> netCoords_;
+    std::vector<Vector2DD> netNormals_;
 
 
-    QVector<Vector2DD> calcNormals(const QVector<Vector2DD> &coords) const;
+    std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
 
-    Vector2DD calcNormalAtIndex(const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals, int i) const;
+    Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals, int i) const;
 
     int findInsertIdx(const Vector2DD &p) const;
 

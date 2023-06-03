@@ -2,7 +2,6 @@
 
 #include <QMap>
 #include <QVector3D>
-#include <QVector>
 
 /**
  * @brief The ColorMapName enum contains the different available color maps.
@@ -26,28 +25,28 @@ class ColorMap {
 public:
     ColorMap();
 
-    QVector<QVector3D> &getColorMap(ColorMapName name);
+    std::vector<QVector3D> &getColorMap(ColorMapName name);
 
     inline int getNumColorMaps() { return int(colorMaps.size()); }
 
 private:
-    QMap<ColorMapName, QVector<QVector3D>> colorMaps;
+    QMap<ColorMapName, std::vector<QVector3D>> colorMaps;
 
-    QVector<QVector3D> getTurboRainbowColorMap();
+    std::vector<QVector3D> getTurboRainbowColorMap();
 
-    QVector<QVector3D> getPlasmaColorMap();
+    std::vector<QVector3D> getPlasmaColorMap();
 
-    QVector<QVector3D> getBlackBodyColorMap();
+    std::vector<QVector3D> getBlackBodyColorMap();
 
-    QVector<QVector3D> getInfernoColorMap();
+    std::vector<QVector3D> getInfernoColorMap();
 
-    QVector<QVector3D> getKindlmannColorMap();
+    std::vector<QVector3D> getKindlmannColorMap();
 
-    QVector<QVector3D> getSmoothCoolWarmColorMap();
+    std::vector<QVector3D> getSmoothCoolWarmColorMap();
 
-    QVector<QVector3D> getMPLCoolColorMap();
+    std::vector<QVector3D> getMPLCoolColorMap();
 
-    QVector<QVector3D> getOceanDeepColorMap();
+    std::vector<QVector3D> getOceanDeepColorMap();
 
-    QVector<QVector3D> getCMPHaxbyColorMap();
+    std::vector<QVector3D> getCMPHaxbyColorMap();
 };

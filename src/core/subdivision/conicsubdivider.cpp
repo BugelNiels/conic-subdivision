@@ -12,11 +12,11 @@ void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
         return;
     }
     if (settings_.convexitySplit) {
-        QVector<Vector2DD> coords;
-        QVector<Vector2DD> norms;
-        QVector<bool> customNorms;
+        std::vector<Vector2DD> coords;
+        std::vector<Vector2DD> norms;
+        std::vector<bool> customNorms;
         knotCurve(curve_, coords, norms, customNorms);
-        QVector<double> stabilities;
+        std::vector<double> stabilities;
         stabilities.resize(coords.size());
         subdivide(coords, norms, stabilities, level);
     } else {
@@ -26,9 +26,9 @@ void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
 
 }
 
-void ConicSubdivider::subdivide(const QVector<Vector2DD> &points,
-                                const QVector<Vector2DD> &normals,
-                                const QVector<double> &stabilities, int level) {
+void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
+                                const std::vector<Vector2DD> &normals,
+                                const std::vector<double> &stabilities, int level) {
     // base case
     if (level == 0) {
         curve_->curveCoords_ = points;
@@ -40,9 +40,9 @@ void ConicSubdivider::subdivide(const QVector<Vector2DD> &points,
     if (curve_->isClosed()) {
         n += 1;
     }
-    QVector<Vector2DD> newPoints(n);
-    QVector<Vector2DD> newNormals(n);
-    QVector<double> newStabilities(n);
+    std::vector<Vector2DD> newPoints(n);
+    std::vector<Vector2DD> newNormals(n);
+    std::vector<double> newStabilities(n);
 
     // set vertex points
     for (int i = 0; i < n; i += 2) {
@@ -51,12 +51,11 @@ void ConicSubdivider::subdivide(const QVector<Vector2DD> &points,
         newStabilities[i] = stabilities[i / 2];
     }
     // set new points
-    int patchSize = 6;
-    QVector<int> indices;
-    indices.reserve(patchSize);
+    std::vector<int> indices;
+    indices.reserve(4);
     for (int i = 1; i < n; i += 2) {
-        QVector<Vector2DD> patchCoords;
-        QVector<Vector2DD> patchNormals;
+        std::vector<Vector2DD> patchCoords;
+        std::vector<Vector2DD> patchNormals;
 
         extractPatch(points, normals, indices, i, patchCoords, patchNormals);
 
@@ -98,43 +97,43 @@ bool arePointsCollinear(const Vector2DD &p1, const Vector2DD &p2, const Vector2D
     return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) < 0.0001;
 }
 
-void ConicSubdivider::extractPatch(const QVector<Vector2DD> &points, const QVector<Vector2DD> &normals,
-                                   QVector<int> &indices, int i, QVector<Vector2DD> &patchCoords,
-                                   QVector<Vector2DD> &patchNormals) const {
+void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals,
+                                   std::vector<int> &indices, int i, std::vector<Vector2DD> &patchCoords,
+                                   std::vector<Vector2DD> &patchNormals) const {
     int pIdx = i / 2;
 
     int size = int(points.size());
 
     indices.clear();
     // Two edge points
-    indices.append(pIdx);
+    indices.emplace_back(pIdx);
     // p_2-p_1-p0-p1-p2-p3
     if (curve_->isClosed()) {
         bool startKnotPoint = curve_->knotIndices_.contains(pIdx);
         bool endKnotPoint = curve_->knotIndices_.contains((pIdx + 1) % size);
-        indices.append((pIdx + 1) % size);
+        indices.emplace_back((pIdx + 1) % size);
         if (!startKnotPoint) {
-            indices.append((pIdx - 1 + size) % size);
+            indices.emplace_back((pIdx - 1 + size) % size);
         } else {
-            indices.append((pIdx + 2) % size);
+            indices.emplace_back((pIdx + 2) % size);
         }
         if (!endKnotPoint) {
-            indices.append((pIdx + 2) % size);
+            indices.emplace_back((pIdx + 2) % size);
         } else {
-            indices.append((pIdx - 1 + size) % size);
+            indices.emplace_back((pIdx - 1 + size) % size);
         }
     } else {
-        indices.append(pIdx + 1);
+        indices.emplace_back(pIdx + 1);
         if (pIdx + 2 < size) {
-            indices.append(pIdx + 2);
+            indices.emplace_back(pIdx + 2);
         }
         if (pIdx - 1 >= 0) {
-            indices.append(pIdx - 1);
+            indices.emplace_back(pIdx - 1);
         }
     }
     for (int index: indices) {
-        patchCoords.append(points[index]);
-        patchNormals.append(normals[index]);
+        patchCoords.emplace_back(points[index]);
+        patchNormals.emplace_back(normals[index]);
     }
 }
 
@@ -161,8 +160,8 @@ T mix(const T &a, const T &b, double w) {
     return (1.0 - w) * a + w * b;
 }
 
-void ConicSubdivider::knotCurve(SubdivisionCurve *curve, QVector<Vector2DD> &coords, QVector<Vector2DD> &norms,
-                                QVector<bool> &customNorms) {
+void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> &coords, std::vector<Vector2DD> &norms,
+                                std::vector<bool> &customNorms) {
 
 
     int n = int(curve->netCoords_.size());
@@ -176,9 +175,9 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve, QVector<Vector2DD> &coo
         int nextIdx = curve->getNextIdx(i);
         const Vector2DD &v2 = curve->netCoords_[nextIdx];
         const Vector2DD &v3 = curve->netCoords_[curve->getNextIdx(nextIdx)];
-        coords.append(v1);
-        norms.append(curve->netNormals_[i]);
-        customNorms.append(curve->customNormals_[i]);
+        coords.emplace_back(v1);
+        norms.emplace_back(curve->netNormals_[i]);
+        customNorms.emplace_back(curve->customNormals_[i]);
         idx++;
         if (v0 == v1 || v2 == v3 || v1 == v2) {
             continue;
@@ -216,15 +215,15 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve, QVector<Vector2DD> &coo
 
             knotNormal = (1 - settings_.knotTension) * knotNormal + settings_.knotTension * reflectVec;
             knotNormal.normalize();
-            coords.append(midPoint);
-            norms.append(knotNormal);
-            customNorms.append(true);
+            coords.emplace_back(midPoint);
+            norms.emplace_back(knotNormal);
+            customNorms.emplace_back(true);
             curve->knotIndices_.insert(idx);
             idx++;
         }
     }
 }
 
-QVector<double> ConicSubdivider::getStabilityVals() const {
+std::vector<double> ConicSubdivider::getStabilityVals() const {
     return stability_;
 }

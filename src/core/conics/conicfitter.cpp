@@ -67,8 +67,8 @@ inline Eigen::RowVectorXd normEqYEigen(const Vector2DD &coord, const Vector2DD &
     return row;
 }
 
-Eigen::MatrixXd ConicFitter::initAEigen(const QVector<Vector2DD> &coords,
-                                        const QVector<Vector2DD> &normals) const {
+Eigen::MatrixXd ConicFitter::initAEigen(const std::vector<Vector2DD> &coords,
+                                        const std::vector<Vector2DD> &normals) const {
     Eigen::MatrixXd A(numEq_, numUnknowns_);
 
     int rowIdx = 0;
@@ -113,8 +113,8 @@ Eigen::VectorXd ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
 #endif
 }
 
-Eigen::VectorXd ConicFitter::fitConic(const QVector<Vector2DD> &coords,
-                                      const QVector<Vector2DD> &normals) {
+Eigen::VectorXd ConicFitter::fitConic(const std::vector<Vector2DD> &coords,
+                                      const std::vector<Vector2DD> &normals) {
     numPoints_ = int(coords.size());
     numNormals_ = int(normals.size());
     numUnknowns_ = 6 + numNormals_;

@@ -12,23 +12,23 @@ public:
 
     void subdivide(SubdivisionCurve *curve, int level);
 
-    void knotCurve(SubdivisionCurve *curve, QVector<Vector2DD> &coords, QVector<Vector2DD> &norms,
-                   QVector<bool> &customNorms);
+    void knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> &coords, std::vector<Vector2DD> &norms,
+                   std::vector<bool> &customNorms);
 
-    QVector<double> getStabilityVals() const;
+    std::vector<double> getStabilityVals() const;
 
 private:
     const Settings &settings_;
-    QVector<double> stability_;
+    std::vector<double> stability_;
     SubdivisionCurve *curve_;
 
-    void subdivide(const QVector<Vector2DD> &points,
-                   const QVector<Vector2DD> &normals,
-                   const QVector<double> &stabilities, int level);
+    void subdivide(const std::vector<Vector2DD> &points,
+                   const std::vector<Vector2DD> &normals,
+                   const std::vector<double> &stabilities, int level);
 
     bool areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2, const Vector2DD &v3) const;
 
-    void extractPatch(const QVector<Vector2DD> &points, const QVector<Vector2DD> &normals,
-                      QVector<int> &indices, int i, QVector<Vector2DD> &patchCoords,
-                      QVector<Vector2DD> &patchNormals) const;
+    void extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals,
+                      std::vector<int> &indices, int i, std::vector<Vector2DD> &patchCoords,
+                      std::vector<Vector2DD> &patchNormals) const;
 };

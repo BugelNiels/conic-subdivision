@@ -15,18 +15,19 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings)
 }
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, bool closed)
+SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, bool closed)
         : settings_(settings),
           closed_(closed),
           netCoords_(std::move(coords)),
           subdivider(settings_) {
     netNormals_ = calcNormals(netCoords_);
     customNormals_.resize(netNormals_.size());
-    customNormals_.fill(false);
+    std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<Vector2DD> coords, QVector<Vector2DD> normals,
+SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords,
+                                   std::vector<Vector2DD> normals,
                                    bool closed)
         : settings_(settings),
           closed_(closed),
@@ -34,7 +35,7 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings, QVector<Vector2DD> 
           netNormals_(std::move(normals)),
           subdivider(settings_) {
     customNormals_.resize(netNormals_.size());
-    customNormals_.fill(false);
+    std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
 Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
@@ -61,9 +62,9 @@ Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
     return (t1 + t2).normalized();
 }
 
-QVector<Vector2DD> SubdivisionCurve::calcNormals(
-        const QVector<Vector2DD> &coords) const {
-    QVector<Vector2DD> normals;
+std::vector<Vector2DD> SubdivisionCurve::calcNormals(
+        const std::vector<Vector2DD> &coords) const {
+    std::vector<Vector2DD> normals;
     int n = int(coords.size());
     normals.resize(n);
     for (int i = 0; i < n; i++) {
@@ -72,7 +73,9 @@ QVector<Vector2DD> SubdivisionCurve::calcNormals(
     return normals;
 }
 
-Vector2DD SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals, int i) const {
+Vector2DD
+SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals,
+                                    int i) const {
     int n = int(normals.size());
     int nextIdx;
     int prevIdx;
@@ -122,9 +125,9 @@ Vector2DD SubdivisionCurve::calcNormalAtIndex(const QVector<Vector2DD> &coords, 
 
 int SubdivisionCurve::addPoint(const Vector2DD &p) {
     int idx = findInsertIdx(p);
-    netCoords_.insert(idx, p);
-    netNormals_.insert(idx, Vector2DD());
-    customNormals_.insert(idx, false);
+    netCoords_.insert(netCoords_.begin() + idx, p);
+    netNormals_.insert(netNormals_.begin() + idx, Vector2DD());
+    customNormals_.insert(customNormals_.begin() + idx, false);
     netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
     netNormals_[getNextIdx(idx)] = calcNormalAtIndex(netCoords_, netNormals_, getNextIdx(idx));
     netNormals_[getPrevIdx(idx)] = calcNormalAtIndex(netCoords_, netNormals_, getPrevIdx(idx));
@@ -156,9 +159,9 @@ void SubdivisionCurve::setNormalPosition(int idx, const Vector2DD &p) {
 }
 
 void SubdivisionCurve::removePoint(int idx) {
-    netCoords_.remove(idx);
-    netNormals_.remove(idx);
-    customNormals_.remove(idx);
+    netCoords_.erase(netCoords_.begin() + idx);
+    netNormals_.erase(netNormals_.begin() + idx);
+    customNormals_.erase(customNormals_.begin() + idx);
     int prevIdx = getPrevIdx(idx);
     if (!customNormals_[prevIdx]) {
         recalculateNormal(prevIdx);
@@ -275,7 +278,7 @@ bool SubdivisionCurve::isClosed() const {
 
 void SubdivisionCurve::setClosed(bool closed) {
     closed_ = closed;
-    if(netCoords_.empty()) {
+    if (netCoords_.empty()) {
         return;
     }
     if (!customNormals_[0]) {
@@ -295,9 +298,9 @@ void SubdivisionCurve::applySubdivision() {
 }
 
 void SubdivisionCurve::insertKnots() {
-    QVector<Vector2DD> coords;
-    QVector<Vector2DD> norms;
-    QVector<bool> customNorms;
+    std::vector<Vector2DD> coords;
+    std::vector<Vector2DD> norms;
+    std::vector<bool> customNorms;
     subdivider.knotCurve(this, coords, norms, customNorms);
 
     netCoords_ = coords;
@@ -306,7 +309,7 @@ void SubdivisionCurve::insertKnots() {
 
 }
 
-QVector<double> SubdivisionCurve::getStabilityVals() const {
+std::vector<double> SubdivisionCurve::getStabilityVals() const {
     return subdivider.getStabilityVals();
 }
 

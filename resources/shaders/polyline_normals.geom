@@ -21,7 +21,7 @@ in float stability_vs[];
 
 out vec4 line_color;
 
-bool calcNormals = true;
+bool calcNormals = false;
 
 const vec3 curvOutlineCol = vec3(168f/255f, 113/255f, 208/255f);
 const vec3 curvLineCol = vec3(0, 1, 0);
