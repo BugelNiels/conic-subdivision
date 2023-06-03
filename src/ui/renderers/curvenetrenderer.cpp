@@ -57,25 +57,25 @@ void CurveNetRenderer::initBuffers() {
 void CurveNetRenderer::updateBuffers(SubdivisionCurve &sc) {
     coords_ = qVecToVec(sc.getNetCoords());
     normals_ = qVecToVec(sc.getNetNormals());
-    if (coords_.size() == 0) {
+    int coordSize = coords_.size();
+    if (coordSize == 0) {
         vboSize_ = 0;
         return;
     }
-    int size = coords_.size();
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < coordSize; i++) {
         normals_[i] = (coords_[i] + settings_.normalLength * normals_[i].normalized());
     }
 
-    QVector<int> indices(coords_.size() + 2);
-    for (int i = 0; i < coords_.size(); i++) {
-        indices.append(i);
+    std::vector<int> indices;
+    indices.reserve(coordSize + 2);
+    indices.emplace_back(sc.isClosed() ? coordSize - 1 : 0);
+    for (int i = 0; i < coordSize; i++) {
+        indices.emplace_back(i);
     }
     if (sc.isClosed()) {
-        indices.prepend(coords_.size() - 1);
-        indices.append(0);
+        indices.emplace_back(0);
     } else {
-        indices.prepend(0);
-        indices.append(coords_.size() - 1);
+        indices.emplace_back(coordSize - 1);
     }
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);

@@ -37,5 +37,5 @@ protected:
 
     static QOpenGLShaderProgram *constructPolyLineShader() ;
 
-    static QVector<QVector2D> qVecToVec(const QVector<Vector2DD> &items) ;
+    static std::vector<QVector2D> qVecToVec(const std::vector<Vector2DD> &items) ;
 };

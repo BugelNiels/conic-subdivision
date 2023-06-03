@@ -19,8 +19,8 @@ Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     return matrix;
 }
 
-Conic::Conic(const QVector<Vector2DD> &coords,
-             const QVector<Vector2DD> &normals, const Settings &settings)
+Conic::Conic(const std::vector<Vector2DD> &coords,
+             const std::vector<Vector2DD> &normals, const Settings &settings)
         : settings_(settings) {
     Q_ = fitConic(coords, normals);
 }
@@ -32,8 +32,8 @@ Conic::Conic(const QVector<Vector2DD> &coords,
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-Matrix3DD Conic::fitConic(const QVector<Vector2DD> &coords,
-                          const QVector<Vector2DD> &normals) {
+Matrix3DD Conic::fitConic(const std::vector<Vector2DD> &coords,
+                          const std::vector<Vector2DD> &normals) {
     ConicFitter fitter(settings_);
     Eigen::VectorXd foundCoefs = fitter.fitConic(coords, normals);
     stability_ = fitter.stability();
@@ -108,14 +108,27 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
         return false;
     }
     double root = std::sqrt(disc);
+    
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
+#if 1
     if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;
     } else {
         t = t1;
     }
     return true;
+#else
+    if(t0 > 0) {
+        t = t0;
+        return true;
+    }
+    if(t1 > 0) {
+        t = t1;
+        return true;
+    }
+    return false;
+#endif
 }
 
 void Conic::printConic() const {

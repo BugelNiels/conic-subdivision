@@ -40,4 +40,5 @@ private:
     QSpinBox *subdivStepsSpinBox;
     QAction *closedCurveAction;
     QString presetName;
+
 };

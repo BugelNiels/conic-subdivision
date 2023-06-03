@@ -24,7 +24,7 @@ out vec4 line_color;
 bool calcNormals = false;
 
 const vec3 curvOutlineCol = vec3(168f/255f, 113/255f, 208/255f);
-const vec3 curvLineCol = vec3(117f/255f, 195f/255f, 143f/255f);
+const vec3 curvLineCol = vec3(0, 1, 0);
 const vec3 curvLineCol2 = vec3(0.95);
 
 /**
@@ -73,13 +73,13 @@ void emitNormal(vec4 a, vec4 b, vec4 c, vec2 norm) {
 }
 
 float calcCurvature(vec4 a, vec4 b, vec4 c) {
-    vec3 ab = a.xyz - b.xyz;
-    vec3 cb = c.xyz - b.xyz;
+    vec2 ab = a.xy - b.xy;
+    vec2 cb = c.xy - b.xy;
 
     float normAB = length(ab);
     float normCB = length(cb);
 
-    float curvature = 2.0 * length(cross(ab, cb)) / (normAB * normCB * (normAB + normCB));
+    float curvature = 2.0 * length(cross(vec3(ab, 0.0), vec3(cb, 0.0))) / (normAB * normCB * (normAB + normCB));
     return curvature;
 }
 
@@ -109,7 +109,10 @@ void main() {
 
     line_color = vec4(lineColor, 1);
     vec2 n1 = calcNormals ? calcNormal(p0, p1, p2) : -norm_vs[1];
+    n1 = normalize(n1);
     vec2 n2 = calcNormals ? calcNormal(p1, p2, p3) : -norm_vs[2];
+    n2 = normalize(n2);
+
     if (visualize_normals) {
         emitNormal(p0, p1, p2, n1);
         emitNormal(p1, p2, p3, n2);
@@ -123,8 +126,6 @@ void main() {
         line_color = vec4(curvOutlineCol, 1.0);
         emitLine(firstToothTip, secondToothTip);
     }
-
-
 
     // Emit the curve itself
     if (stability_colors) {

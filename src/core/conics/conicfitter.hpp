@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QVector>
-
 #include "src/core/settings.hpp"
 #include <Eigen/Core>
 #include "util/vector.hpp"
@@ -10,8 +8,8 @@ class ConicFitter {
 public:
     explicit ConicFitter(const Settings &settings);
 
-    Eigen::VectorXd fitConic(const QVector<Vector2DD> &coords,
-                             const QVector<Vector2DD> &normals);
+    Eigen::VectorXd fitConic(const std::vector<Vector2DD> &coords,
+                             const std::vector<Vector2DD> &normals);
 
     double stability();
 
@@ -33,7 +31,7 @@ private:
     double getNormalWeight(int index) const;
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
-    initAEigen(const QVector<Vector2DD> &coords, const QVector<Vector2DD> &normals) const;
+    initAEigen(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals) const;
 
     Eigen::VectorXd solveLinSystem(const Eigen::MatrixXd &A);
 };

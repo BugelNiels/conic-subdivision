@@ -19,10 +19,10 @@
 
 #include "src/core/conics/conicpresets.hpp"
 #include "ui/stylepresets.hpp"
-#include "core/settings.hpp"
 #include "util/imgresourcereader.hpp"
 
 #include "mainview.hpp"
+#include "util/objcurvereader.hpp"
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent) {
@@ -141,13 +141,14 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
     );
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
-    connect(splitConvexityCheckBox, &QCheckBox::toggled, [this, weightedKnotLocation, gravitateAnglesCheckBox, tensionSlider](bool toggled) {
-        settings_.convexitySplit = toggled;
-        weightedKnotLocation->setEnabled(toggled);
-        gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedKnotLocation);
-        tensionSlider->setEnabled(toggled);
-        mainView_->recalculateCurve();
-    });
+    connect(splitConvexityCheckBox, &QCheckBox::toggled,
+            [this, weightedKnotLocation, gravitateAnglesCheckBox, tensionSlider](bool toggled) {
+                settings_.convexitySplit = toggled;
+                weightedKnotLocation->setEnabled(toggled);
+                gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedKnotLocation);
+                tensionSlider->setEnabled(toggled);
+                mainView_->recalculateCurve();
+            });
 
     auto *insertKnotsButton = new QPushButton("Insert Knots");
     insertKnotsButton->setToolTip(
@@ -348,6 +349,24 @@ QMenu *MainWindow::getFileMenu() {
     });
     fileMenu->addAction(newAction);
 
+    auto *openAction = new QAction(QStringLiteral("Open"), fileMenu);
+    openAction->setShortcutContext(Qt::ApplicationShortcut);
+    openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+    connect(openAction, &QAction::triggered, [this]() {
+        QString filePath = QFileDialog::getOpenFileName(
+                nullptr, "Load Curve", "../curves/",
+                tr("Obj Files (*.obj)"));
+        if (filePath == "") {
+            return;
+        }
+        ObjCurveReader reader(settings_);
+        mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(reader.loadCurveFromObj(filePath)));
+        // TODO: extract function for new curves
+        subdivStepsSpinBox->setValue(0);
+        closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
+        mainView_->recalculateCurve();
+    });
+    fileMenu->addAction(openAction);
 
     auto *saveAction = new QAction(QStringLiteral("Save"), fileMenu);
     saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));

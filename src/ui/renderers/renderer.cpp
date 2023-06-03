@@ -75,11 +75,11 @@ QOpenGLShaderProgram *Renderer::constructDefaultShader(
     return shader;
 }
 
-QVector<QVector2D> Renderer::qVecToVec(const QVector<Vector2DD> &items) {
-    QVector<QVector2D> qItems;
+std::vector<QVector2D> Renderer::qVecToVec(const std::vector<Vector2DD> &items) {
+    std::vector<QVector2D> qItems;
     qItems.reserve(items.size());
     for (auto &item: items) {
-        qItems.emplaceBack(QVector2D(float(item.x()), float(item.y())));
+        qItems.emplace_back(float(item.x()), float(item.y()));
     }
     return qItems;
 }
