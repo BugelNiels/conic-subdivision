@@ -108,14 +108,27 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
         return false;
     }
     double root = std::sqrt(disc);
+    
     double t0 = (-b - root) / a;
     double t1 = (-b + root) / a;
+#if 1
     if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;
     } else {
         t = t1;
     }
     return true;
+#else
+    if(t0 > 0) {
+        t = t0;
+        return true;
+    }
+    if(t1 > 0) {
+        t = t1;
+        return true;
+    }
+    return false;
+#endif
 }
 
 void Conic::printConic() const {

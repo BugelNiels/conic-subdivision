@@ -45,8 +45,8 @@ typedef struct Settings {
     float deselectRadius = 0.05;
     float drawPointRadius = 8.0f;
     float selectedPointRadius = 12.0f;
-    float curveLineWidth = 2.0f;
-    float controlLineWidth = 1.0f;
+    float curveLineWidth = 3.0f;
+    float controlLineWidth = 2.0f;
     int curvatureSign = 1;
     float curvatureScale = 1.0f;
 

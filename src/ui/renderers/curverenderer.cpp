@@ -107,33 +107,26 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
                       stability.data(), GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
-    const auto& coords_d = sc.getNetCoords();
-    QVector<double> temp;
-    for(const auto& coord : coords_d) {
-        temp.append(coord.x());
-        temp.append(coord.y());
-    }
-
+    const auto& coords_d = sc.getSubdivLevel() == 0 ? sc.getNetCoords() : sc.getCurveCoords();
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[3]);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(double) * temp.size(),
-                      temp.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(Vector2DD) * coords_d.size(),
+                      coords_d.data(), GL_DYNAMIC_DRAW);
 #endif
 
 
-    QVector<int> indices(coords.size() + 2);
-    for (int i = 0; i < coords.size(); i++) {
+    int coordSize = coords.size();
+    QVector<int> indices;
+    indices.reserve(coordSize + 2);
+    for (int i = 0; i < coordSize; i++) {
         indices.append(i);
     }
     if (sc.isClosed()) {
-        indices.prepend(coords.size() - 1);
+        indices.prepend(coordSize - 1);
         indices.append(0);
         indices.append(1);
-        if (coords.size() > 2) {
-            indices.append(2);
-        }
     } else {
         indices.prepend(0);
-        indices.append(coords.size() - 1);
+        indices.append(coordSize - 1);
     }
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
