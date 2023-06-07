@@ -4,6 +4,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QAction>
+#include <QApplication>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QSpinBox>
@@ -29,8 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
     mainView_ = new MainView(settings_, this);
     presets_ = new conics::ConicPresets(settings_);
 
-    auto *dock = initSideMenu();
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
+    dock_ = initSideMenu();
+    addDockWidget(Qt::LeftDockWidgetArea, dock_);
     setMenuBar(initMenuBar());
     setCentralWidget(mainView_);
 
@@ -320,6 +321,7 @@ QMenuBar *MainWindow::initMenuBar() {
     menuBar->addMenu(getFileMenu());
     menuBar->addMenu(getPresetMenu());
     menuBar->addMenu(getRenderMenu());
+    menuBar->addMenu(getWindowMenu());
 
     auto *lightModeToggle = new QAction(menuBar);
     lightModeToggle->setIcon(
@@ -509,4 +511,16 @@ QMenu *MainWindow::getRenderMenu() {
     });
     renderMenu->addAction(flipNormals);
     return renderMenu;
+}
+
+QMenu *MainWindow::getWindowMenu() {
+    auto *windowMenu = new QMenu("Window");
+
+    auto *resizeAction = new QAction(QStringLiteral("Resize"), windowMenu);
+    connect(resizeAction, &QAction::triggered, [this](bool toggled) {
+        this->showNormal();
+        this->resize(dock_->width() + 800, 800);
+    });
+    windowMenu->addAction(resizeAction);
+    return windowMenu;
 }

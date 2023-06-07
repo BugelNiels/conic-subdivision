@@ -7,7 +7,6 @@
 
 class Settings;
 
-
 /**
  * @brief The SubdivisionCurve class contains the data of a 2D subdivision
  * curve.

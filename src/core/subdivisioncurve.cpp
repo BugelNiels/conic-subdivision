@@ -4,7 +4,6 @@
 
 #include "settings.hpp"
 #include "core/conics/conic.hpp"
-#include "core/subdivision/conicsubdivider.hpp"
 
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
@@ -34,7 +33,8 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2
           netCoords_(std::move(coords)),
           netNormals_(std::move(normals)),
           subdivider(settings_) {
-    customNormals_.resize(netNormals_.size());
+    int size = netCoords_.size();
+    customNormals_.resize(size);
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 

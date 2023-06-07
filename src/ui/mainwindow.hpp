@@ -41,4 +41,7 @@ private:
     QAction *closedCurveAction;
     QString presetName;
 
+    QMenu *getWindowMenu();
+
+    QDockWidget *dock_;
 };
