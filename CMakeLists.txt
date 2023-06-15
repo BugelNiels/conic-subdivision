@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 COMPONENTS Core Gui OpenGL OpenGLWidgets Widgets 3DCore 3DRender REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui OpenGL OpenGLWidgets Widgets REQUIRED)
 find_package (Eigen3 3.3 REQUIRED)
 
 include_directories(src)
@@ -27,8 +27,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt6::OpenGL
         Qt6::OpenGLWidgets
         Qt6::Widgets
-        Qt6::3DCore
-        Qt6::3DRender
         Eigen3::Eigen
         )
 

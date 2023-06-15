@@ -23,7 +23,7 @@ out vec4 line_color;
 
 bool calcNormals = false;
 
-const vec3 curvOutlineCol = vec3(168f/255f, 113/255f, 208/255f);
+const vec3 curvOutlineCol = vec3(0.66, 0.44, 0.81);
 const vec3 curvLineCol = vec3(0, 1, 0);
 const vec3 curvLineCol2 = vec3(0.95);
 

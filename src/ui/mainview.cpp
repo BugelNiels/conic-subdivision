@@ -10,6 +10,7 @@ MainView::MainView(Settings &settings, QWidget *parent) : QOpenGLWidget(parent),
                                                           cr_(settings) {
 
     subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve(settings_));
+    setMinimumWidth(200);
     QSurfaceFormat format;
     format.setSamples(4);    // Set the number of samples used for multisampling
     setFormat(format);
