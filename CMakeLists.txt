@@ -28,7 +28,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt6::OpenGLWidgets
         Qt6::Widgets
         Eigen3::Eigen
-        ${XCB_LIBRARIES}
         )
 
 install(TARGETS ${PROJECT_NAME}
