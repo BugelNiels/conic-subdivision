@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ConicSubdiv VERSION 1.0 LANGUAGES CXX)
+project(conicsubdiv VERSION 1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 COMPONENTS Core Gui OpenGL OpenGLWidgets Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui OpenGLWidgets Widgets REQUIRED)
 find_package (Eigen3 3.3 REQUIRED)
 
 include_directories(src)
@@ -16,10 +16,10 @@ include_directories(src)
 file(GLOB_RECURSE CPP_SOURCES src/*.cpp)
 file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
-qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
+qt_add_executable(${PROJECT_NAME} 
         ${CPP_SOURCES} ${H_HEADERS}
-        resources/resources.qrc
-        src/util/objcurvereader.cpp src/util/objcurvereader.hpp)
+        resources/resources.qrc)
+
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt6::Core
@@ -28,6 +28,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt6::OpenGLWidgets
         Qt6::Widgets
         Eigen3::Eigen
+        ${XCB_LIBRARIES}
         )
 
 install(TARGETS ${PROJECT_NAME}
