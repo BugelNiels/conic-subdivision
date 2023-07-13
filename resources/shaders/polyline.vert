@@ -5,7 +5,6 @@ layout(location = 0) in vec2 vertcoords_clip_vs;
 layout(location = 1) in vec2 vertnorms_clip_vs;
 layout(location = 2) in float stabilities;
 
-
 out vec2 norm_vs;
 out float stability_vs;
 

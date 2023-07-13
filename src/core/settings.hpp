@@ -22,10 +22,10 @@ typedef struct Settings {
     bool normalHandles = true;
 
     // Calculation Weights
-    double pointWeight = 100000.0;
-    double normalWeight = 100000.0;
-    double middlePointWeight = 1.0;
-    double middleNormalWeight = 1.0;
+    double middlePointWeight = 100000.0;
+    double middleNormalWeight = 100000.0;
+    double outerPointWeight = 1.0;
+    double outerNormalWeight = 1.0;
 
     // Calculation settings
     bool circleNormals = false;
@@ -36,7 +36,7 @@ typedef struct Settings {
     bool weightedKnotLocation = false;
     bool gravitateSmallerAngles = true;
     double knotTension = 0.8;
-    double epsilon = 1e-20;
+    long double epsilon = 1e-40;
 
     // UI related constants
     float normalLength = 0.15;

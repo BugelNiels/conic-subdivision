@@ -5,7 +5,7 @@ ObjCurveReader::ObjCurveReader(const Settings &settings) : settings_(settings) {
 
 }
 
-void insertLineSegment(QMap<int, int> &lineSegments, int startIdx, int endIdx) {
+static void insertLineSegment(QMap<int, int> &lineSegments, int startIdx, int endIdx) {
     if (!lineSegments.contains(startIdx)) {
         lineSegments.insert(startIdx, endIdx);
         return;

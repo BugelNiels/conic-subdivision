@@ -6,8 +6,8 @@
 
 #include "src/core/settings.hpp"
 
-Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
-    double a, b, c, d, e, f;
+static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
+    long double a, b, c, d, e, f;
     a = coefs[0];           // A - x*x
     b = coefs[2];           // C - x*y
     c = coefs[1];           // B - y*y
@@ -19,10 +19,10 @@ Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     return matrix;
 }
 
-Conic::Conic(const std::vector<Vector2DD> &coords,
-             const std::vector<Vector2DD> &normals, const Settings &settings)
+Conic::Conic(const std::vector<PatchPoint> &patchPoints,
+             const Settings &settings)
         : settings_(settings) {
-    Q_ = fitConic(coords, normals);
+    Q_ = fitConic(patchPoints);
 }
 
 /**
@@ -32,18 +32,17 @@ Conic::Conic(const std::vector<Vector2DD> &coords,
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-Matrix3DD Conic::fitConic(const std::vector<Vector2DD> &coords,
-                          const std::vector<Vector2DD> &normals) {
+Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
     ConicFitter fitter(settings_);
-    Eigen::VectorXd foundCoefs = fitter.fitConic(coords, normals);
+    Eigen::VectorX<long double> foundCoefs = fitter.fitConic(patchPoints);
     stability_ = fitter.stability();
     return coefsToMatrix(foundCoefs);
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
     Vector3DD p3(p.x(), p.y(), 1);
-    double xn = Q_.row(0).dot(p3);
-    double yn = Q_.row(1).dot(p3);
+    long double xn = Q_.row(0).dot(p3);
+    long double yn = Q_.row(1).dot(p3);
     Vector2DD normal(xn, yn);
     if (normal.dot(rd) < 0.0) {
         normal *= -1;
@@ -53,7 +52,7 @@ Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
 
 bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
                    Vector2DD &normal) const {
-    double t;
+    long double t;
     if (intersects(ro, rd, t)) {
         p = ro + t * rd;
         normal = conicNormal(p, rd);
@@ -74,15 +73,14 @@ bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
   of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284,
   Oct. 2013, pp. 2245-2264
 */
-double diff_of_products(double a, double b, double c, double d) {
-    double w = d * c;
-    double e = fma(-d, c, w);
-    double f = fma(a, b, -w);
+static long double diff_of_products(long double a, long double b, long double c, long double d) {
+    long double w = d * c;
+    long double e = fmal(-d, c, w);
+    long double f = fmal(a, b, -w);
     return f + e;
 }
 
-bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
-                       double &t) const {
+bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t) const {
     Vector3DD p(ro.x(), ro.y(), 1);
     Vector3DD u(rd.x(), rd.y(), 0);
     // Technically, b = p.dot(Q_ * u) + u.dot(Q_ * p);
@@ -91,10 +89,9 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
     // Because of this, we can remove the 4 in the discriminant calculation ((2b)^2 - 4ac = b^2 - ac
     // And we can also remove the 2 from the "/2a" part of the quadratic formula:
     // -2b+-sqrt(disc)/2a = -b+-sqrt(disc)/a
-
-    double a = u.dot(Q_ * u);
-    double b = u.dot(Q_ * p);
-    double c = p.dot(Q_ * p);
+    long double a = u.dot(Q_ * u);
+    long double b = u.dot(Q_ * p);
+    long double c = p.dot(Q_ * p);
 
     if (std::fabs(a) < settings_.epsilon) {
         t = -c / b;
@@ -103,14 +100,14 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd,
         }
         return true;
     }
-    double disc = diff_of_products(b, b, a, c);
+    long double disc = diff_of_products(b, b, a, c);
     if (disc < 0.0) {
         return false;
     }
-    double root = std::sqrt(disc);
-    
-    double t0 = (-b - root) / a;
-    double t1 = (-b + root) / a;
+    long double root = std::sqrt(disc);
+
+    long double t0 = (-b - root) / a;
+    long double t1 = (-b + root) / a;
 #if 1
     if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;

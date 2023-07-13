@@ -7,7 +7,7 @@
 class ObjCurveReader {
 
 public:
-    ObjCurveReader(const Settings& settings);
+    explicit ObjCurveReader(const Settings& settings);
 
     SubdivisionCurve loadCurveFromObj(const QString &filePath);
 

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Conic Subdiv
-Comment=Tool for 2D curve subdivision
-Exec=conicsubdiv
-Icon=conicsubdiv
-Categories=Graphics;

@@ -6,7 +6,7 @@
 #include "shadertypes.hpp"
 #include "util/vector.hpp"
 
-//#define SHADER_DOUBLE_PRECISION
+#define SHADER_DOUBLE_PRECISION
 
 class Settings;
 
@@ -33,9 +33,20 @@ protected:
 
     virtual void initBuffers() = 0;
 
-    static QOpenGLShaderProgram *constructDefaultShader(const QString &name) ;
+    static QOpenGLShaderProgram *constructDefaultShader(const QString &name);
 
-    static QOpenGLShaderProgram *constructPolyLineShader() ;
+    static QOpenGLShaderProgram *constructPolyLineShader();
 
-    static std::vector<QVector2D> qVecToVec(const std::vector<Vector2DD> &items) ;
+    static std::vector<QVector2D> qVecToVec(const std::vector<Vector2DD> &items);
+
+    template<class T>
+    static std::vector<T> qVecToVec(const std::vector<Vector2DD> &items) {
+        std::vector<T> qItems;
+        qItems.reserve(items.size() * 2);
+        for (auto &item: items) {
+            qItems.emplace_back(T(item.x()));
+            qItems.emplace_back(T(item.y()));
+        }
+        return qItems;
+    }
 };

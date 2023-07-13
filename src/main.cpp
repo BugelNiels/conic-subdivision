@@ -1,13 +1,9 @@
-#include "src/core/conics/conicfitter.hpp"
-
 #include <QApplication>
 #include <QSurfaceFormat>
-#include <QVector2D>
 
 #include <QDockWidget>
 
 #include "src/ui/mainwindow.hpp"
-#include "src/core/settings.hpp"
 
 /**
  * @brief main Starts up the QT application and UI.

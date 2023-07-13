@@ -5,29 +5,10 @@
 
 ConicFitter::ConicFitter(const Settings &settings) : settings_(settings) {}
 
-
-double ConicFitter::getPointWeight(int index) const {
-    if (index < 2) {
-        return pointWeight_;
-    } else if (index < 4) {
-        return middlePointWeight_;
-    }
-    return 0;
-}
-
-double ConicFitter::getNormalWeight(int index) const {
-    if (index < 2) {
-        return normalWeight_;
-    } else if (index < 4) {
-        return middleNormalWeight_;
-    }
-    return 0;
-}
-
-inline Eigen::RowVectorXd pointEqEigen(const Vector2DD &coord, int numUnknowns) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
-    double x = coord.x();
-    double y = coord.y();
+static Eigen::RowVectorX<long double> pointEqEigen(const Vector2DD &coord, int numUnknowns) {
+    Eigen::RowVectorX<long double> row = Eigen::RowVectorX<long double>::Zero(numUnknowns);
+    long double x = coord.x();
+    long double y = coord.y();
     row(0) = x * x;
     row(1) = y * y;
     row(2) = 2 * x * y;
@@ -37,11 +18,13 @@ inline Eigen::RowVectorXd pointEqEigen(const Vector2DD &coord, int numUnknowns) 
     return row;
 }
 
-inline Eigen::RowVectorXd normEqXEigen(const Vector2DD &coord, const Vector2DD &normal,
-                                       int numUnknowns, int normIdx) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
-    double x = coord.x();
-    double y = coord.y();
+static Eigen::RowVectorX<long double> normEqXEigen(const Vector2DD &coord,
+                                                   const Vector2DD &normal,
+                                                   int numUnknowns,
+                                                   int normIdx) {
+    Eigen::RowVectorX<long double> row = Eigen::RowVectorX<long double>::Zero(numUnknowns);
+    long double x = coord.x();
+    long double y = coord.y();
     row(0) = 2 * x;  // A
     row(1) = 0;      // B
     row(2) = 2 * y;  // C
@@ -52,11 +35,13 @@ inline Eigen::RowVectorXd normEqXEigen(const Vector2DD &coord, const Vector2DD &
     return row;
 }
 
-inline Eigen::RowVectorXd normEqYEigen(const Vector2DD &coord, const Vector2DD &normal,
-                                       int numUnknowns, int normIdx) {
-    Eigen::RowVectorXd row = Eigen::RowVectorXd::Zero(numUnknowns);
-    double x = coord.x();
-    double y = coord.y();
+static Eigen::RowVectorX<long double> normEqYEigen(const Vector2DD &coord,
+                                                   const Vector2DD &normal,
+                                                   int numUnknowns,
+                                                   int normIdx) {
+    Eigen::RowVectorX<long double> row = Eigen::RowVectorX<long double>::Zero(numUnknowns);
+    long double x = coord.x();
+    long double y = coord.y();
     row(0) = 0;        // A
     row(1) = 2 * y;    // B
     row(2) = 2 * x;    // C
@@ -67,26 +52,23 @@ inline Eigen::RowVectorXd normEqYEigen(const Vector2DD &coord, const Vector2DD &
     return row;
 }
 
-Eigen::MatrixXd ConicFitter::initAEigen(const std::vector<Vector2DD> &coords,
-                                        const std::vector<Vector2DD> &normals) const {
-    Eigen::MatrixXd A(numEq_, numUnknowns_);
+Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic>
+ConicFitter::initAEigen(const std::vector<PatchPoint> &patchPoints) const {
+    Eigen::MatrixX<long double> A(numEq_, numUnknowns_);
 
     int rowIdx = 0;
-    for (int i = 0; i < numPoints_; i++) {
-        double weight = getPointWeight(i);
-        A.row(rowIdx++) = pointEqEigen(coords[i], numUnknowns_) * weight;
-    }
-    for (int i = 0; i < numNormals_; i++) {
-        double weight = getNormalWeight(i);
-        const Vector2DD &coord = coords[i];
-        const Vector2DD &normal = normals[i];
-        A.row(rowIdx++) = normEqXEigen(coord, normal, numUnknowns_, i) * weight;
-        A.row(rowIdx++) = normEqYEigen(coord, normal, numUnknowns_, i) * weight;
+    for (int i = 0; i < patchPoints.size(); i++) {
+        auto &p = patchPoints[i];
+        const Vector2DD &coord = p.coords;
+        const Vector2DD &normal = p.normal;
+        A.row(rowIdx++) = pointEqEigen(coord, numUnknowns_) * p.pointWeight;
+        A.row(rowIdx++) = normEqXEigen(coord, normal, numUnknowns_, i) * p.normWeight;
+        A.row(rowIdx++) = normEqYEigen(coord, normal, numUnknowns_, i) * p.normWeight;
     }
     return A;
 }
 
-Eigen::VectorXd ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
+Eigen::VectorX<long double> ConicFitter::solveLinSystem(const Eigen::MatrixX<long double> &A) {
 #if 0
     Eigen::MatrixXd MtM = A.transpose() * A;
     Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(MtM);
@@ -106,30 +88,23 @@ Eigen::VectorXd ConicFitter::solveLinSystem(const Eigen::MatrixXd &A) {
     Eigen::VectorXd solution = eigenvectors.col(minIndex);
     return vecToQVecEigen(solution);
 #else
-    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeThinV);
+    Eigen::JacobiSVD<Eigen::MatrixX<long double>> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
     stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
     return V.col(V.cols() - 1);
 #endif
 }
 
-Eigen::VectorXd ConicFitter::fitConic(const std::vector<Vector2DD> &coords,
-                                      const std::vector<Vector2DD> &normals) {
-    numPoints_ = int(coords.size());
-    numNormals_ = int(normals.size());
-    numUnknowns_ = 6 + numNormals_;
+Eigen::VectorX<long double> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
+    int numPoints = int(patchPoints.size());
+    numUnknowns_ = 6 + numPoints;
 
-    pointWeight_ = settings_.pointWeight;
-    normalWeight_ = settings_.normalWeight;
-    middlePointWeight_ = settings_.middlePointWeight;
-    middleNormalWeight_ = settings_.middleNormalWeight;
-
-    numEq_ = numPoints_ + numNormals_ * 2;
-    return solveLinSystem(initAEigen(coords, normals));
+    numEq_ = numPoints * 3; // 1 eq per coordinate + 2 per normal
+    return solveLinSystem(initAEigen(patchPoints));
 }
 
 double ConicFitter::stability() {
-    double minVal = 10.0 * std::max(settings_.pointWeight, settings_.normalWeight);
+    double minVal = 10.0 * std::max(settings_.middlePointWeight, settings_.middleNormalWeight);
     double maxVal = 1.0e9 * minVal;
     double logMin = std::log10(minVal);
     double logMax = std::log10(maxVal);

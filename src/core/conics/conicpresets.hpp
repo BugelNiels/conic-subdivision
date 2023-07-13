@@ -13,14 +13,14 @@ namespace conics {
 
         ~ConicPresets();
 
-        SubdivisionCurve getPreset(const QString &name) const;
+        [[nodiscard]] SubdivisionCurve getPreset(const QString &name) const;
 
-        QList<QString> getPresetNames() const;
+        [[nodiscard]] std::vector<QString> getPresetNames() const;
 
     private:
         const Settings &settings_;
 
-        QMap<QString, std::shared_ptr<SubdivisionCurve>> presets_;
+        std::map<QString, std::shared_ptr<SubdivisionCurve>> presets_;
 
         SubdivisionCurve getPentagon();
 

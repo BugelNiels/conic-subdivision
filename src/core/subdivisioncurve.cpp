@@ -14,7 +14,9 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings)
 }
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, bool closed)
+SubdivisionCurve::SubdivisionCurve(const Settings &settings,
+                                   std::vector<Vector2DD> coords,
+                                   bool closed)
         : settings_(settings),
           closed_(closed),
           netCoords_(std::move(coords)),
@@ -25,7 +27,8 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2
 }
 
 
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords,
+SubdivisionCurve::SubdivisionCurve(const Settings &settings,
+                                   std::vector<Vector2DD> coords,
                                    std::vector<Vector2DD> normals,
                                    bool closed)
         : settings_(settings),
@@ -38,8 +41,8 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
-                     const Vector2DD &c, bool areaWeighted) {
+static Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
+                            const Vector2DD &c, bool areaWeighted) {
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
@@ -62,8 +65,7 @@ Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
     return (t1 + t2).normalized();
 }
 
-std::vector<Vector2DD> SubdivisionCurve::calcNormals(
-        const std::vector<Vector2DD> &coords) const {
+std::vector<Vector2DD> SubdivisionCurve::calcNormals(const std::vector<Vector2DD> &coords) const {
     std::vector<Vector2DD> normals;
     int n = int(coords.size());
     normals.resize(n);
@@ -73,9 +75,9 @@ std::vector<Vector2DD> SubdivisionCurve::calcNormals(
     return normals;
 }
 
-Vector2DD
-SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals,
-                                    int i) const {
+Vector2DD SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
+                                              const std::vector<Vector2DD> &normals,
+                                              int i) const {
     int n = int(normals.size());
     int nextIdx;
     int prevIdx;
@@ -99,16 +101,16 @@ SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords, const 
             normal.x() *= -1;
             return Vector2DD(normal.y(), normal.x()).normalized();
         } else {
-            double d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) +
-                            c.x() * (a.y() - b.y()));
-            double ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
-                        d;
-            double uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
-                        d;
+            long double d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) +
+                                 c.x() * (a.y() - b.y()));
+            long double ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
+                              (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
+                              (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
+                             d;
+            long double uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
+                              (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
+                              (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
+                             d;
             Vector2DD oscCircleCenter = Vector2DD(ux, uy);
             Vector2DD norm = (oscCircleCenter - b).normalized();
 
@@ -203,7 +205,7 @@ int SubdivisionCurve::getPrevIdx(int idx) const {
     return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
-double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
+static double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
     Vector2DD AB = B - A;
     Vector2DD AP = P - A;
     double AB_len2 = AB.squaredNorm();

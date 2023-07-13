@@ -175,9 +175,9 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     edgeVertWeightSpinBox->setMinimum(0);
     edgeVertWeightSpinBox->setMaximum(maxWeight);
-    edgeVertWeightSpinBox->setValue(settings_.pointWeight);
+    edgeVertWeightSpinBox->setValue(settings_.middlePointWeight);
     connect(edgeVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.pointWeight = newVal;
+        settings_.middlePointWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeVertWeightSpinBox);
@@ -188,9 +188,9 @@ QDockWidget *MainWindow::initSideMenu() {
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
-    midVertWeightSpinBox->setValue(settings_.middlePointWeight);
+    midVertWeightSpinBox->setValue(settings_.outerPointWeight);
     connect(midVertWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.middlePointWeight = newVal;
+        settings_.outerPointWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midVertWeightSpinBox);
@@ -203,9 +203,9 @@ QDockWidget *MainWindow::initSideMenu() {
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>"
     );
-    edgeNormWeightSpinBox->setValue(settings_.normalWeight);
+    edgeNormWeightSpinBox->setValue(settings_.middleNormalWeight);
     connect(edgeNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.normalWeight = newVal;
+        settings_.middleNormalWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeNormWeightSpinBox);
@@ -216,9 +216,9 @@ QDockWidget *MainWindow::initSideMenu() {
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
-    midNormWeightSpinBox->setValue(settings_.middleNormalWeight);
+    midNormWeightSpinBox->setValue(settings_.outerNormalWeight);
     connect(midNormWeightSpinBox, &QDoubleSpinBox::valueChanged, [this](double newVal) {
-        settings_.middleNormalWeight = newVal;
+        settings_.outerNormalWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(midNormWeightSpinBox);

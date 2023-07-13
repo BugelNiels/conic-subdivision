@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QString>
-#include <QSet>
+#include <set>
 #include "util/vector.hpp"
 #include "core/subdivision/conicsubdivider.hpp"
 
@@ -21,19 +21,23 @@ public:
     SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, std::vector<Vector2DD> normals,
                      bool closed = true);
 
-    inline const std::vector<Vector2DD>& getNetCoords() const { return netCoords_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getNetCoords() const { return netCoords_; }
 
-    inline const std::vector<Vector2DD>& getNetNormals() const { return netNormals_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getNetNormals() const { return netNormals_; }
 
-    inline const std::vector<Vector2DD>& getCurveCoords() const { return curveCoords_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveCoords() const { return curveCoords_; }
 
-    inline const std::vector<Vector2DD>& getCurveNormals() const { return curveNormals_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveNormals() const { return curveNormals_; }
 
-    inline int getSubdivLevel() const { return subdivisionLevel_; }
+    [[nodiscard]] inline int getSubdivLevel() const { return subdivisionLevel_; }
 
-    int findClosestVertex(const Vector2DD &p, double maxDist) const;
+    [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
 
-    int findClosestNormal(const Vector2DD &p, double maxDist) const;
+    [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist) const;
+
+    [[nodiscard]] bool isClosed() const;
+
+    [[nodiscard]] std::vector<double> getStabilityVals() const;
 
     int addPoint(const Vector2DD &p);
 
@@ -51,15 +55,12 @@ public:
 
     void recalculateNormal(int idx);
 
-    bool isClosed() const;
 
     void setClosed(bool closed);
 
     void insertKnots();
 
     void applySubdivision();
-
-    std::vector<double> getStabilityVals() const;
 
     void translate(const Vector2DD &translation);
 
@@ -73,21 +74,22 @@ private:
     std::vector<Vector2DD> curveCoords_;
     std::vector<Vector2DD> curveNormals_;
     std::vector<bool> customNormals_;
-    QSet<int> knotIndices_;
+    std::set<int> knotIndices_;
 
     std::vector<Vector2DD> netCoords_;
     std::vector<Vector2DD> netNormals_;
 
 
-    std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
+    [[nodiscard]] std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
 
-    Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals, int i) const;
+    [[nodiscard]] Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords,
+                                              const std::vector<Vector2DD> &normals, int i) const;
 
-    int findInsertIdx(const Vector2DD &p) const;
+    [[nodiscard]] int findInsertIdx(const Vector2DD &p) const;
 
-    int getNextIdx(int idx) const;
+    [[nodiscard]] int getNextIdx(int idx) const;
 
-    int getPrevIdx(int idx) const;
+    [[nodiscard]] int getPrevIdx(int idx) const;
 
     friend class ConicSubdivider;
 

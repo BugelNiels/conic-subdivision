@@ -8,30 +8,18 @@ class ConicFitter {
 public:
     explicit ConicFitter(const Settings &settings);
 
-    Eigen::VectorXd fitConic(const std::vector<Vector2DD> &coords,
-                             const std::vector<Vector2DD> &normals);
+    Eigen::VectorX<long double> fitConic(const std::vector<PatchPoint> &patchPoints);
 
     double stability();
 
 private:
     const Settings &settings_;
-    double stability_ = 0;
-    int numPoints_ = 0;
-    int numNormals_ = 0;
+    long double stability_ = 0;
     int numEq_ = 0;
 
-    double pointWeight_ = 1.0;
-    double normalWeight_ = 1.0;
-    double middlePointWeight_ = 1.0;
-    double middleNormalWeight_ = 1.0;
     int numUnknowns_ = 0;
 
-    double getPointWeight(int index) const;
+    [[nodiscard]] Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> initAEigen(const std::vector<PatchPoint> &patchPoints) const;
 
-    double getNormalWeight(int index) const;
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
-    initAEigen(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals) const;
-
-    Eigen::VectorXd solveLinSystem(const Eigen::MatrixXd &A);
+    Eigen::VectorX<long double> solveLinSystem(const Eigen::MatrixX<long double> &A);
 };

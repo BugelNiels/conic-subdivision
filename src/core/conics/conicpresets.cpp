@@ -146,9 +146,14 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, d
 
 
 SubdivisionCurve conics::ConicPresets::getPreset(const QString &name) const {
-    return *presets_[name];
+    return *presets_.at(name);
 }
 
-QList<QString> conics::ConicPresets::getPresetNames() const {
-    return presets_.keys();
+std::vector<QString> conics::ConicPresets::getPresetNames() const {
+    std::vector<QString> keys;
+    keys.reserve(presets_.size());
+    for (const auto& [key, value]: presets_) {
+        keys.emplace_back(key);
+    }
+    return keys;
 }

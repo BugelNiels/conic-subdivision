@@ -28,7 +28,8 @@ void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
 
 void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
                                 const std::vector<Vector2DD> &normals,
-                                const std::vector<double> &stabilities, int level) {
+                                const std::vector<double> &stabilities,
+                                int level) {
     // base case
     if (level == 0) {
         curve_->curveCoords_ = points;
@@ -51,13 +52,10 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
         newStabilities[i] = stabilities[i / 2];
     }
     // set new points
-    std::vector<int> indices;
-    indices.reserve(4);
     for (int i = 1; i < n; i += 2) {
-        std::vector<Vector2DD> patchCoords;
-        std::vector<Vector2DD> patchNormals;
+        std::vector<PatchPoint> patchPoints;
 
-        extractPatch(points, normals, indices, i, patchCoords, patchNormals);
+        extractPatch(points, normals, i, patchPoints);
 
         int prevIdx = (i - 1 + n) % n;
         int nextIdx = (i + 1) % n;
@@ -71,7 +69,7 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
             dir = newNormals[prevIdx] + newNormals[nextIdx];
         }
         // Note that dir is not normalized!
-        Conic conic(patchCoords, patchNormals, settings_);
+        Conic conic(patchPoints, settings_);
         Vector2DD sampledPoint;
         Vector2DD sampledNormal;
         const bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
@@ -88,7 +86,11 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     if (settings_.recalculateNormals) {
         newNormals = curve_->calcNormals(newPoints);
     }
-    curve_->knotIndices_.clear();
+    std::set<int> newKnotIndices;
+    for (const auto &knotIdx: curve_->knotIndices_) {
+        newKnotIndices.insert(knotIdx * 2);
+    }
+    curve_->knotIndices_ = newKnotIndices;
     subdivide(newPoints, newNormals, newStabilities, level - 1);
 }
 
@@ -97,43 +99,95 @@ bool arePointsCollinear(const Vector2DD &p1, const Vector2DD &p2, const Vector2D
     return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) < 0.0001;
 }
 
-void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals,
-                                   std::vector<int> &indices, int i, std::vector<Vector2DD> &patchCoords,
-                                   std::vector<Vector2DD> &patchNormals) const {
+
+void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals, int i,
+                                   std::vector<PatchPoint> &patchPoints) const {
     int pIdx = i / 2;
 
     int size = int(points.size());
 
-    indices.clear();
-    // Two edge points
-    indices.emplace_back(pIdx);
-    // p_2-p_1-p0-p1-p2-p3
     if (curve_->isClosed()) {
-        bool startKnotPoint = curve_->knotIndices_.contains(pIdx);
-        bool endKnotPoint = curve_->knotIndices_.contains((pIdx + 1) % size);
-        indices.emplace_back((pIdx + 1) % size);
-        if (!startKnotPoint) {
-            indices.emplace_back((pIdx - 1 + size) % size);
+
+        // Left middle
+        int leftMiddleIdx = pIdx;
+        bool leftKnotPoint = curve_->knotIndices_.count(leftMiddleIdx) > 0;
+        patchPoints.push_back({points[leftMiddleIdx],
+                               normals[leftMiddleIdx],
+                               settings_.middlePointWeight,
+                               settings_.middleNormalWeight});
+
+        // Right middle
+        int rightMiddleIdx = (pIdx + 1) % size;
+        bool rightKnotPoint = curve_->knotIndices_.count(rightMiddleIdx) > 0;
+        patchPoints.push_back({points[rightMiddleIdx],
+                               normals[rightMiddleIdx],
+                               settings_.middlePointWeight,
+                               settings_.middleNormalWeight});
+
+
+        if (!leftKnotPoint) {
+            int leftOuterIdx = (leftMiddleIdx - 1 + size) % size;
+            patchPoints.push_back({points[leftOuterIdx],
+                                   normals[leftOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
         } else {
-            indices.emplace_back((pIdx + 2) % size);
+            int rightOuterIdx = (rightMiddleIdx + 2) % size;
+            patchPoints.push_back({points[rightOuterIdx],
+                                   normals[rightOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
         }
-        if (!endKnotPoint) {
-            indices.emplace_back((pIdx + 2) % size);
+
+        if (!rightKnotPoint) {
+            int rightOuterIdx = (rightMiddleIdx + 2) % size;
+            patchPoints.push_back({points[rightOuterIdx],
+                                   normals[rightOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
         } else {
-            indices.emplace_back((pIdx - 1 + size) % size);
+            int leftOuterIdx = (leftMiddleIdx - 1 + size) % size;
+            patchPoints.push_back({points[leftOuterIdx],
+                                   normals[leftOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
+
         }
+        // TODO: either re-insert the leftKnotPoint again, or insert 1 point outside the patch (essentially shifting it)
     } else {
-        indices.emplace_back(pIdx + 1);
-        if (pIdx + 2 < size) {
-            indices.emplace_back(pIdx + 2);
+        bool leftKnotPoint = curve_->knotIndices_.count(pIdx) > 0;
+        bool rightKnotPoint = curve_->knotIndices_.count(pIdx + 1) > 0;
+
+        // Left middle
+        int leftMiddleIdx = pIdx;
+        patchPoints.push_back({points[leftMiddleIdx],
+                               normals[leftMiddleIdx],
+                               settings_.middlePointWeight,
+                               settings_.middleNormalWeight});
+
+        // Right middle
+        int rightMiddleIdx = pIdx + 1;
+        patchPoints.push_back({points[rightMiddleIdx],
+                               normals[rightMiddleIdx],
+                               settings_.middlePointWeight,
+                               settings_.middleNormalWeight});
+
+
+        if (!leftKnotPoint && pIdx > 0) {
+            int leftOuterIdx = pIdx - 1;
+            patchPoints.push_back({points[leftOuterIdx],
+                                   normals[leftOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
         }
-        if (pIdx - 1 >= 0) {
-            indices.emplace_back(pIdx - 1);
+
+        if (!rightKnotPoint && pIdx < size - 2) {
+            int rightOuterIdx = pIdx + 2;
+            patchPoints.push_back({points[rightOuterIdx],
+                                   normals[rightOuterIdx],
+                                   settings_.outerPointWeight,
+                                   settings_.outerNormalWeight});
         }
-    }
-    for (int index: indices) {
-        patchCoords.emplace_back(points[index]);
-        patchNormals.emplace_back(normals[index]);
     }
 }
 
@@ -146,8 +200,8 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v
         return true; // End point edge case
     }
     Vector2DD normal = Vector2DD(v2.y() - v1.y(), v1.x() - v2.x());
-    double dotProduct1 = normal.dot(v1v3);
-    double dotProduct2 = normal.dot(v1v0);
+    long double dotProduct1 = normal.dot(v1v3);
+    long double dotProduct2 = normal.dot(v1v0);
     if (std::abs(dotProduct1) < settings_.epsilon || std::abs(dotProduct2) < settings_.epsilon) {
         return true;
     }
@@ -156,7 +210,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v
 }
 
 template<typename T>
-T mix(const T &a, const T &b, double w) {
+T mix(const T &a, const T &b, long double w) {
     return (1.0 - w) * a + w * b;
 }
 
@@ -186,16 +240,16 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> 
 
             Vector2DD reflectVec = (v1 - v2).normalized();
             reflectVec = {-reflectVec.y(), reflectVec.x()};
-            double angle1 = curve->netNormals_[i].dot(reflectVec);
-            double angle2 = curve->netNormals_[nextIdx].dot(reflectVec);
+            long double angle1 = curve->netNormals_[i].dot(reflectVec);
+            long double angle2 = curve->netNormals_[nextIdx].dot(reflectVec);
 
-            double ratio = 0.5;
+            long double ratio = 0.5;
             if (settings_.weightedKnotLocation) {
                 angle1 = (v0 - v1).normalized().dot((v1 - v2).normalized());
                 angle2 = (v3 - v2).normalized().dot((v2 - v1).normalized());
 
-                double l1 = std::abs(std::acos(angle1));
-                double l2 = std::abs(std::acos(angle2));
+                long double l1 = std::abs(std::acos(angle1));
+                long double l2 = std::abs(std::acos(angle2));
                 if (settings_.gravitateSmallerAngles) {
                     ratio = l1 / (l1 + l2);
                 } else {

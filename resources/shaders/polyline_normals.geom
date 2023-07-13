@@ -21,7 +21,7 @@ in float stability_vs[];
 
 out vec4 line_color;
 
-bool calcNormals = false;
+bool calcNormals = true;
 
 const vec3 curvOutlineCol = vec3(0.66, 0.44, 0.81);
 const vec3 curvLineCol = vec3(0, 1, 0);
@@ -112,7 +112,6 @@ void main() {
     n1 = normalize(n1);
     vec2 n2 = calcNormals ? calcNormal(p1, p2, p3) : -norm_vs[2];
     n2 = normalize(n2);
-
     if (visualize_normals) {
         emitNormal(p0, p1, p2, n1);
         emitNormal(p1, p2, p3, n2);
