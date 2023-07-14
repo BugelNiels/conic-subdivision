@@ -55,7 +55,7 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     for (int i = 1; i < n; i += 2) {
         std::vector<PatchPoint> patchPoints;
 
-        extractPatch(points, normals, i, patchPoints);
+        extractPatch(points, normals, i / 2, patchPoints);
 
         int prevIdx = (i - 1 + n) % n;
         int nextIdx = (i + 1) % n;
@@ -100,10 +100,8 @@ bool arePointsCollinear(const Vector2DD &p1, const Vector2DD &p2, const Vector2D
 }
 
 
-void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals, int i,
+void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals, int pIdx,
                                    std::vector<PatchPoint> &patchPoints) const {
-    int pIdx = i / 2;
-
     int size = int(points.size());
 
     if (curve_->isClosed()) {

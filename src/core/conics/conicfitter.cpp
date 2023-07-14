@@ -69,30 +69,10 @@ ConicFitter::initAEigen(const std::vector<PatchPoint> &patchPoints) const {
 }
 
 Eigen::VectorX<long double> ConicFitter::solveLinSystem(const Eigen::MatrixX<long double> &A) {
-#if 0
-    Eigen::MatrixXd MtM = A.transpose() * A;
-    Eigen::EigenSolver<Eigen::MatrixXd> eigensolver(MtM);
-    Eigen::VectorXd eigenvalues = eigensolver.eigenvalues().real();
-    Eigen::MatrixXd eigenvectors = eigensolver.eigenvectors().real();
-
-    int minIndex;
-    double minValue = std::numeric_limits<double>::max();
-    for (int i = 0; i < eigenvalues.size(); ++i) {
-        double absValue = std::abs(eigenvalues(i));
-        if (absValue < minValue) {
-            minValue = absValue;
-            minIndex = i;
-        }
-    }
-
-    Eigen::VectorXd solution = eigenvectors.col(minIndex);
-    return vecToQVecEigen(solution);
-#else
     Eigen::JacobiSVD<Eigen::MatrixX<long double>> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
     stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
     return V.col(V.cols() - 1);
-#endif
 }
 
 Eigen::VectorX<long double> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
