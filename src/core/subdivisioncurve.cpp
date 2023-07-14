@@ -62,7 +62,6 @@ static Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
         t2.normalize();
     }
     // TODO: check this, does not seem to be symmetric
-    // TODO: replace sliders
     return (t1 + t2).normalized();
 }
 

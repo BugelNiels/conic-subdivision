@@ -13,6 +13,7 @@
  */
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    qDebug() << "Using " << sizeof(long double) << "bit calculations";
 
     QSurfaceFormat glFormat;
     glFormat.setProfile(QSurfaceFormat::CoreProfile);

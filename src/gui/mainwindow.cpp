@@ -169,6 +169,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     vertLayout->addWidget(new QLabel("Vertex weights"));
     auto *edgeVertWeightSpinBox = new DoubleSlider("Inner", settings_.middlePointWeight, 0, maxWeight);
+    edgeVertWeightSpinBox->setStepSize(1.0);
     edgeVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
@@ -178,6 +179,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(edgeVertWeightSpinBox);
 
     auto *midVertWeightSpinBox = new DoubleSlider("Outer", settings_.outerPointWeight, 0, maxWeight);
+    midVertWeightSpinBox->setStepSize(1.0);
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );
@@ -190,6 +192,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     vertLayout->addWidget(new QLabel("Normal weights"));
     auto *edgeNormWeightSpinBox = new DoubleSlider("Inner", settings_.middleNormalWeight, 0, maxWeight);
+    edgeNormWeightSpinBox->setStepSize(1.0);
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>"
     );
@@ -200,6 +203,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(edgeNormWeightSpinBox);
 
     auto *midNormWeightSpinBox = new DoubleSlider("Outer", settings_.outerNormalWeight, 0, maxWeight);
+    midNormWeightSpinBox->setStepSize(1.0);
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
     );

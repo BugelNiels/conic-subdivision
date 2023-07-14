@@ -215,7 +215,7 @@ T mix(const T &a, const T &b, long double w) {
 void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> &coords, std::vector<Vector2DD> &norms,
                                 std::vector<bool> &customNorms) {
 
-
+    curve->knotIndices_.clear();
     int n = int(curve->netCoords_.size());
     coords.reserve(n);
     norms.reserve(n);
