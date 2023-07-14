@@ -1,8 +1,8 @@
 #pragma once
 
-#include "src/ui/renderers/shadertypes.hpp"
+#include "src/gui/renderers/shadertypes.hpp"
 #include <QMatrix4x4>
-#include "ui/stylepresets.hpp"
+#include "gui/stylepresets.hpp"
 
 /**
  * Struct that contains all the settings of the program. Initialised with a

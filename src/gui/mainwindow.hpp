@@ -5,6 +5,8 @@
 #include <QSpinBox>
 #include "src/core/conics/conicpresets.hpp"
 #include "core/settings.hpp"
+#include "external/qt-value-slider/include/intslider.hpp"
+#include "external/qt-value-slider/include/doubleslider.hpp"
 
 class MainView;
 
@@ -37,7 +39,7 @@ private:
 
     void resetView(bool recalculate = true);
 
-    QSpinBox *subdivStepsSpinBox;
+    ValueSliders::IntSlider *subdivStepsSpinBox;
     QAction *closedCurveAction;
     QString presetName;
 

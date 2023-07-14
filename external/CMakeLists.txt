@@ -1,0 +1,12 @@
+set(CONIC_INCLUDE_DIRS "")
+set(EXTERNAL_LIBS "")
+
+# QT Value Sliders
+option(SLIDER_LIBRARY ON)
+add_subdirectory(qt-value-slider)
+list(APPEND CONIC_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/qt-value-slider)
+list(APPEND EXTERNAL_LIBS valueSliders)
+
+# Update parent variable.
+set(NITRO_INCLUDE_DIRS ${NITRO_INCLUDE_DIRS} PARENT_SCOPE)
+set(EXTERNAL_LIBS ${EXTERNAL_LIBS} PARENT_SCOPE)

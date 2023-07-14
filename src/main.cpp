@@ -3,7 +3,7 @@
 
 #include <QDockWidget>
 
-#include "src/ui/mainwindow.hpp"
+#include "src/gui/mainwindow.hpp"
 
 /**
  * @brief main Starts up the QT application and UI.

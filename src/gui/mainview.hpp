@@ -3,8 +3,8 @@
 #include <QOpenGLWidget>
 #include <QOpenGLDebugLogger>
 
-#include "ui/renderers/curvenetrenderer.hpp"
-#include "ui/renderers/curverenderer.hpp"
+#include "gui/renderers/curvenetrenderer.hpp"
+#include "gui/renderers/curverenderer.hpp"
 #include "util/vector.hpp"
 
 

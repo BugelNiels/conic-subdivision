@@ -2,7 +2,7 @@
 
 #include <QPalette>
 #include <QColor>
-#include "ui/renderers/util/colormap.hpp"
+#include "gui/renderers/util/colormap.hpp"
 
 class Settings;
 
