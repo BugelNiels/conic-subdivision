@@ -13,6 +13,8 @@ find_package (Eigen3 3.3 REQUIRED)
 
 include_directories(src)
 
+add_subdirectory(external)
+
 file(GLOB_RECURSE CPP_SOURCES src/*.cpp)
 file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
