@@ -105,7 +105,7 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
     gravitateAnglesCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, the weighted knot locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted knot points gravitate towards the vertex having the largest angle.</body></html>"
+            "<html><head/><body><p>If enabled, the weighted inflection point locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted inflection points gravitate towards the vertex having the largest angle.</body></html>"
     );
     gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
     gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
@@ -114,9 +114,9 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
 
-    auto *weightedKnotLocation = new QCheckBox("Weighted Knot Location");
+    auto *weightedKnotLocation = new QCheckBox("Weighted Inflection Points");
     weightedKnotLocation->setToolTip(
-            "<html><head/><body><p>If enabled, does not insert the knots in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
+            "<html><head/><body><p>If enabled, does not insert the inflection points in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
     );
     weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
     connect(weightedKnotLocation, &QCheckBox::toggled, [this, gravitateAnglesCheckBox](bool toggled) {
@@ -126,9 +126,9 @@ QDockWidget *MainWindow::initSideMenu() {
     });
 
 
-    auto *tensionSlider = new DoubleSlider("Knot Tension", 0.8, 0, 1, BoundMode::UPPER_LOWER);
+    auto *tensionSlider = new DoubleSlider("Inflection Point Tension", 0.8, 0, 1, BoundMode::UPPER_LOWER);
     tensionSlider->setToolTip(
-            "<html><head/><body><p>Changes how much the normals of newly inserted knot points gravitate to the normal orthogonal to the edge.</p></body></html>"
+            "<html><head/><body><p>Changes how much the normals of newly inserted inflection points gravitate to the normal orthogonal to the edge.</p></body></html>"
     );
     connect(tensionSlider, &DoubleSlider::valueUpdated, [this](double value) {
         settings_.knotTension = value;
@@ -138,7 +138,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
     splitConvexityCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, automatically inserts knots before subdividing.</body></html>"
+            "<html><head/><body><p>If enabled, automatically inserts inflection points before subdividing.</body></html>"
     );
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
     connect(splitConvexityCheckBox, &QCheckBox::toggled,
@@ -150,9 +150,9 @@ QDockWidget *MainWindow::initSideMenu() {
                 mainView_->recalculateCurve();
             });
 
-    auto *insertKnotsButton = new QPushButton("Insert Knots");
+    auto *insertKnotsButton = new QPushButton("Insert Inflection Points");
     insertKnotsButton->setToolTip(
-            "<html><head/><body><p>If pressed, inserts knot points to improve convexity properties.</body></html>"
+            "<html><head/><body><p>If pressed, inserts inflection points points to improve convexity properties.</body></html>"
     );
     connect(insertKnotsButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->insertKnots();

@@ -5,6 +5,7 @@
 #include "conicfitter.hpp"
 
 #include "src/core/settings.hpp"
+#include <iostream>
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
     long double a, b, c, d, e, f;
@@ -14,6 +15,20 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
     d = coefs[3];           // D - x
     e = coefs[4];           // E - y
     f = coefs[5];           // F - constant
+    bool positive = true;
+    bool negative = true;
+    for(int i = 6; i < coefs.size(); i++) {
+        positive = positive && coefs[i] > 0;
+        negative = negative && coefs[i] < 0;
+    }
+    if(!positive && !negative) {
+        std::cout << "problem " << negative << " " << positive << " ";
+
+        for(int i = 6; i < coefs.size(); i++) {
+            std::cout << " " << coefs[i];
+        }
+        std::cout << std::endl;
+    }
     Matrix3DD matrix;
     matrix << a, b, d, b, c, e, d, e, f;
     return matrix;

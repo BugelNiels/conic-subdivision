@@ -69,6 +69,8 @@ ConicFitter::initAEigen(const std::vector<PatchPoint> &patchPoints) const {
 }
 
 Eigen::VectorX<long double> ConicFitter::solveLinSystem(const Eigen::MatrixX<long double> &A) {
+    // TODO: use Ceres, minimise objective function such that the signs of all normal scaling factors are equal
+    // Might as well introduce the equality constraints for both the points and normals then
     Eigen::JacobiSVD<Eigen::MatrixX<long double>> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
     stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
