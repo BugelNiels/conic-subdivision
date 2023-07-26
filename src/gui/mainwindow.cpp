@@ -126,7 +126,7 @@ QDockWidget *MainWindow::initSideMenu() {
     });
 
 
-    auto *tensionSlider = new DoubleSlider("Inflection Point Tension", 0.8, 0, 1, BoundMode::UPPER_LOWER);
+    auto *tensionSlider = new DoubleSlider("Tension", 0.8, 0, 1, BoundMode::UPPER_LOWER);
     tensionSlider->setToolTip(
             "<html><head/><body><p>Changes how much the normals of newly inserted inflection points gravitate to the normal orthogonal to the edge.</p></body></html>"
     );

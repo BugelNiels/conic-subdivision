@@ -7,7 +7,7 @@
 #include "core/settings.hpp"
 
 MainView::MainView(Settings &settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
-                                                          cr_(settings) {
+                                                          cr_(settings), conicR_(settings) {
 
     subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve(settings_));
     setMinimumWidth(200);
@@ -43,6 +43,7 @@ void MainView::initializeGL() {
     auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(this->context());
     cnr_.init(functions);
     cr_.init(functions);
+    conicR_.init(functions);
     updateBuffers();
 }
 
@@ -103,6 +104,7 @@ void MainView::paintGL() {
     if (subCurve_ != nullptr) {
         cr_.draw();
         cnr_.draw();
+        conicR_.draw();
     }
 }
 
@@ -185,6 +187,9 @@ void MainView::mousePressEvent(QMouseEvent *event) {
                 // First attempt to select a vertex. If unsuccessful, select a normal
                 if (!attemptVertexSelect(scenePos)) {
                     attemptNormalSelect(scenePos);
+                } else {
+                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex).getMatrix();
+                    conicR_.updateBuffers(selectedConic);
                 }
             }
             update();
@@ -224,6 +229,8 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
                 subCurve_->setVertexPosition(settings_.selectedVertex, scenePos);
+                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex).getMatrix();
+                conicR_.updateBuffers(selectedConic);
                 updateBuffers();
             }
             if (settings_.selectedNormal > -1) {

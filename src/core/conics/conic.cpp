@@ -5,6 +5,7 @@
 #include "conicfitter.hpp"
 
 #include "src/core/settings.hpp"
+#include "conicfitter2.hpp"
 #include <iostream>
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
@@ -15,20 +16,51 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
     d = coefs[3];           // D - x
     e = coefs[4];           // E - y
     f = coefs[5];           // F - constant
+#if 0
     bool positive = true;
     bool negative = true;
-    for(int i = 6; i < coefs.size(); i++) {
+    for (int i = 6; i < coefs.size(); i++) {
         positive = positive && coefs[i] > 0;
         negative = negative && coefs[i] < 0;
     }
-    if(!positive && !negative) {
+    if (!positive && !negative) {
         std::cout << "problem " << negative << " " << positive << " ";
 
-        for(int i = 6; i < coefs.size(); i++) {
+        for (int i = 6; i < coefs.size(); i++) {
             std::cout << " " << coefs[i];
         }
         std::cout << std::endl;
     }
+#endif
+    Matrix3DD matrix;
+    matrix << a, b, d, b, c, e, d, e, f;
+    return matrix;
+}
+
+static Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
+    long double a, b, c, d, e, f;
+    a = coefs[0];           // A - x*x
+    b = coefs[2];           // C - x*y
+    c = coefs[1];           // B - y*y
+    d = coefs[3];           // D - x
+    e = coefs[4];           // E - y
+    f = coefs[5];           // F - constant
+#if 0
+    bool positive = true;
+    bool negative = true;
+    for (int i = 6; i < coefs.size(); i++) {
+        positive = positive && coefs[i] > 0;
+        negative = negative && coefs[i] < 0;
+    }
+    if (!positive && !negative) {
+        std::cout << "problem " << negative << " " << positive << " ";
+
+        for (int i = 6; i < coefs.size(); i++) {
+            std::cout << " " << coefs[i];
+        }
+        std::cout << std::endl;
+    }
+#endif
     Matrix3DD matrix;
     matrix << a, b, d, b, c, e, d, e, f;
     return matrix;
@@ -36,8 +68,8 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
 
 Conic::Conic(const std::vector<PatchPoint> &patchPoints,
              const Settings &settings)
-        : settings_(settings) {
-    Q_ = fitConic(patchPoints);
+        : epsilon_(settings.epsilon) {
+    Q_ = fitConic(patchPoints, settings.testToggle);
 }
 
 /**
@@ -47,8 +79,15 @@ Conic::Conic(const std::vector<PatchPoint> &patchPoints,
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
-    ConicFitter fitter(settings_);
+Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints, bool toggle) {
+    if (toggle) {
+        ConicFitter2 fitter;
+        Eigen::VectorXd foundCoefs = fitter.fitConic(patchPoints);
+        stability_ = fitter.stability();
+        return coefsToMatrix(foundCoefs);
+
+    }
+    ConicFitter fitter;
     Eigen::VectorX<long double> foundCoefs = fitter.fitConic(patchPoints);
     stability_ = fitter.stability();
     return coefsToMatrix(foundCoefs);
@@ -108,7 +147,7 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t)
     long double b = u.dot(Q_ * p);
     long double c = p.dot(Q_ * p);
 
-    if (std::fabs(a) < settings_.epsilon) {
+    if (std::fabs(a) < epsilon_) {
         t = -c / b;
         if (std::isnan(t)) {
             return false;

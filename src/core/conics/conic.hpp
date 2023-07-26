@@ -6,6 +6,8 @@ class Settings;
 
 class Conic {
 public:
+    Conic() {};
+
     Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings);
 
     bool sample(const Vector2DD &origin, const Vector2DD &direction,
@@ -15,14 +17,17 @@ public:
 
     [[nodiscard]] double getStability() const;
 
+    void printConic() const;
+
+    Matrix3DD getMatrix() { return Q_; }
+
 private:
-    const Settings &settings_;
+    long double epsilon_ = 0;
     Matrix3DD Q_;
     double stability_ = 0;
 
-    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
+    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints, bool toggle);
 
     [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
 
-    void printConic() const;
 };

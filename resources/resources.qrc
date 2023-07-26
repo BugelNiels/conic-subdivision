@@ -2,6 +2,8 @@
     <qresource prefix="/">
         <file>shaders/flat.frag</file>
         <file>shaders/flat.vert</file>
+        <file>shaders/conic.frag</file>
+        <file>shaders/conic.vert</file>
         <file>shaders/polyline_normals.geom</file>
         <file>shaders/polyline.vert</file>
         <file>shaders/polyline.frag</file>

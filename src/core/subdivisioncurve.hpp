@@ -4,6 +4,7 @@
 #include <set>
 #include "util/vector.hpp"
 #include "core/subdivision/conicsubdivider.hpp"
+#include "core/conics/conic.hpp"
 
 class Settings;
 
@@ -55,6 +56,7 @@ public:
 
     void recalculateNormal(int idx);
 
+    Conic getConicAtIndex(int idx);
 
     void setClosed(bool closed);
 

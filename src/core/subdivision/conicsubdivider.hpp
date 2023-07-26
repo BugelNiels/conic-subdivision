@@ -17,6 +17,11 @@ public:
 
     [[nodiscard]] std::vector<double> getStabilityVals() const;
 
+    void extractPatch(const std::vector<Vector2DD> &points,
+                      const std::vector<Vector2DD> &normals,
+                      int i,
+                      std::vector<PatchPoint> &patchPoints) const;
+
 private:
     const Settings &settings_;
     std::vector<double> stability_;
@@ -28,10 +33,6 @@ private:
                    int level);
 
 
-    void extractPatch(const std::vector<Vector2DD> &points,
-                      const std::vector<Vector2DD> &normals,
-                      int i,
-                      std::vector<PatchPoint> &patchPoints) const;
 
 
     [[nodiscard]] bool areInSameHalfPlane(const Vector2DD &v0,

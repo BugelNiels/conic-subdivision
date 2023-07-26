@@ -321,3 +321,9 @@ void SubdivisionCurve::translate(const Vector2DD &translation) {
     }
     reSubdivide();
 }
+
+Conic SubdivisionCurve::getConicAtIndex(int idx) {
+    std::vector<PatchPoint> patch;
+    subdivider.extractPatch(netCoords_, netNormals_, idx, patch);
+    return Conic(patch, settings_);
+}

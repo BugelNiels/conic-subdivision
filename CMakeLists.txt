@@ -21,6 +21,7 @@ find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets OpenGL OpenGLWidgets)
 find_package(OpenMP REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
+find_package(Ceres REQUIRED)
 
 set(CONIC_INCLUDE_DIRS "")
 set(EXTERNAL_LIBS "")
@@ -33,6 +34,7 @@ list(APPEND CONIC_LIBS Qt6::Widgets)
 list(APPEND CONIC_LIBS Qt6::OpenGL)
 list(APPEND CONIC_LIBS Qt6::OpenGLWidgets)
 list(APPEND CONIC_LIBS Eigen3::Eigen)
+list(APPEND CONIC_LIBS Ceres::ceres)
 if (OpenMP_FOUND)
     list(APPEND CONIC_LIBS OpenMP::OpenMP_CXX)
 else ()
@@ -48,7 +50,7 @@ file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
         ${CPP_SOURCES} ${H_HEADERS}
-        resources/resources.qrc)
+        resources/resources.qrc src/core/conics/conicfitter2.cpp src/gui/renderers/conicrenderer.cpp)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE

@@ -6,14 +6,13 @@
 
 class ConicFitter {
 public:
-    explicit ConicFitter(const Settings &settings);
+    explicit ConicFitter();
 
     Eigen::VectorX<long double> fitConic(const std::vector<PatchPoint> &patchPoints);
 
     double stability();
 
 private:
-    const Settings &settings_;
     long double stability_ = 0;
     int numEq_ = 0;
 

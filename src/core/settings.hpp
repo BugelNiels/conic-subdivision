@@ -61,6 +61,4 @@ typedef struct Settings {
     // UI Controls
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
-
-
 } Settings;

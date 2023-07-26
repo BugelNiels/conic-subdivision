@@ -6,6 +6,7 @@
 #include "gui/renderers/curvenetrenderer.hpp"
 #include "gui/renderers/curverenderer.hpp"
 #include "util/vector.hpp"
+#include "gui/renderers/conicrenderer.hpp"
 
 
 class SubdivisionCurve;
@@ -61,6 +62,7 @@ private:
 
     CurveNetRenderer cnr_;
     CurveRenderer cr_;
+    ConicRenderer conicR_;
 
     std::shared_ptr<SubdivisionCurve> subCurve_;
 
