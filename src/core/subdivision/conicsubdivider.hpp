@@ -25,10 +25,9 @@ public:
      * The inflection points have a special normal, so there will have the value true there.
      */
     void insertInflPoints(SubdivisionCurve *curve,
-                   std::vector<Vector2DD> &coords,
-                   std::vector<Vector2DD> &norms,
-                   std::vector<bool> &customNorms);
-
+                          std::vector<Vector2DD> &coords,
+                          std::vector<Vector2DD> &norms,
+                          std::vector<bool> &customNorms);
 
     /**
      * Extracts a patch of a given neighbourhood from a curve. Maintains convexity provided that inflection points were inserted.
@@ -41,9 +40,9 @@ public:
      * @return A collection of patch points.
      */
     std::vector<PatchPoint> extractPatch(const std::vector<Vector2DD> &points,
-                      const std::vector<Vector2DD> &normals,
-                      int i,
-                      int maxPatchSize) const;
+                                         const std::vector<Vector2DD> &normals,
+                                         int i,
+                                         int maxPatchSize) const;
 
 private:
     const Settings &settings_;
@@ -75,19 +74,19 @@ private:
      * @param newNormals The normals at subdivision level d+1.
      */
     void edgePoint(const std::vector<Vector2DD> &points,
-                     const std::vector<Vector2DD> &normals,
-                     int i,
-                     std::vector<Vector2DD> &newPoints,
-                     std::vector<Vector2DD> &newNormals) const;
+                   const std::vector<Vector2DD> &normals,
+                   int i,
+                   std::vector<Vector2DD> &newPoints,
+                   std::vector<Vector2DD> &newNormals) const;
 
     /**
      * For 3 vertices A-B-C, this calculates the normal of the inflection point on the edge B-C based only on the A, B and C.
-     * @param pointNormal The normal of B
-     * @param edge The edge B-C.
+     * @param edgeAB The edge A-B
+     * @param edgeBC The edge B-C.
      * @param orthogonal A vector orthogonal to B-C.
-     * @return A pair containing the inflection point normal, and the angle it makes with either the edge vector or the orthogonal vector (whichever is smallest).
+     * @return The inflection point normal and the angle the normal makes with the orthogonal line.
      */
-    std::pair<Vector2DD, long double> inflNormal(const Vector2DD &pointNormal,
-                    const Vector2DD &edge,
-                    const Vector2DD &orthogonal) const;
+    std::pair<Vector2DD, real_t> inflNormal(const Vector2DD &edgeAB,
+                                            const Vector2DD &edgeBC,
+                                            const Vector2DD &orthogonal) const;
 };

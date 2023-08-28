@@ -2,22 +2,23 @@
 
 #include <Eigen/Core>
 
-using Vector2DD = Eigen::Vector2<long double>;
-using Vector3DD = Eigen::Vector3<long double>;
-using Vector4DD = Eigen::Vector4<long double>;
+using real_t = long double;
 
-using Matrix4DD = Eigen::Matrix4<long double>;
-using Matrix3DD = Eigen::Matrix3<long double>;
+using Vector2DD = Eigen::Vector2<real_t>;
+using Vector3DD = Eigen::Vector3<real_t>;
+using Vector4DD = Eigen::Vector4<real_t>;
 
-typedef struct PatchPoint {
+using Matrix4DD = Eigen::Matrix4<real_t>;
+using Matrix3DD = Eigen::Matrix3<real_t>;
+
+using PatchPoint = struct PatchPoint {
     Vector2DD coords;
     Vector2DD normal;
-    double pointWeight;
-    double normWeight;
-} PatchPoint;
-
+    real_t pointWeight;
+    real_t normWeight;
+};
 
 template<typename T>
-T mix(const T &a, const T &b, long double w) {
+T mix(const T &a, const T &b, real_t w) {
     return (1.0 - w) * a + w * b;
 }
