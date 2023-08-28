@@ -1,23 +1,26 @@
 #include "mainview.hpp"
 
-#include <QOpenGLVersionFunctionsFactory>
+#include "core/settings.hpp"
 #include "src/core/subdivisioncurve.hpp"
 #include <QMouseEvent>
+#include <QOpenGLVersionFunctionsFactory>
 #include <utility>
-#include "core/settings.hpp"
 
-MainView::MainView(Settings &settings, QWidget *parent) : QOpenGLWidget(parent), settings_(settings), cnr_(settings),
-                                                          cr_(settings), conicR_(settings) {
+MainView::MainView(Settings &settings, QWidget *parent)
+    : QOpenGLWidget(parent),
+      settings_(settings),
+      cnr_(settings),
+      cr_(settings),
+      conicR_(settings) {
 
     subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve(settings_));
     setMinimumWidth(200);
     QSurfaceFormat format;
-    format.setSamples(4);    // Set the number of samples used for multisampling
+    format.setSamples(4); // Set the number of samples used for multisampling
     setFormat(format);
     resetViewMatrix();
     setMouseTracking(true);
 }
-
 
 MainView::~MainView() {
     debugLogger_->stopLogging();
@@ -27,7 +30,10 @@ MainView::~MainView() {
 void MainView::initializeGL() {
     initializeOpenGLFunctions();
     debugLogger_ = new QOpenGLDebugLogger();
-    connect(debugLogger_, SIGNAL(messageLogged(QOpenGLDebugMessage)), this, SLOT(onMessageLogged(QOpenGLDebugMessage)),
+    connect(debugLogger_,
+            SIGNAL(messageLogged(QOpenGLDebugMessage)),
+            this,
+            SLOT(onMessageLogged(QOpenGLDebugMessage)),
             Qt::DirectConnection);
 
     if (debugLogger_->initialize()) {
@@ -40,7 +46,8 @@ void MainView::initializeGL() {
     glEnable(GL_MULTISAMPLE);
 
     // grab the opengl context
-    auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(this->context());
+    auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(
+            this->context());
     cnr_.init(functions);
     cr_.init(functions);
     conicR_.init(functions);
@@ -79,7 +86,6 @@ void MainView::recalculateCurve() {
     if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
         Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
         conicR_.updateBuffers(selectedConic);
-
     }
     subCurve_->reSubdivide();
     updateBuffers();
@@ -133,7 +139,6 @@ Vector2DD MainView::toNormalizedScreenCoordinates(double x, double y) {
     return Vector2DD(from.x(), from.y());
 }
 
-
 bool MainView::attemptVertexSelect(const Vector2DD &scenePos) {
     settings_.selectedNormal = -1;
     float maxDist = settings_.selectRadius;
@@ -183,7 +188,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
     if (subCurve_ == nullptr) {
         return;
     }
-    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(),
+                                                       event->position().y());
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
@@ -196,7 +202,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
                 if (!attemptVertexSelect(scenePos)) {
                     attemptNormalSelect(scenePos);
                 } else {
-                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex).getMatrix();
+                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex)
+                                                      .getMatrix();
                     conicR_.updateBuffers(selectedConic);
                     selectedConicIdx_ = settings_.selectedVertex;
                 }
@@ -221,7 +228,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
 
 void MainView::mouseMoveEvent(QMouseEvent *event) {
     QWidget::mouseMoveEvent(event);
-    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(),
+                                                       event->position().y());
     if (event->buttons() == Qt::LeftButton && event->modifiers().testFlag(Qt::ShiftModifier)) {
         setCursor(Qt::ClosedHandCursor);
         translationUpdate(scenePos, event->position());
@@ -238,7 +246,8 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
                 subCurve_->setVertexPosition(settings_.selectedVertex, scenePos);
-                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex).getMatrix();
+                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex)
+                                                  .getMatrix();
                 conicR_.updateBuffers(selectedConic);
                 updateBuffers();
             }
@@ -262,7 +271,6 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             update();
         }
     }
-
 }
 
 /**
@@ -339,8 +347,10 @@ void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void MainView::wheelEvent(QWheelEvent *event) {
     QWidget::wheelEvent(event);
-    float zoom = event->angleDelta().y() > 0 ? settings_.zoomStrength : 1.0f / settings_.zoomStrength;
-    Vector2DD mouseNDC = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
+    float zoom = event->angleDelta().y() > 0 ? settings_.zoomStrength
+                                             : 1.0f / settings_.zoomStrength;
+    Vector2DD mouseNDC = toNormalizedScreenCoordinates(event->position().x(),
+                                                       event->position().y());
     settings_.viewMatrix.translate(mouseNDC.x(), mouseNDC.y());
     settings_.viewMatrix.scale(zoom);
     settings_.viewMatrix.translate(-mouseNDC.x(), -mouseNDC.y());
@@ -376,20 +386,20 @@ void MainView::updateCursor(const Qt::KeyboardModifiers &flags) {
     }
 }
 
-
 /**
  * @brief MainView::onMessageLogged Helper function for logging messages.
  * @param message The message to log.
  */
 void MainView::onMessageLogged(QOpenGLDebugMessage message) {
     bool log = false;
-    if (message.severity() == QOpenGLDebugMessage::LowSeverity || message.type() == QOpenGLDebugMessage::OtherType) {
+    if (message.severity() == QOpenGLDebugMessage::LowSeverity ||
+        message.type() == QOpenGLDebugMessage::OtherType) {
         return;
     }
 
     // Format based on source
-#define CASE(c) \
-  case QOpenGLDebugMessage::c: :
+#define CASE(c)                                                                                    \
+    case QOpenGLDebugMessage::c: :
     switch (message.source()) {
         case QOpenGLDebugMessage::APISource:
         case QOpenGLDebugMessage::WindowSystemSource:
@@ -406,7 +416,8 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
     }
 #undef CASE
 
-    if (log) qDebug() << "  → Log:" << message;
+    if (log)
+        qDebug() << "  → Log:" << message;
 }
 
 void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {

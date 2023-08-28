@@ -7,9 +7,7 @@
 #define NORM_IDX 1
 #define DOUBLE_IDX 2
 
-CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {
-
-}
+CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {}
 
 CurveRenderer::~CurveRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -50,12 +48,11 @@ void CurveRenderer::initBuffers() {
     gl_->glGenBuffers(1, &ibo_);
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
-
     ColorMap colMap;
     auto colMapVals = colMap.getColorMap(settings_.style.colorMapName);
 
     texture_ = new QOpenGLTexture(QOpenGLTexture::Target1D);
-    texture_->setFormat(QOpenGLTexture::RGB32F);  // Adjust the format as needed
+    texture_->setFormat(QOpenGLTexture::RGB32F); // Adjust the format as needed
     texture_->setSize(colMapVals.size());
     texture_->allocateStorage(QOpenGLTexture::RGB, QOpenGLTexture::Float32);
     texture_->setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, colMapVals.data());
@@ -87,12 +84,16 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     }
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[COORDS_IDX]);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords.size(),
-                      coords.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER,
+                      sizeof(QVector2D) * coords.size(),
+                      coords.data(),
+                      GL_DYNAMIC_DRAW);
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[NORM_IDX]);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals.size(),
-                      normals.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER,
+                      sizeof(QVector2D) * normals.size(),
+                      normals.data(),
+                      GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
     const auto &coords_d = sc.getSubdivLevel() == 0 ? sc.getNetCoords() : sc.getCurveCoords();
@@ -105,10 +106,11 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     }
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[DOUBLE_IDX]);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(double) * doubleData.size(),
-                      doubleData.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER,
+                      sizeof(double) * doubleData.size(),
+                      doubleData.data(),
+                      GL_DYNAMIC_DRAW);
 #endif
-
 
     int coordSize = coords.size();
     std::vector<int> indices;
@@ -125,8 +127,10 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     }
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
-                      indices.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                      sizeof(int) * indices.size(),
+                      indices.data(),
+                      GL_DYNAMIC_DRAW);
 
     vboSize_ = indices.size();
 }
@@ -139,10 +143,8 @@ void CurveRenderer::draw() {
                             settings_.visualizeNormals);
     shader->setUniformValue(shader->uniformLocation("visualize_curvature"),
                             settings_.visualizeCurvature);
-    shader->setUniformValue(shader->uniformLocation("viewMatrix"),
-                            settings_.viewMatrix);
-    shader->setUniformValue(shader->uniformLocation("curvatureScale"),
-                            settings_.curvatureScale);
+    shader->setUniformValue(shader->uniformLocation("viewMatrix"), settings_.viewMatrix);
+    shader->setUniformValue(shader->uniformLocation("curvatureScale"), settings_.curvatureScale);
 
     shader->setUniformValue(shader->uniformLocation("colorMap"), 0);
 
@@ -159,8 +161,7 @@ void CurveRenderer::draw() {
 
     gl_->glBindVertexArray(vao_);
 
-    gl_->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize_, GL_UNSIGNED_INT,
-                        nullptr);
+    gl_->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize_, GL_UNSIGNED_INT, nullptr);
 
     shader->release();
 }

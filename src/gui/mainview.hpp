@@ -1,18 +1,17 @@
 #pragma once
 
-#include <QOpenGLWidget>
 #include <QOpenGLDebugLogger>
+#include <QOpenGLWidget>
 
+#include "gui/renderers/conicrenderer.hpp"
 #include "gui/renderers/curvenetrenderer.hpp"
 #include "gui/renderers/curverenderer.hpp"
 #include "util/vector.hpp"
-#include "gui/renderers/conicrenderer.hpp"
-
 
 class SubdivisionCurve;
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit MainView(Settings &settings, QWidget *parent = nullptr);
@@ -57,7 +56,6 @@ protected:
 private:
     Settings &settings_;
 
-
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
     CurveNetRenderer cnr_;
@@ -86,7 +84,4 @@ private:
 private slots:
 
     void onMessageLogged(QOpenGLDebugMessage message);
-
-
 };
-

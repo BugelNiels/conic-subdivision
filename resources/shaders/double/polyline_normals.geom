@@ -129,14 +129,14 @@ void main() {
     line_color = vec4(lineColor, 1);
     dvec2 nc1 = calcNormal(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
     dvec2 n1 = calcNormals ? nc1 : dvec2(-norm_vs[1]);
-    if(dot(n1, nc1) < 0) {
+    if (dot(n1, nc1) < 0) {
         n1 *= -1;
     }
 
     n1 = normalize(n1);
     dvec2 nc2 = calcNormal(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
     dvec2 n2 = calcNormals ? nc2 : dvec2(-norm_vs[2]);
-    if(dot(n2, nc2) < 0) {
+    if (dot(n2, nc2) < 0) {
         n2 *= -1;
     }
     n2 = normalize(n2);

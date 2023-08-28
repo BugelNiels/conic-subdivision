@@ -9,7 +9,6 @@ using Vector4DD = Eigen::Vector4<long double>;
 using Matrix4DD = Eigen::Matrix4<long double>;
 using Matrix3DD = Eigen::Matrix3<long double>;
 
-
 typedef struct PatchPoint {
     Vector2DD coords;
     Vector2DD normal;

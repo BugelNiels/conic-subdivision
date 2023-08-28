@@ -1,17 +1,17 @@
 #pragma once
 
-#include <QMainWindow>
-#include <QLabel>
-#include <QSpinBox>
-#include "src/core/conics/conicpresets.hpp"
 #include "core/settings.hpp"
-#include "external/qt-value-slider/include/intslider.hpp"
 #include "external/qt-value-slider/include/doubleslider.hpp"
+#include "external/qt-value-slider/include/intslider.hpp"
+#include "src/core/conics/conicpresets.hpp"
+#include <QLabel>
+#include <QMainWindow>
+#include <QSpinBox>
 
 class MainView;
 
 class MainWindow : public QMainWindow {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

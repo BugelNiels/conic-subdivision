@@ -1,29 +1,29 @@
 #pragma once
 
-#include <QPalette>
-#include <QColor>
 #include "gui/renderers/util/colormap.hpp"
+#include <QColor>
+#include <QPalette>
 
 class Settings;
 
 namespace conics::ui {
 
-    typedef struct StylePreset {
-        QColor backgroundCol;
-        QColor controlCurveCol;
-        QColor controlPointCol;
-        QColor smoothCurveCol;
-        QColor selectedVertCol;
-        QColor selectedNormCol;
-        QColor normCol;
-        ColorMapName colorMapName;
+typedef struct StylePreset {
+    QColor backgroundCol;
+    QColor controlCurveCol;
+    QColor controlPointCol;
+    QColor smoothCurveCol;
+    QColor selectedVertCol;
+    QColor selectedNormCol;
+    QColor normCol;
+    ColorMapName colorMapName;
 
-        QPalette palette;
-    } StylePreset;
+    QPalette palette;
+} StylePreset;
 
-    void applyStylePreset(Settings &settings, const StylePreset &preset);
+void applyStylePreset(Settings &settings, const StylePreset &preset);
 
-    StylePreset getDarkModePalette();
+StylePreset getDarkModePalette();
 
-    StylePreset getLightModePalette();
-} // conics
+StylePreset getLightModePalette();
+} // namespace conics::ui

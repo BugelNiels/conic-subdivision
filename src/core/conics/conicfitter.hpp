@@ -1,8 +1,8 @@
 #pragma once
 
 #include "src/core/settings.hpp"
-#include <Eigen/Core>
 #include "util/vector.hpp"
+#include <Eigen/Core>
 
 class ConicFitter {
 public:
@@ -18,7 +18,8 @@ private:
 
     int numUnknowns_ = 0;
 
-    [[nodiscard]] Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> initAEigen(const std::vector<PatchPoint> &patchPoints) const;
+    [[nodiscard]] Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> initAEigen(
+            const std::vector<PatchPoint> &patchPoints) const;
 
     Eigen::VectorX<long double> solveLinSystem(const Eigen::MatrixX<long double> &A);
 };

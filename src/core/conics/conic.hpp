@@ -6,12 +6,14 @@ class Settings;
 
 class Conic {
 public:
-    Conic() {};
+    Conic(){};
 
     Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings);
 
-    bool sample(const Vector2DD &origin, const Vector2DD &direction,
-                Vector2DD &point, Vector2DD &normal) const;
+    bool sample(const Vector2DD &origin,
+                const Vector2DD &direction,
+                Vector2DD &point,
+                Vector2DD &normal) const;
 
     bool intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t) const;
 
@@ -30,6 +32,4 @@ private:
     double stability_ = 0;
 
     Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
-
-
 };

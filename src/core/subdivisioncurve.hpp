@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/conics/conic.hpp"
+#include "core/subdivision/conicsubdivider.hpp"
+#include "util/vector.hpp"
 #include <QString>
 #include <set>
-#include "util/vector.hpp"
-#include "core/subdivision/conicsubdivider.hpp"
-#include "core/conics/conic.hpp"
 
 class Settings;
 
@@ -14,21 +14,28 @@ class Settings;
  */
 class SubdivisionCurve {
 public:
-
     explicit SubdivisionCurve(const Settings &settings);
 
-    explicit SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, bool closed = true);
+    explicit SubdivisionCurve(const Settings &settings,
+                              std::vector<Vector2DD> coords,
+                              bool closed = true);
 
-    SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, std::vector<Vector2DD> normals,
+    SubdivisionCurve(const Settings &settings,
+                     std::vector<Vector2DD> coords,
+                     std::vector<Vector2DD> normals,
                      bool closed = true);
 
     [[nodiscard]] inline const std::vector<Vector2DD> &getNetCoords() const { return netCoords_; }
 
     [[nodiscard]] inline const std::vector<Vector2DD> &getNetNormals() const { return netNormals_; }
 
-    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveCoords() const { return curveCoords_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveCoords() const {
+        return curveCoords_;
+    }
 
-    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveNormals() const { return curveNormals_; }
+    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveNormals() const {
+        return curveNormals_;
+    }
 
     [[nodiscard]] inline int getSubdivLevel() const { return subdivisionLevel_; }
 
@@ -81,11 +88,11 @@ private:
     std::vector<Vector2DD> netCoords_;
     std::vector<Vector2DD> netNormals_;
 
-
     [[nodiscard]] std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
 
     [[nodiscard]] Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords,
-                                              const std::vector<Vector2DD> &normals, int i) const;
+                                              const std::vector<Vector2DD> &normals,
+                                              int i) const;
 
     [[nodiscard]] int findInsertIdx(const Vector2DD &p) const;
 
@@ -95,5 +102,8 @@ private:
 
     friend class ConicSubdivider;
 
-    Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c, bool areaWeighted) const;
+    Vector2DD calcNormal(const Vector2DD &a,
+                         const Vector2DD &b,
+                         const Vector2DD &c,
+                         bool areaWeighted) const;
 };

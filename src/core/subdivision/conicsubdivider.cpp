@@ -20,7 +20,6 @@ void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
     } else {
         subdivide(netCoords, netNorms, level);
     }
-
 }
 
 void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
@@ -47,7 +46,6 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     // set new points
     for (int i = 1; i < n; i += 2) {
         vertexPoint(points, normals, i, newPoints, newNormals);
-
     }
     if (settings_.recalculateNormals) {
         newNormals = curve_->calcNormals(newPoints);
@@ -60,12 +58,11 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     subdivide(newPoints, newNormals, level - 1);
 }
 
-void
-ConicSubdivider::vertexPoint(const std::vector<Vector2DD> &points,
-                             const std::vector<Vector2DD> &normals,
-                             int i,
-                             std::vector<Vector2DD> &newPoints,
-                             std::vector<Vector2DD> &newNormals) const {
+void ConicSubdivider::vertexPoint(const std::vector<Vector2DD> &points,
+                                  const std::vector<Vector2DD> &normals,
+                                  int i,
+                                  std::vector<Vector2DD> &newPoints,
+                                  std::vector<Vector2DD> &newNormals) const {
     int n = newPoints.size();
     std::vector<PatchPoint> patchPoints;
     extractPatch(points, normals, i / 2, patchPoints, settings_.patchSize);
@@ -114,11 +111,10 @@ ConicSubdivider::vertexPoint(const std::vector<Vector2DD> &points,
     newNormals[i] = sampledNormal;
 }
 
-
 bool arePointsCollinear(const Vector2DD &p1, const Vector2DD &p2, const Vector2DD &p3) {
-    return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) < 0.0001;
+    return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) <
+           0.0001;
 }
-
 
 void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points,
                                    const std::vector<Vector2DD> &normals,
@@ -236,8 +232,9 @@ void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points,
     }
 }
 
-
-bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0, const Vector2DD &v1, const Vector2DD &v2,
+bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
+                                         const Vector2DD &v1,
+                                         const Vector2DD &v2,
                                          const Vector2DD &v3) const {
     Vector2DD v1v3 = v3 - v1;
     Vector2DD v1v0 = v0 - v1;
@@ -266,8 +263,10 @@ Vector2DD rotate(const Vector2DD &v, double angle) {
 }
 
 Vector2DD clamp(const Vector2DD &vec, const Vector2DD &a, const Vector2DD &b) {
-    long double clampedX = std::max(std::min(vec.x(), std::max(a.x(), b.x())), std::min(a.x(), b.x()));
-    long double clampedY = std::max(std::min(vec.y(), std::max(a.y(), b.y())), std::min(a.y(), b.y()));
+    long double clampedX = std::max(std::min(vec.x(), std::max(a.x(), b.x())),
+                                    std::min(a.x(), b.x()));
+    long double clampedY = std::max(std::min(vec.y(), std::max(a.y(), b.y())),
+                                    std::min(a.y(), b.y()));
     return Vector2DD(clampedX, clampedY);
 }
 
@@ -322,18 +321,19 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve,
 
             Vector2DD midPoint = mix(v1, v2, ratio);
 
-
             Vector2DD diagonal = {1, 1};
             diagonal.normalize();
             Vector2DD inflNormalLeft;
-//            Vector2DD normLeft = curve->netNormals_[i].normalized();
+            //            Vector2DD normLeft = curve->netNormals_[i].normalized();
             Vector2DD normLeft = ((v0 - v1).normalized() + (v2 - v1).normalized()).normalized();
 
             double leftAngle;
-            long double smallestOrthoAngleLeft = std::min(std::abs(std::acos(normLeft.dot(orthogonalV1V2))),
-                                                          std::abs(std::acos(normLeft.dot(-orthogonalV1V2))));
-            long double smallestStraightAngleLeft = std::min(std::abs(std::acos(normLeft.dot(v1v2))),
-                                                             std::abs(std::acos(normLeft.dot(-v1v2))));
+            long double smallestOrthoAngleLeft = std::min(
+                    std::abs(std::acos(normLeft.dot(orthogonalV1V2))),
+                    std::abs(std::acos(normLeft.dot(-orthogonalV1V2))));
+            long double smallestStraightAngleLeft = std::min(
+                    std::abs(std::acos(normLeft.dot(v1v2))),
+                    std::abs(std::acos(normLeft.dot(-v1v2))));
             if (smallestStraightAngleLeft > smallestOrthoAngleLeft) {
                 // The normal makes a sharper angle with the orthogonal vector
                 // Take the normal and reflect it around the orthogonal vector to obtain the left inflection normal
@@ -348,14 +348,16 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve,
             }
 
             Vector2DD inflNormalRight;
-//            Vector2DD normRight = curve->netNormals_[nextIdx].normalized();
+            //            Vector2DD normRight = curve->netNormals_[nextIdx].normalized();
             Vector2DD normRight = ((v3 - v2).normalized() + (v1 - v2).normalized()).normalized();
             double rightAngle;
 
-            long double smallestOrthoAngleRight = std::min(std::abs(std::acos(normRight.dot(orthogonalV1V2))),
-                                                           std::abs(std::acos(normRight.dot(-orthogonalV1V2))));
-            long double smallestStraightAngleRight = std::min(std::abs(std::acos(normRight.dot(v1v2))),
-                                                              std::abs(std::acos(normRight.dot(-v1v2))));
+            long double smallestOrthoAngleRight = std::min(
+                    std::abs(std::acos(normRight.dot(orthogonalV1V2))),
+                    std::abs(std::acos(normRight.dot(-orthogonalV1V2))));
+            long double smallestStraightAngleRight = std::min(
+                    std::abs(std::acos(normRight.dot(v1v2))),
+                    std::abs(std::acos(normRight.dot(-v1v2))));
             if (smallestStraightAngleRight > smallestOrthoAngleRight) {
                 // The normal makes a sharper angle with the orthogonal vector
                 // Take the normal and reflect it around the orthogonal vector to obtain the left inflection normal

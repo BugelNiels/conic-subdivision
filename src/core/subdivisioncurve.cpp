@@ -2,47 +2,44 @@
 
 #include <utility>
 
-#include "settings.hpp"
 #include "core/conics/conic.hpp"
-
+#include "settings.hpp"
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
-        : settings_(settings),
-          closed_(true),
-          subdivider(settings_) {
-
-}
-
+    : settings_(settings),
+      closed_(true),
+      subdivider(settings_) {}
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings,
                                    std::vector<Vector2DD> coords,
                                    bool closed)
-        : settings_(settings),
-          closed_(closed),
-          netCoords_(std::move(coords)),
-          subdivider(settings_) {
+    : settings_(settings),
+      closed_(closed),
+      netCoords_(std::move(coords)),
+      subdivider(settings_) {
     netNormals_ = calcNormals(netCoords_);
     customNormals_.resize(netNormals_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-
 SubdivisionCurve::SubdivisionCurve(const Settings &settings,
                                    std::vector<Vector2DD> coords,
                                    std::vector<Vector2DD> normals,
                                    bool closed)
-        : settings_(settings),
-          closed_(closed),
-          netCoords_(std::move(coords)),
-          netNormals_(std::move(normals)),
-          subdivider(settings_) {
+    : settings_(settings),
+      closed_(closed),
+      netCoords_(std::move(coords)),
+      netNormals_(std::move(normals)),
+      subdivider(settings_) {
     int size = netCoords_.size();
     customNormals_.resize(size);
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-Vector2DD SubdivisionCurve::calcNormal(const Vector2DD &a, const Vector2DD &b,
-                            const Vector2DD &c, bool areaWeighted) const {
+Vector2DD SubdivisionCurve::calcNormal(const Vector2DD &a,
+                                       const Vector2DD &b,
+                                       const Vector2DD &c,
+                                       bool areaWeighted) const {
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
@@ -272,7 +269,6 @@ void SubdivisionCurve::recalculateNormal(int idx) {
     netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
 }
 
-
 bool SubdivisionCurve::isClosed() const {
     return closed_;
 }
@@ -307,7 +303,6 @@ void SubdivisionCurve::insertKnots() {
     netCoords_ = coords;
     netNormals_ = norms;
     customNormals_ = customNorms;
-
 }
 
 void SubdivisionCurve::translate(const Vector2DD &translation) {

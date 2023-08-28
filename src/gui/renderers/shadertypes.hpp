@@ -3,6 +3,4 @@
 /**
  * @brief Represents the different shaders that exist in this program.
  */
-enum ShaderType {
-    FLAT, POLYLINE, CONIC
-};
+enum ShaderType { FLAT, POLYLINE, CONIC };

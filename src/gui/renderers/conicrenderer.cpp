@@ -3,10 +3,7 @@
 #include "core/settings.hpp"
 #include "util/colormap.hpp"
 
-
-ConicRenderer::ConicRenderer(const Settings &settings) : Renderer(settings) {
-
-}
+ConicRenderer::ConicRenderer(const Settings &settings) : Renderer(settings) {}
 
 ConicRenderer::~ConicRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -32,21 +29,24 @@ void ConicRenderer::initBuffers() {
 
     gl_->glBindVertexArray(0);
 
-    QVector<QVector3D> quad = {
-            {-1.0, -1.0, 0.0},
-            {1.0,  -1.0, 0.0},
-            {-1.0, 1.0,  0.0},
-            {1.0,  1.0,  0.0}};
+    QVector<QVector3D> quad = {{-1.0, -1.0, 0.0},
+                               {1.0, -1.0, 0.0},
+                               {-1.0, 1.0, 0.0},
+                               {1.0, 1.0, 0.0}};
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector3D) * quad.size(),
-                      quad.data(), GL_STATIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER,
+                      sizeof(QVector3D) * quad.size(),
+                      quad.data(),
+                      GL_STATIC_DRAW);
 
     QVector<unsigned int> meshIndices = {0, 1, 2, 1, 3, 2};
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * meshIndices.size(),
-                      meshIndices.data(), GL_STATIC_DRAW);
+    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                      sizeof(int) * meshIndices.size(),
+                      meshIndices.data(),
+                      GL_STATIC_DRAW);
     vboSize_ = meshIndices.size();
 
     // unbind
@@ -71,8 +71,7 @@ void ConicRenderer::draw() {
 
     shader->setUniformValue(shader->uniformLocation("toWorldMatrix"),
                             (settings_.projectionMatrix * settings_.viewMatrix).inverted());
-    shader->setUniformValue(shader->uniformLocation("conic"),
-                            conicCoefs_);
+    shader->setUniformValue(shader->uniformLocation("conic"), conicCoefs_);
 
     gl_->glDrawElements(GL_TRIANGLES, vboSize_, GL_UNSIGNED_INT, nullptr);
 

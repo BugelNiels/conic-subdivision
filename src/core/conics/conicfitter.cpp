@@ -1,7 +1,7 @@
 #include "conicfitter.hpp"
 #include <Eigen/Dense>
-#include <Eigen/SVD>
 #include <Eigen/Eigen>
+#include <Eigen/SVD>
 
 ConicFitter::ConicFitter() {}
 
@@ -25,12 +25,12 @@ static Eigen::RowVectorX<long double> normEqXEigen(const Vector2DD &coord,
     Eigen::RowVectorX<long double> row = Eigen::RowVectorX<long double>::Zero(numUnknowns);
     long double x = coord.x();
     long double y = coord.y();
-    row(0) = 2 * x;  // A
-    row(1) = 0;      // B
-    row(2) = 2 * y;  // C
-    row(3) = 2;      // D
-    row(4) = 0;      // E
-    row(5) = 0;      // F
+    row(0) = 2 * x; // A
+    row(1) = 0;     // B
+    row(2) = 2 * y; // C
+    row(3) = 2;     // D
+    row(4) = 0;     // E
+    row(5) = 0;     // F
     row(6 + normIdx) = -normal.x();
     return row;
 }
@@ -42,18 +42,18 @@ static Eigen::RowVectorX<long double> normEqYEigen(const Vector2DD &coord,
     Eigen::RowVectorX<long double> row = Eigen::RowVectorX<long double>::Zero(numUnknowns);
     long double x = coord.x();
     long double y = coord.y();
-    row(0) = 0;        // A
-    row(1) = 2 * y;    // B
-    row(2) = 2 * x;    // C
-    row(3) = 0;        // E
-    row(4) = 2;        // F
-    row(5) = 0;        // G
+    row(0) = 0;     // A
+    row(1) = 2 * y; // B
+    row(2) = 2 * x; // C
+    row(3) = 0;     // E
+    row(4) = 2;     // F
+    row(5) = 0;     // G
     row(6 + normIdx) = -normal.y();
     return row;
 }
 
-Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic>
-ConicFitter::initAEigen(const std::vector<PatchPoint> &patchPoints) const {
+Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
+        const std::vector<PatchPoint> &patchPoints) const {
     Eigen::MatrixX<long double> A(numEq_, numUnknowns_);
 
     int rowIdx = 0;
@@ -71,15 +71,16 @@ ConicFitter::initAEigen(const std::vector<PatchPoint> &patchPoints) const {
 Eigen::VectorX<long double> ConicFitter::solveLinSystem(const Eigen::MatrixX<long double> &A) {
     Eigen::JacobiSVD<Eigen::MatrixX<long double>> svd(A, Eigen::ComputeThinV);
     const auto &V = svd.matrixV();
-//    stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
+    stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
     return V.col(V.cols() - 1);
 }
 
 Eigen::VectorX<long double> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
     int numPoints = int(patchPoints.size());
-    numUnknowns_ = 6 + numPoints; // 6 for the conic coefficients + however many normal scaling factors we need to find
-
-    numEq_ = numPoints * 3; // 1 eq per coordinate + 2 per normal
+    // 6 for the conic coefficients + however many normal scaling factors we need to find
+    numUnknowns_ = 6 + numPoints;
+    // 1 eq per coordinate + 2 per normal
+    numEq_ = numPoints * 3;
     return solveLinSystem(initAEigen(patchPoints));
 }
 

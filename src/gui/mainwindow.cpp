@@ -1,25 +1,25 @@
 #include "mainwindow.hpp"
 
-#include <QDockWidget>
-#include <QMenu>
-#include <QMenuBar>
 #include <QAction>
 #include <QApplication>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QSpinBox>
 #include <QCheckBox>
-#include <QOpenGLFramebufferObject>
-#include <QPainter>
+#include <QDockWidget>
 #include <QFileDialog>
-#include <QOpenGLPaintDevice>
-#include <QPushButton>
-#include <QSlider>
+#include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMessageBox>
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLPaintDevice>
+#include <QPainter>
+#include <QPushButton>
 #include <QRadioButton>
+#include <QSlider>
+#include <QSpinBox>
+#include <QVBoxLayout>
 
-#include "src/core/conics/conicpresets.hpp"
 #include "gui/stylepresets.hpp"
+#include "src/core/conics/conicpresets.hpp"
 #include "util/imgresourcereader.hpp"
 
 #include "mainview.hpp"
@@ -29,8 +29,7 @@ using DoubleSlider = ValueSliders::DoubleSlider;
 using IntSlider = ValueSliders::IntSlider;
 using BoundMode = ValueSliders::BoundMode;
 
-MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     mainView_ = new MainView(settings_, this);
     presets_ = new conics::ConicPresets(settings_);
 
@@ -54,10 +53,7 @@ void MainWindow::resetView(bool recalculate) {
     subdivStepsSpinBox->setVal(0);
 }
 
-
-MainWindow::~MainWindow() {
-}
-
+MainWindow::~MainWindow() {}
 
 QDockWidget *MainWindow::initSideMenu() {
     QWidget *sideMenu = new QWidget(this);
@@ -93,8 +89,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(subdivStepsSpinBox);
     auto *applySubdivButton = new QPushButton("Apply Subdivision");
     applySubdivButton->setToolTip(
-            "<html><head/><body><p>If pressed, applies the subdivision.</body></html>"
-    );
+            "<html><head/><body><p>If pressed, applies the subdivision.</body></html>");
     connect(applySubdivButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->applySubdivision();
         mainView_->recalculateCurve();
@@ -102,11 +97,12 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(applySubdivButton);
 
-
     auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
     gravitateAnglesCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, the weighted inflection point locations gravitate towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, lets the weighted inflection points gravitate towards the vertex having the largest angle.</body></html>"
-    );
+            "<html><head/><body><p>If enabled, the weighted inflection point locations gravitate "
+            "towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, "
+            "lets the weighted inflection points gravitate towards the vertex having the largest "
+            "angle.</body></html>");
     gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
     gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
     connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
@@ -116,22 +112,25 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *weightedKnotLocation = new QCheckBox("Weighted Inflection Points");
     weightedKnotLocation->setToolTip(
-            "<html><head/><body><p>If enabled, does not insert the inflection points in the midpoint of each edge, but instead lets the position depend on the ratio between the the two outgoing edges.</body></html>"
-    );
+            "<html><head/><body><p>If enabled, does not insert the inflection points in the "
+            "midpoint of each edge, but instead lets the position depend on the ratio between the "
+            "the two outgoing edges.</body></html>");
     weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
-    connect(weightedKnotLocation, &QCheckBox::toggled, [this, gravitateAnglesCheckBox](bool toggled) {
-        settings_.weightedKnotLocation = toggled;
-        gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
-        mainView_->recalculateCurve();
-    });
+    connect(weightedKnotLocation,
+            &QCheckBox::toggled,
+            [this, gravitateAnglesCheckBox](bool toggled) {
+                settings_.weightedKnotLocation = toggled;
+                gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
+                mainView_->recalculateCurve();
+            });
 
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
-    splitConvexityCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, automatically inserts inflection points before subdividing.</body></html>"
-    );
+    splitConvexityCheckBox->setToolTip("<html><head/><body><p>If enabled, automatically inserts "
+                                       "inflection points before subdividing.</body></html>");
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
-    connect(splitConvexityCheckBox, &QCheckBox::toggled,
+    connect(splitConvexityCheckBox,
+            &QCheckBox::toggled,
             [this, weightedKnotLocation, gravitateAnglesCheckBox](bool toggled) {
                 settings_.convexitySplit = toggled;
                 weightedKnotLocation->setEnabled(toggled);
@@ -140,9 +139,9 @@ QDockWidget *MainWindow::initSideMenu() {
             });
 
     auto *patchSizeSlider = new IntSlider("Patch Size", 2, 1, 5, BoundMode::UPPER_LOWER);
-    patchSizeSlider->setToolTip(
-            "<html><head/><body><p>Changes how much the patch should grow in either direction of the edge. The total size of the patch will be at most 2 times this number.</p></body></html>"
-    );
+    patchSizeSlider->setToolTip("<html><head/><body><p>Changes how much the patch should grow in "
+                                "either direction of the edge. The total size of the patch will be "
+                                "at most 2 times this number.</p></body></html>");
     connect(patchSizeSlider, &IntSlider::valueUpdated, [this](int value) {
         settings_.patchSize = value;
         mainView_->recalculateCurve();
@@ -150,20 +149,19 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *dynamicPatchSizeCheckBox = new QCheckBox("Dynamic Patch Size");
     dynamicPatchSizeCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, starting at a patch size of 2, it continuously increases the patch size until a solution is found where all points lie on the same branch of the conic.</body></html>"
-    );
+            "<html><head/><body><p>If enabled, starting at a patch size of 2, it continuously "
+            "increases the patch size until a solution is found where all points lie on the same "
+            "branch of the conic.</body></html>");
     dynamicPatchSizeCheckBox->setChecked(settings_.dynamicPatchSize);
-    connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled,
-            [this, patchSizeSlider](bool toggled) {
-                settings_.dynamicPatchSize = toggled;
-                patchSizeSlider->setEnabled(!toggled);
-                mainView_->recalculateCurve();
-            });
+    connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled, [this, patchSizeSlider](bool toggled) {
+        settings_.dynamicPatchSize = toggled;
+        patchSizeSlider->setEnabled(!toggled);
+        mainView_->recalculateCurve();
+    });
 
     auto *insertKnotsButton = new QPushButton("Insert Inflection Points");
-    insertKnotsButton->setToolTip(
-            "<html><head/><body><p>If pressed, inserts inflection points points to improve convexity properties.</body></html>"
-    );
+    insertKnotsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points "
+                                  "points to improve convexity properties.</body></html>");
     connect(insertKnotsButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->insertKnots();
         mainView_->recalculateCurve();
@@ -182,21 +180,34 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Vertex weights"));
-    auto *edgeVertWeightSpinBox = new DoubleSlider("Inner", settings_.middlePointWeight, 0, maxWeight);
+    auto *edgeVertWeightSpinBox = new DoubleSlider("Inner",
+                                                   settings_.middlePointWeight,
+                                                   0,
+                                                   maxWeight);
     edgeVertWeightSpinBox->setStepSize(1.0);
     edgeVertWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
+            "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
+            "font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the "
+            "points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; "
+            "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         settings_.middlePointWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeVertWeightSpinBox);
 
-    auto *midVertWeightSpinBox = new DoubleSlider("Outer", settings_.outerPointWeight, 0, maxWeight);
+    auto *midVertWeightSpinBox = new DoubleSlider("Outer",
+                                                  settings_.outerPointWeight,
+                                                  0,
+                                                  maxWeight);
     midVertWeightSpinBox->setStepSize(1.0);
     midVertWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
-    );
+            "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
+            "font-weight:600;&quot;>b</span>-c<span style=&quot; "
+            "font-weight:600;&quot;>-</span>d-<span style=&quot; "
+            "font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the points "
+            "at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; "
+            "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         settings_.outerPointWeight = newVal;
         mainView_->recalculateCurve();
@@ -205,22 +216,34 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Normal weights"));
-    auto *edgeNormWeightSpinBox = new DoubleSlider("Inner", settings_.middleNormalWeight, 0, maxWeight);
+    auto *edgeNormWeightSpinBox = new DoubleSlider("Inner",
+                                                   settings_.middleNormalWeight,
+                                                   0,
+                                                   maxWeight);
     edgeNormWeightSpinBox->setStepSize(1.0);
     edgeNormWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; font-weight:600;&quot;>d </span>(the edge points).</p></body></html>"
-    );
+            "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
+            "font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the "
+            "normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; "
+            "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         settings_.middleNormalWeight = newVal;
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(edgeNormWeightSpinBox);
 
-    auto *midNormWeightSpinBox = new DoubleSlider("Outer", settings_.outerNormalWeight, 0, maxWeight);
+    auto *midNormWeightSpinBox = new DoubleSlider("Outer",
+                                                  settings_.outerNormalWeight,
+                                                  0,
+                                                  maxWeight);
     midNormWeightSpinBox->setStepSize(1.0);
     midNormWeightSpinBox->setToolTip(
-            "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; font-weight:600;&quot;>b</span>-c<span style=&quot; font-weight:600;&quot;>-</span>d-<span style=&quot; font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; font-weight:600;&quot;>e</span>.</p></body></html>"
-    );
+            "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
+            "font-weight:600;&quot;>b</span>-c<span style=&quot; "
+            "font-weight:600;&quot;>-</span>d-<span style=&quot; "
+            "font-weight:600;&quot;>e</span>-f</p><p>this value change the weights of the normals "
+            "at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; "
+            "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         settings_.outerNormalWeight = newVal;
         mainView_->recalculateCurve();
@@ -239,8 +262,8 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *regularNormalsRadioButton = new QRadioButton("Regular Normals");
     regularNormalsRadioButton->setToolTip(
-            "<html><head/><body><p>If enabled, approximates the normals using half the angle between the two adjacent edges.</body></html>"
-    );
+            "<html><head/><body><p>If enabled, approximates the normals using half the angle "
+            "between the two adjacent edges.</body></html>");
     regularNormalsRadioButton->setChecked(!settings_.areaWeightedNormals);
     connect(regularNormalsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         settings_.areaWeightedNormals = false;
@@ -251,8 +274,8 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *lengthWeightedRadioButton = new QRadioButton("Length Weighted Normals");
     lengthWeightedRadioButton->setToolTip(
-            "<html><head/><body><p>If enabled, approximates the normals by taking into consideration the edge lengths.</body></html>"
-    );
+            "<html><head/><body><p>If enabled, approximates the normals by taking into "
+            "consideration the edge lengths.</body></html>");
     lengthWeightedRadioButton->setChecked(settings_.areaWeightedNormals);
     connect(lengthWeightedRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         settings_.areaWeightedNormals = toggled;
@@ -261,9 +284,8 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(lengthWeightedRadioButton);
 
     auto *circleNormsRadioButton = new QRadioButton("Circle Normals");
-    circleNormsRadioButton->setToolTip(
-            "<html><head/><body><p>Estimate the normals using oscilating circles.</p></body></html>"
-    );
+    circleNormsRadioButton->setToolTip("<html><head/><body><p>Estimate the normals using "
+                                       "oscilating circles.</p></body></html>");
     circleNormsRadioButton->setChecked(settings_.circleNormals);
     connect(circleNormsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         settings_.circleNormals = toggled;
@@ -271,13 +293,14 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(circleNormsRadioButton);
 
-
     vertLayout->addStretch();
 
     auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
     recalcNormsCheckBox->setToolTip(
-            "<html><head/><body><p>If this option is enabled, the normals will be re-evaluated at every step. If this option is disabled, the vertex points will keep their normals. Any new edge points will obtain the normal of the conic they were sampled from.</p></body></html>"
-    );
+            "<html><head/><body><p>If this option is enabled, the normals will be re-evaluated at "
+            "every step. If this option is disabled, the vertex points will keep their normals. "
+            "Any new edge points will obtain the normal of the conic they were sampled "
+            "from.</p></body></html>");
     recalcNormsCheckBox->setChecked(settings_.recalculateNormals);
     connect(recalcNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         settings_.recalculateNormals = toggled;
@@ -287,8 +310,10 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *edgeSampleCheckBox = new QCheckBox("Edge Normal");
     edgeSampleCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, uses a ray perpendicular to the edge to intersect with the conic and sample the new point from. If disabled, uses the average of the edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the middle of the edge.</p></body></html>"
-    );
+            "<html><head/><body><p>If enabled, uses a ray perpendicular to the edge to intersect "
+            "with the conic and sample the new point from. If disabled, uses the average of the "
+            "edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the "
+            "middle of the edge.</p></body></html>");
     edgeSampleCheckBox->setChecked(settings_.edgeTangentSample);
     connect(edgeSampleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         settings_.edgeTangentSample = toggled;
@@ -297,10 +322,12 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(edgeSampleCheckBox);
     vertLayout->addStretch();
 
-    auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale", settings_.curvatureScale, 0.01, 2);
+    auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale",
+                                                  settings_.curvatureScale,
+                                                  0.01,
+                                                  2);
     curvatureScaleSlider->setToolTip(
-            "<html><head/><body><p>Changes how long the curvature combs are.</p></body></html>"
-    );
+            "<html><head/><body><p>Changes how long the curvature combs are.</p></body></html>");
     connect(curvatureScaleSlider, &DoubleSlider::valueUpdated, [this](double value) {
         settings_.curvatureScale = value;
         mainView_->updateBuffers();
@@ -308,14 +335,12 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(curvatureScaleSlider);
     vertLayout->addStretch();
 
-
     auto *dockWidget = new QDockWidget(this);
     dockWidget->setWidget(sideMenu);
-    dockWidget->setFeatures(
-            dockWidget->features() & ~(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable));
+    dockWidget->setFeatures(dockWidget->features() &
+                            ~(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetFloatable));
     return dockWidget;
 }
-
 
 QMenuBar *MainWindow::initMenuBar() {
     auto *menuBar = new QMenuBar();
@@ -325,8 +350,9 @@ QMenuBar *MainWindow::initMenuBar() {
     menuBar->addMenu(getWindowMenu());
 
     auto *lightModeToggle = new QAction(menuBar);
-    lightModeToggle->setIcon(
-            QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png", {42, 42}, QColor(128, 128, 128))));
+    lightModeToggle->setIcon(QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png",
+                                                                      {42, 42},
+                                                                      QColor(128, 128, 128))));
     lightModeToggle->setCheckable(true);
     lightModeToggle->setChecked(true); // default is light mode
     connect(lightModeToggle, &QAction::toggled, this, [this](bool toggled) {
@@ -356,14 +382,16 @@ QMenu *MainWindow::getFileMenu() {
     openAction->setShortcutContext(Qt::ApplicationShortcut);
     openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
     connect(openAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getOpenFileName(
-                nullptr, "Load Curve", "../curves/",
-                tr("Obj Files (*.obj)"));
+        QString filePath = QFileDialog::getOpenFileName(nullptr,
+                                                        "Load Curve",
+                                                        "../curves/",
+                                                        tr("Obj Files (*.obj)"));
         if (filePath == "") {
             return;
         }
         ObjCurveReader reader(settings_);
-        mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(reader.loadCurveFromObj(filePath)));
+        mainView_->setSubCurve(
+                std::make_shared<SubdivisionCurve>(reader.loadCurveFromObj(filePath)));
         // TODO: extract function for new curves
         subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
@@ -375,7 +403,9 @@ QMenu *MainWindow::getFileMenu() {
     saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(saveAction, &QAction::triggered, [this]() {
         QString filePath = QFileDialog::getSaveFileName(
-                nullptr, "Save Image", "../images/",
+                nullptr,
+                "Save Image",
+                "../images/",
                 tr("Img Files (*.png *.jpg *.jpeg *.tiff *.tif *pgm *ppm)"));
         if (filePath != "") {
             QPixmap pixmap(mainView_->size());
@@ -385,12 +415,15 @@ QMenu *MainWindow::getFileMenu() {
                 QMessageBox::information(this, "Image Saved", filePath);
                 return;
             } else {
-                QMessageBox::warning(this, "Failed to save image",
+                QMessageBox::warning(this,
+                                     "Failed to save image",
                                      "Ensure you provided a file extension:\n:" + filePath);
                 return;
             }
         }
-        QMessageBox::warning(this, "Failed to save image", "Ensure you provided a valid path:\n: " + filePath);
+        QMessageBox::warning(this,
+                             "Failed to save image",
+                             "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveAction);
 

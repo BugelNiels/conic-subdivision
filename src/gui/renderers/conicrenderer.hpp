@@ -23,7 +23,6 @@ protected:
     void initBuffers() override;
 
 private:
-
     QMatrix3x3 conicCoefs_;
 #ifdef SHADER_DOUBLE_PRECISION
     int numBuffers_ = 4;

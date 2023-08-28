@@ -9,12 +9,12 @@
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
     long double a, b, c, d, e, f;
-    a = coefs[0];           // A - x*x
-    b = coefs[2];           // C - x*y
-    c = coefs[1];           // B - y*y
-    d = coefs[3];           // D - x
-    e = coefs[4];           // E - y
-    f = coefs[5];           // F - constant
+    a = coefs[0]; // A - x*x
+    b = coefs[2]; // C - x*y
+    c = coefs[1]; // B - y*y
+    d = coefs[3]; // D - x
+    e = coefs[4]; // E - y
+    f = coefs[5]; // F - constant
 #if 0
     bool positive = true;
     bool negative = true;
@@ -38,12 +38,12 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     long double a, b, c, d, e, f;
-    a = coefs[0];           // A - x*x
-    b = coefs[2];           // C - x*y
-    c = coefs[1];           // B - y*y
-    d = coefs[3];           // D - x
-    e = coefs[4];           // E - y
-    f = coefs[5];           // F - constant
+    a = coefs[0]; // A - x*x
+    b = coefs[2]; // C - x*y
+    c = coefs[1]; // B - y*y
+    d = coefs[3]; // D - x
+    e = coefs[4]; // E - y
+    f = coefs[5]; // F - constant
 #if 0
     bool positive = true;
     bool negative = true;
@@ -65,9 +65,8 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
     return matrix;
 }
 
-Conic::Conic(const std::vector<PatchPoint> &patchPoints,
-             const Settings &settings)
-        : epsilon_(settings.epsilon) {
+Conic::Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings)
+    : epsilon_(settings.epsilon) {
     Q_ = fitConic(patchPoints);
 }
 
@@ -101,7 +100,9 @@ Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     return normal;
 }
 
-bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p,
+bool Conic::sample(const Vector2DD &ro,
+                   const Vector2DD &rd,
+                   Vector2DD &p,
                    Vector2DD &normal) const {
     long double t;
     if (intersects(ro, rd, t)) {
@@ -167,15 +168,15 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t)
     }
     return true;
 #else
-    if(t0 > 0 && t1 > 0) {
+    if (t0 > 0 && t1 > 0) {
         t = std::min(t0, t1);
         return true;
     }
-    if(t0 > 0) {
+    if (t0 > 0) {
         t = t0;
         return true;
     }
-    if(t1 > 0) {
+    if (t1 > 0) {
         t = t1;
         return true;
     }
@@ -194,12 +195,12 @@ void Conic::printConic() const {
 
     // Print the conic formula in Geogebra-compatible format
     qDebug() << QString("%1*x^2 + %2*x*y + %3*y^2 + %4*x + %5*y + %6 = 0")
-            .arg(A)
-            .arg(D)
-            .arg(E)
-            .arg(G)
-            .arg(B)
-            .arg(F);
+                        .arg(A)
+                        .arg(D)
+                        .arg(E)
+                        .arg(G)
+                        .arg(B)
+                        .arg(F);
 }
 
 double Conic::getStability() const {

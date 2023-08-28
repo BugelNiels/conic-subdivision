@@ -1,17 +1,15 @@
 #pragma once
 
-
-#include <QString>
 #include "core/subdivisioncurve.hpp"
+#include <QString>
 
 class ObjCurveReader {
 
 public:
-    explicit ObjCurveReader(const Settings& settings);
+    explicit ObjCurveReader(const Settings &settings);
 
     SubdivisionCurve loadCurveFromObj(const QString &filePath);
 
 private:
-    const Settings& settings_;
+    const Settings &settings_;
 };
-
