@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 
+// Using regular doubles seems to work fine as well, but this is to achieve optimal accuracy.
 using real_t = long double;
 
 using Vector2DD = Eigen::Vector2<real_t>;
