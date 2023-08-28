@@ -30,6 +30,7 @@ using IntSlider = ValueSliders::IntSlider;
 using BoundMode = ValueSliders::BoundMode;
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+    setWindowTitle("Conic Subdivision Test Tool");
     mainView_ = new MainView(settings_, this);
     presets_ = new conics::ConicPresets(settings_);
 
