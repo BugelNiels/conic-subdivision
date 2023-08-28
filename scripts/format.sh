@@ -18,7 +18,7 @@ fi
 
 for ext in $SOURCE_EXTENSIONS; do
   # Find all source files with the specified extension
-  files=$(find src include modules -name "*$ext")
+  files=$(find src -name "*$ext")
 
   # Run clang-format and check for changes
   for file in $files; do

@@ -1,7 +1,6 @@
 #include "renderer.hpp"
 #include "util/vector.hpp"
 
-
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
@@ -10,7 +9,9 @@ Renderer::Renderer(const Settings &settings) : gl_(nullptr), settings_(settings)
 /**
  * @brief Renderer::~Renderer Deconstructs the renderer by deleting all shaders.
  */
-Renderer::~Renderer() { qDeleteAll(shaders_); }
+Renderer::~Renderer() {
+    qDeleteAll(shaders_);
+}
 
 /**
  * @brief Renderer::init Initialises the renderer with an OpenGL context and
@@ -62,8 +63,7 @@ QOpenGLShaderProgram *Renderer::constructPolyLineShader() {
  * @param name Name of the shader.
  * @return The constructed shader.
  */
-QOpenGLShaderProgram *Renderer::constructDefaultShader(
-        const QString &name) {
+QOpenGLShaderProgram *Renderer::constructDefaultShader(const QString &name) {
     QString pathVert = ":/shaders/" + name + ".vert";
     QString pathFrag = ":/shaders/" + name + ".frag";
 
