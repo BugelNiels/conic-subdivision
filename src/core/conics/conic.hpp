@@ -15,9 +15,9 @@ public:
                 Vector2DD &point,
                 Vector2DD &normal) const;
 
-    bool intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t) const;
+    bool intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) const;
 
-    [[nodiscard]] double getStability() const;
+    [[nodiscard]] real_t getStability() const;
 
     void printConic() const;
 
@@ -27,9 +27,9 @@ public:
     [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p) const;
 
 private:
-    long double epsilon_ = 0;
+    real_t epsilon_ = 0;
     Matrix3DD Q_;
-    double stability_ = 0;
+    real_t stability_ = 0;
 
     Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
 };

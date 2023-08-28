@@ -1,14 +1,15 @@
 #pragma once
 
+#include "gui/renderers/shadertypes.hpp"
 #include "gui/stylepresets.hpp"
-#include "src/gui/renderers/shadertypes.hpp"
+#include "util/vector.hpp"
 #include <QMatrix4x4>
 
 /**
  * Struct that contains all the settings of the program. Initialised with a
  * number of default values.
  */
-typedef struct Settings {
+using Settings = struct Settings {
     // Selection data
     int selectedVertex = -1;
     int selectedNormal = -1;
@@ -21,10 +22,10 @@ typedef struct Settings {
     bool normalHandles = true;
 
     // Calculation Weights
-    double middlePointWeight = 100000.0;
-    double middleNormalWeight = 100000.0;
-    double outerPointWeight = 10.0;
-    double outerNormalWeight = 1.0;
+    real_t middlePointWeight = 100000.0;
+    real_t middleNormalWeight = 100000.0;
+    real_t outerPointWeight = 10.0;
+    real_t outerNormalWeight = 1.0;
     int patchSize = 2;
 
     // Calculation settings
@@ -33,7 +34,7 @@ typedef struct Settings {
     bool areaWeightedNormals = true;
     bool weightedInflPointLocation = false;
     bool gravitateSmallerAngles = true;
-    long double epsilon = 1e-40;
+    real_t epsilon = 1e-40;
     bool dynamicPatchSize = true;
 
     // UI related constants
@@ -59,4 +60,4 @@ typedef struct Settings {
     // UI Controls
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
-} Settings;
+};

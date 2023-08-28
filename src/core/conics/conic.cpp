@@ -7,59 +7,13 @@
 #include "src/core/settings.hpp"
 #include <iostream>
 
-static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
-    long double a, b, c, d, e, f;
-    a = coefs[0]; // A - x*x
-    b = coefs[2]; // C - x*y
-    c = coefs[1]; // B - y*y
-    d = coefs[3]; // D - x
-    e = coefs[4]; // E - y
-    f = coefs[5]; // F - constant
-#if 0
-    bool positive = true;
-    bool negative = true;
-    for (int i = 6; i < coefs.size(); i++) {
-        positive = positive && coefs[i] > 0;
-        negative = negative && coefs[i] < 0;
-    }
-    if (!positive && !negative) {
-        std::cout << "problem " << negative << " " << positive << " ";
-
-        for (int i = 6; i < coefs.size(); i++) {
-            std::cout << " " << coefs[i];
-        }
-        std::cout << std::endl;
-    }
-#endif
-    Matrix3DD matrix;
-    matrix << a, b, d, b, c, e, d, e, f;
-    return matrix;
-}
-
-static Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
-    long double a, b, c, d, e, f;
-    a = coefs[0]; // A - x*x
-    b = coefs[2]; // C - x*y
-    c = coefs[1]; // B - y*y
-    d = coefs[3]; // D - x
-    e = coefs[4]; // E - y
-    f = coefs[5]; // F - constant
-#if 0
-    bool positive = true;
-    bool negative = true;
-    for (int i = 6; i < coefs.size(); i++) {
-        positive = positive && coefs[i] > 0;
-        negative = negative && coefs[i] < 0;
-    }
-    if (!positive && !negative) {
-        std::cout << "problem " << negative << " " << positive << " ";
-
-        for (int i = 6; i < coefs.size(); i++) {
-            std::cout << " " << coefs[i];
-        }
-        std::cout << std::endl;
-    }
-#endif
+static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {
+    real_t a = coefs[0]; // A - x*x
+    real_t b = coefs[2]; // C - x*y
+    real_t c = coefs[1]; // B - y*y
+    real_t d = coefs[3]; // D - x
+    real_t e = coefs[4]; // E - y
+    real_t f = coefs[5]; // F - constant
     Matrix3DD matrix;
     matrix << a, b, d, b, c, e, d, e, f;
     return matrix;
@@ -79,7 +33,7 @@ Conic::Conic(const std::vector<PatchPoint> &patchPoints, const Settings &setting
  */
 Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
     ConicFitter fitter;
-    Eigen::VectorX<long double> foundCoefs = fitter.fitConic(patchPoints);
+    Eigen::VectorX<real_t> foundCoefs = fitter.fitConic(patchPoints);
     stability_ = fitter.stability();
     return coefsToMatrix(foundCoefs);
 }
@@ -94,8 +48,8 @@ Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
 
 Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     Vector3DD p3(p.x(), p.y(), 1);
-    long double xn = Q_.row(0).dot(p3);
-    long double yn = Q_.row(1).dot(p3);
+    real_t xn = Q_.row(0).dot(p3);
+    real_t yn = Q_.row(1).dot(p3);
     Vector2DD normal(xn, yn);
     return normal;
 }
@@ -104,7 +58,7 @@ bool Conic::sample(const Vector2DD &ro,
                    const Vector2DD &rd,
                    Vector2DD &p,
                    Vector2DD &normal) const {
-    long double t;
+    real_t t;
     if (intersects(ro, rd, t)) {
         p = ro + t * rd;
         normal = conicNormal(p, rd);
@@ -125,14 +79,14 @@ bool Conic::sample(const Vector2DD &ro,
   of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284,
   Oct. 2013, pp. 2245-2264
 */
-static long double diff_of_products(long double a, long double b, long double c, long double d) {
-    long double w = d * c;
-    long double e = fmal(-d, c, w);
-    long double f = fmal(a, b, -w);
+static real_t diff_of_products(real_t a, real_t b, real_t c, real_t d) {
+    real_t w = d * c;
+    real_t e = fmal(-d, c, w);
+    real_t f = fmal(a, b, -w);
     return f + e;
 }
 
-bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t) const {
+bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) const {
     Vector3DD p(ro.x(), ro.y(), 1);
     Vector3DD u(rd.x(), rd.y(), 0);
     // Technically, b = p.dot(Q_ * u) + u.dot(Q_ * p);
@@ -141,9 +95,9 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t)
     // Because of this, we can remove the 4 in the discriminant calculation ((2b)^2 - 4ac = b^2 - ac
     // And we can also remove the 2 from the "/2a" part of the quadratic formula:
     // -2b+-sqrt(disc)/2a = -b+-sqrt(disc)/a
-    long double a = u.dot(Q_ * u);
-    long double b = u.dot(Q_ * p);
-    long double c = p.dot(Q_ * p);
+    real_t a = u.dot(Q_ * u);
+    real_t b = u.dot(Q_ * p);
+    real_t c = p.dot(Q_ * p);
 
     if (std::fabs(a) < epsilon_) {
         t = -c / b;
@@ -152,14 +106,14 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t)
         }
         return true;
     }
-    long double disc = diff_of_products(b, b, a, c);
+    real_t disc = diff_of_products(b, b, a, c);
     if (disc < 0.0) {
         return false;
     }
-    long double root = std::sqrt(disc);
+    real_t root = std::sqrt(disc);
 
-    long double t0 = (-b - root) / a;
-    long double t1 = (-b + root) / a;
+    real_t t0 = (-b - root) / a;
+    real_t t1 = (-b + root) / a;
 #if 1
     if (std::fabs(t0) < std::fabs(t1)) {
         t = t0;
@@ -203,6 +157,6 @@ void Conic::printConic() const {
                         .arg(F);
 }
 
-double Conic::getStability() const {
+real_t Conic::getStability() const {
     return stability_;
 }

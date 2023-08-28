@@ -158,8 +158,9 @@ QDockWidget *MainWindow::initSideMenu() {
     });
 
     auto *insertInflPointsButton = new QPushButton("Insert Inflection Points");
-    insertInflPointsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points "
-                                  "points to improve convexity properties.</body></html>");
+    insertInflPointsButton->setToolTip(
+            "<html><head/><body><p>If pressed, inserts inflection points "
+            "points to improve convexity properties.</body></html>");
     connect(insertInflPointsButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->insertInflPoints();
         mainView_->recalculateCurve();
@@ -256,7 +257,6 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(testToggleCheckBox);
     vertLayout->addStretch();
 #endif
-
 
     auto *recalcButton = new QPushButton("Reset Normals");
     connect(recalcButton, &QPushButton::pressed, this, [this] {

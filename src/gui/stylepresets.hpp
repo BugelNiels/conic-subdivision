@@ -8,7 +8,7 @@ class Settings;
 
 namespace conics::ui {
 
-typedef struct StylePreset {
+using StylePreset = struct StylePreset {
     QColor backgroundCol;
     QColor controlCurveCol;
     QColor controlPointCol;
@@ -19,7 +19,7 @@ typedef struct StylePreset {
     ColorMapName colorMapName;
 
     QPalette palette;
-} StylePreset;
+};
 
 void applyStylePreset(Settings &settings, const StylePreset &preset);
 
