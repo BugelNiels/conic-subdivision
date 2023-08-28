@@ -12,10 +12,10 @@ public:
 
     void subdivide(SubdivisionCurve *curve, int level);
 
-    void knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> &coords, std::vector<Vector2DD> &norms,
+    void knotCurve(SubdivisionCurve *curve,
+                   std::vector<Vector2DD> &coords,
+                   std::vector<Vector2DD> &norms,
                    std::vector<bool> &customNorms);
-
-    [[nodiscard]] std::vector<double> getStabilityVals() const;
 
     void extractPatch(const std::vector<Vector2DD> &points,
                       const std::vector<Vector2DD> &normals,
@@ -25,12 +25,10 @@ public:
 
 private:
     const Settings &settings_;
-    std::vector<double> stability_;
     SubdivisionCurve *curve_;
 
     void subdivide(const std::vector<Vector2DD> &points,
                    const std::vector<Vector2DD> &normals,
-                   const std::vector<double> &stabilities,
                    int level);
 
 

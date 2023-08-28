@@ -5,8 +5,7 @@
 
 #define COORDS_IDX 0
 #define NORM_IDX 1
-#define STAB_IDX 2
-#define DOUBLE_IDX 3
+#define DOUBLE_IDX 2
 
 CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {
 
@@ -42,10 +41,6 @@ void CurveRenderer::initBuffers() {
     gl_->glEnableVertexAttribArray(NORM_IDX);
     gl_->glVertexAttribPointer(NORM_IDX, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[STAB_IDX]);
-    gl_->glEnableVertexAttribArray(STAB_IDX);
-    gl_->glVertexAttribPointer(STAB_IDX, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
-
 #ifdef SHADER_DOUBLE_PRECISION
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[DOUBLE_IDX]);
     gl_->glEnableVertexAttribArray(DOUBLE_IDX);
@@ -75,20 +70,12 @@ void CurveRenderer::initBuffers() {
 void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     std::vector<QVector2D> coords;
     std::vector<QVector2D> normals;
-    std::vector<float> stability;
     if (sc.getSubdivLevel() == 0) {
         coords = qVecToVec(sc.getNetCoords());
         normals = qVecToVec(sc.getNetNormals());
-        stability.resize(coords.size());
-        std::fill(stability.begin(), stability.end(), 0);
     } else {
         coords = qVecToVec(sc.getCurveCoords());
         normals = qVecToVec(sc.getCurveNormals());
-        const auto &stabVals = sc.getStabilityVals();
-        stability.reserve(stabVals.size());
-        for (const auto stabVal: stabVals) {
-            stability.emplace_back(float(stabVal));
-        }
     }
     for (auto &norm: normals) {
         norm *= settings_.curvatureSign;
@@ -106,9 +93,6 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[NORM_IDX]);
     gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals.size(),
                       normals.data(), GL_DYNAMIC_DRAW);
-    gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[STAB_IDX]);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(float) * stability.size(),
-                      stability.data(), GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
     const auto &coords_d = sc.getSubdivLevel() == 0 ? sc.getNetCoords() : sc.getCurveCoords();
@@ -155,8 +139,6 @@ void CurveRenderer::draw() {
                             settings_.visualizeNormals);
     shader->setUniformValue(shader->uniformLocation("visualize_curvature"),
                             settings_.visualizeCurvature);
-    shader->setUniformValue(shader->uniformLocation("stability_colors"),
-                            settings_.visualizeStability);
     shader->setUniformValue(shader->uniformLocation("viewMatrix"),
                             settings_.viewMatrix);
     shader->setUniformValue(shader->uniformLocation("curvatureScale"),

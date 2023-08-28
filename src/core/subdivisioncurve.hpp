@@ -38,8 +38,6 @@ public:
 
     [[nodiscard]] bool isClosed() const;
 
-    [[nodiscard]] std::vector<double> getStabilityVals() const;
-
     int addPoint(const Vector2DD &p);
 
     void setVertexPosition(int idx, const Vector2DD &p);

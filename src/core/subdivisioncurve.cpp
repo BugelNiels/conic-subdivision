@@ -310,10 +310,6 @@ void SubdivisionCurve::insertKnots() {
 
 }
 
-std::vector<double> SubdivisionCurve::getStabilityVals() const {
-    return subdivider.getStabilityVals();
-}
-
 void SubdivisionCurve::translate(const Vector2DD &translation) {
     for (auto &c: netCoords_) {
         c += translation;

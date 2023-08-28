@@ -16,7 +16,6 @@ typedef struct Settings {
     // View Settings
     bool visualizeNormals = false;
     bool visualizeCurvature = false;
-    bool visualizeStability = false;
     bool showControlPoints = true;
     bool showControlCurve = true;
     bool normalHandles = true;
@@ -24,7 +23,7 @@ typedef struct Settings {
     // Calculation Weights
     double middlePointWeight = 100000.0;
     double middleNormalWeight = 100000.0;
-    double outerPointWeight = 1.0;
+    double outerPointWeight = 10.0;
     double outerNormalWeight = 1.0;
     int patchSize = 2;
 
@@ -38,7 +37,7 @@ typedef struct Settings {
     bool gravitateSmallerAngles = true;
     double knotTension = 0.8;
     long double epsilon = 1e-40;
-    bool dynamicPatchSize = false;
+    bool dynamicPatchSize = true;
 
     // UI related constants
     float normalLength = 0.15;

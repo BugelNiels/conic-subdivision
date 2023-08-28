@@ -16,25 +16,20 @@ void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
         std::vector<Vector2DD> norms;
         std::vector<bool> customNorms;
         knotCurve(curve_, coords, norms, customNorms);
-        std::vector<double> stabilities;
-        stabilities.resize(coords.size());
-        subdivide(coords, norms, stabilities, level);
+        subdivide(coords, norms, level);
     } else {
-        stability_.resize(netCoords.size());
-        subdivide(netCoords, netNorms, stability_, level);
+        subdivide(netCoords, netNorms, level);
     }
 
 }
 
 void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
                                 const std::vector<Vector2DD> &normals,
-                                const std::vector<double> &stabilities,
                                 int level) {
     // base case
     if (level == 0) {
         curve_->curveCoords_ = points;
         curve_->curveNormals_ = normals;
-        stability_ = stabilities;
         return;
     }
     int n = int(points.size()) * 2 - 1;
@@ -43,13 +38,11 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     }
     std::vector<Vector2DD> newPoints(n);
     std::vector<Vector2DD> newNormals(n);
-    std::vector<double> newStabilities(n);
 
     // set vertex points
     for (int i = 0; i < n; i += 2) {
         newPoints[i] = points[i / 2];
         newNormals[i] = normals[i / 2];
-        newStabilities[i] = stabilities[i / 2];
     }
     // set new points
     for (int i = 1; i < n; i += 2) {
@@ -64,7 +57,7 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
         newKnotIndices.insert(knotIdx * 2);
     }
     curve_->knotIndices_ = newKnotIndices;
-    subdivide(newPoints, newNormals, newStabilities, level - 1);
+    subdivide(newPoints, newNormals, level - 1);
 }
 
 void
@@ -387,8 +380,4 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve,
             idx++;
         }
     }
-}
-
-std::vector<double> ConicSubdivider::getStabilityVals() const {
-    return stability_;
 }

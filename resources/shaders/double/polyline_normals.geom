@@ -7,7 +7,6 @@ uniform float curvatureScale;
 
 uniform bool visualize_normals;
 uniform bool visualize_curvature;
-uniform bool stability_colors;
 uniform sampler1D colorMap;
 
 uniform vec3 normalColor;
@@ -18,7 +17,6 @@ uniform mat4 viewMatrix;
 
 in dvec2 coords_dvs[];
 in vec2 norm_vs[];
-in float stability_vs[];
 
 out vec4 line_color;
 
@@ -160,12 +158,6 @@ void main() {
     }
 
     // Emit the curve itself
-    if (stability_colors) {
-        emitLine(p1, p2, stability_vs[1]);
-        line_color = vec4(lineColor, 1);
-    } else {
-        line_color = vec4(lineColor, 1);
-        emitLine(p1, p2);
-    }
-
+    line_color = vec4(lineColor, 1);
+    emitLine(p1, p2);
 }
