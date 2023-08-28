@@ -41,8 +41,8 @@ SubdivisionCurve::SubdivisionCurve(const Settings &settings,
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-static Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
-                            const Vector2DD &c, bool areaWeighted) {
+Vector2DD SubdivisionCurve::calcNormal(const Vector2DD &a, const Vector2DD &b,
+                            const Vector2DD &c, bool areaWeighted) const {
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
@@ -61,7 +61,6 @@ static Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
         t1.normalize();
         t2.normalize();
     }
-    // TODO: check this, does not seem to be symmetric
     return (t1 + t2).normalized();
 }
 
@@ -324,6 +323,10 @@ void SubdivisionCurve::translate(const Vector2DD &translation) {
 
 Conic SubdivisionCurve::getConicAtIndex(int idx) {
     std::vector<PatchPoint> patch;
-    subdivider.extractPatch(netCoords_, netNormals_, idx, patch);
+    subdivider.extractPatch(netCoords_, netNormals_, idx, patch, settings_.patchSize);
     return Conic(patch, settings_);
+}
+
+int SubdivisionCurve::numPoints() const {
+    return subdivisionLevel_ == 0 ? netCoords_.size() : curveCoords_.size();
 }

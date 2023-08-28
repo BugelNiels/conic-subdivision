@@ -77,7 +77,7 @@ Eigen::VectorX<long double> ConicFitter::solveLinSystem(const Eigen::MatrixX<lon
 
 Eigen::VectorX<long double> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
     int numPoints = int(patchPoints.size());
-    numUnknowns_ = 6 + numPoints;
+    numUnknowns_ = 6 + numPoints; // 6 for the conic coefficients + however many normal scaling factors we need to find
 
     numEq_ = numPoints * 3; // 1 eq per coordinate + 2 per normal
     return solveLinSystem(initAEigen(patchPoints));

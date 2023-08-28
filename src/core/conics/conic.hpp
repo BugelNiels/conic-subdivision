@@ -21,13 +21,15 @@ public:
 
     Matrix3DD getMatrix() { return Q_; }
 
+    [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
+    [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p) const;
+
 private:
     long double epsilon_ = 0;
     Matrix3DD Q_;
     double stability_ = 0;
 
-    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints, bool toggle);
+    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
 
-    [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
 
 };

@@ -66,6 +66,8 @@ public:
 
     void translate(const Vector2DD &translation);
 
+    int numPoints() const;
+
 private:
     const Settings &settings_;
     ConicSubdivider subdivider;
@@ -95,4 +97,5 @@ private:
 
     friend class ConicSubdivider;
 
+    Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c, bool areaWeighted) const;
 };

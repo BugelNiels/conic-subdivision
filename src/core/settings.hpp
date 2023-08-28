@@ -26,6 +26,7 @@ typedef struct Settings {
     double middleNormalWeight = 100000.0;
     double outerPointWeight = 1.0;
     double outerNormalWeight = 1.0;
+    int patchSize = 2;
 
     // Calculation settings
     bool circleNormals = false;
@@ -37,6 +38,7 @@ typedef struct Settings {
     bool gravitateSmallerAngles = true;
     double knotTension = 0.8;
     long double epsilon = 1e-40;
+    bool dynamicPatchSize = false;
 
     // UI related constants
     float normalLength = 0.15;

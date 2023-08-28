@@ -5,7 +5,6 @@
 #include "conicfitter.hpp"
 
 #include "src/core/settings.hpp"
-#include "conicfitter2.hpp"
 #include <iostream>
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<long double> &coefs) {
@@ -69,7 +68,7 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorXd &coefs) {
 Conic::Conic(const std::vector<PatchPoint> &patchPoints,
              const Settings &settings)
         : epsilon_(settings.epsilon) {
-    Q_ = fitConic(patchPoints, settings.testToggle);
+    Q_ = fitConic(patchPoints);
 }
 
 /**
@@ -79,14 +78,7 @@ Conic::Conic(const std::vector<PatchPoint> &patchPoints,
  * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
-Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints, bool toggle) {
-    if (toggle) {
-        ConicFitter2 fitter;
-        Eigen::VectorXd foundCoefs = fitter.fitConic(patchPoints);
-        stability_ = fitter.stability();
-        return coefsToMatrix(foundCoefs);
-
-    }
+Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
     ConicFitter fitter;
     Eigen::VectorX<long double> foundCoefs = fitter.fitConic(patchPoints);
     stability_ = fitter.stability();
@@ -94,13 +86,18 @@ Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints, bool toggl
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
+    Vector2DD normal = conicNormal(p);
+    if (normal.dot(rd) < 0.0) {
+        normal *= -1;
+    }
+    return normal;
+}
+
+Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     Vector3DD p3(p.x(), p.y(), 1);
     long double xn = Q_.row(0).dot(p3);
     long double yn = Q_.row(1).dot(p3);
     Vector2DD normal(xn, yn);
-    if (normal.dot(rd) < 0.0) {
-        normal *= -1;
-    }
     return normal;
 }
 
@@ -170,6 +167,10 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t)
     }
     return true;
 #else
+    if(t0 > 0 && t1 > 0) {
+        t = std::min(t0, t1);
+        return true;
+    }
     if(t0 > 0) {
         t = t0;
         return true;

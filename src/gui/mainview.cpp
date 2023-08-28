@@ -75,6 +75,12 @@ void MainView::recalculateCurve() {
     if (subCurve_ == nullptr) {
         return;
     }
+
+    if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
+        Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
+        conicR_.updateBuffers(selectedConic);
+
+    }
     subCurve_->reSubdivide();
     updateBuffers();
 }
@@ -104,7 +110,9 @@ void MainView::paintGL() {
     if (subCurve_ != nullptr) {
         cr_.draw();
         cnr_.draw();
-        conicR_.draw();
+        if (settings_.testToggle) {
+            conicR_.draw();
+        }
     }
 }
 
@@ -142,7 +150,6 @@ bool MainView::attemptVertexSelect(const Vector2DD &scenePos) {
 }
 
 bool MainView::attemptNormalSelect(const Vector2DD &scenePos) {
-    settings_.selectedVertex = -1;
     float maxDist = settings_.selectRadius;
     if (settings_.selectedNormal != -1) {
         // Smaller click radius for easy de-selection of points
@@ -151,6 +158,7 @@ bool MainView::attemptNormalSelect(const Vector2DD &scenePos) {
     // Select control point
     settings_.selectedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
     if (settings_.selectedNormal > -1) {
+        settings_.selectedVertex = -1;
         return true;
     }
     return false;
@@ -190,6 +198,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
                 } else {
                     Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex).getMatrix();
                     conicR_.updateBuffers(selectedConic);
+                    selectedConicIdx_ = settings_.selectedVertex;
                 }
             }
             update();
@@ -402,6 +411,7 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
 
 void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {
     subCurve_ = std::move(newSubCurve);
+    selectedConicIdx_ = -1;
 }
 
 void MainView::recalculateNormals() {

@@ -53,35 +53,8 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     }
     // set new points
     for (int i = 1; i < n; i += 2) {
-        std::vector<PatchPoint> patchPoints;
+        vertexPoint(points, normals, i, newPoints, newNormals);
 
-        extractPatch(points, normals, i / 2, patchPoints);
-
-        int prevIdx = (i - 1 + n) % n;
-        int nextIdx = (i + 1) % n;
-
-        const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0;
-        Vector2DD dir;
-        if (settings_.edgeTangentSample) {
-            dir = newPoints[prevIdx] - newPoints[nextIdx];
-            dir = {-dir.y(), dir.x()};
-        } else {
-            dir = newNormals[prevIdx] + newNormals[nextIdx];
-        }
-        // Note that dir is not normalized!
-        Conic conic(patchPoints, settings_);
-        Vector2DD sampledPoint;
-        Vector2DD sampledNormal;
-        const bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
-
-        if (!valid) {
-            sampledPoint = origin;
-            sampledNormal = dir;
-        }
-
-        newPoints[i] = sampledPoint;
-        newNormals[i] = sampledNormal;
-        newStabilities[i] = conic.getStability();
     }
     if (settings_.recalculateNormals) {
         newNormals = curve_->calcNormals(newPoints);
@@ -94,18 +67,74 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     subdivide(newPoints, newNormals, newStabilities, level - 1);
 }
 
+void
+ConicSubdivider::vertexPoint(const std::vector<Vector2DD> &points,
+                             const std::vector<Vector2DD> &normals,
+                             int i,
+                             std::vector<Vector2DD> &newPoints,
+                             std::vector<Vector2DD> &newNormals) const {
+    int n = newPoints.size();
+    std::vector<PatchPoint> patchPoints;
+    extractPatch(points, normals, i / 2, patchPoints, settings_.patchSize);
+
+    int prevIdx = (i - 1 + n) % n;
+    int nextIdx = (i + 1) % n;
+
+    const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0;
+    Vector2DD dir;
+    if (settings_.edgeTangentSample) {
+        dir = newPoints[prevIdx] - newPoints[nextIdx];
+        dir = {-dir.y(), dir.x()};
+    } else {
+        dir = newNormals[prevIdx] + newNormals[nextIdx];
+    }
+    // Note that dir is not normalized!
+    Conic conic(patchPoints, settings_);
+    Vector2DD sampledPoint;
+    Vector2DD sampledNormal;
+    bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
+
+    if (!valid) {
+        if (settings_.dynamicPatchSize) {
+            int patchSize = settings_.patchSize + 1;
+            int oldPatchSize = patchPoints.size();
+            while (!valid) {
+                patchPoints.clear();
+                extractPatch(points, normals, i / 2, patchPoints, patchSize);
+                if (patchSize > 10 || patchPoints.size() == oldPatchSize) {
+                    sampledPoint = origin;
+                    sampledNormal = dir;
+                    break;
+                }
+                oldPatchSize = patchPoints.size();
+                Conic conic2(patchPoints, settings_);
+                valid = conic2.sample(origin, dir, sampledPoint, sampledNormal);
+                patchSize++;
+            }
+        } else {
+            sampledPoint = origin;
+            sampledNormal = dir;
+        }
+    }
+
+    newPoints[i] = sampledPoint;
+    newNormals[i] = sampledNormal;
+}
+
 
 bool arePointsCollinear(const Vector2DD &p1, const Vector2DD &p2, const Vector2DD &p3) {
     return p1.x() * (p2.y() - p3.y()) + p2.x() * (p3.y() - p1.y()) + p3.x() * (p1.y() - p2.y()) < 0.0001;
 }
 
 
-void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals, int pIdx,
-                                   std::vector<PatchPoint> &patchPoints) const {
+void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points,
+                                   const std::vector<Vector2DD> &normals,
+                                   int pIdx,
+                                   std::vector<PatchPoint> &patchPoints,
+                                   int patchSize) const {
     int size = int(points.size());
 
     if (curve_->isClosed()) {
-
         // Left middle
         int leftMiddleIdx = pIdx;
         bool leftKnotPoint = curve_->knotIndices_.count(leftMiddleIdx) > 0;
@@ -122,69 +151,94 @@ void ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points, const s
                                settings_.middlePointWeight,
                                settings_.middleNormalWeight});
 
-
         if (!leftKnotPoint) {
             int leftOuterIdx = (leftMiddleIdx - 1 + size) % size;
-            patchPoints.push_back({points[leftOuterIdx],
-                                   normals[leftOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
-        } else {
-            int rightOuterIdx = (rightMiddleIdx + 2) % size;
-            patchPoints.push_back({points[rightOuterIdx],
-                                   normals[rightOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
+            for (int i = 1; i < patchSize; ++i) {
+                int idx = (leftMiddleIdx - i + size) % size;
+                if (!areInSameHalfPlane(points[leftMiddleIdx],
+                                        points[rightMiddleIdx],
+                                        points[leftOuterIdx],
+                                        points[idx])) {
+                    break;
+                }
+                patchPoints.push_back({points[idx],
+                                       normals[idx],
+                                       settings_.outerPointWeight,
+                                       settings_.outerNormalWeight});
+            }
         }
 
         if (!rightKnotPoint) {
-            int rightOuterIdx = (rightMiddleIdx + 2) % size;
-            patchPoints.push_back({points[rightOuterIdx],
-                                   normals[rightOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
-        } else {
-            int leftOuterIdx = (leftMiddleIdx - 1 + size) % size;
-            patchPoints.push_back({points[leftOuterIdx],
-                                   normals[leftOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
-
+            int rightOuterIdx = (rightMiddleIdx + 1) % size;
+            for (int i = 1; i < patchSize; ++i) {
+                int idx = (rightMiddleIdx + i) % size;
+                if (!areInSameHalfPlane(points[leftMiddleIdx],
+                                        points[rightMiddleIdx],
+                                        points[rightOuterIdx],
+                                        points[idx])) {
+                    break;
+                }
+                patchPoints.push_back({points[idx],
+                                       normals[idx],
+                                       settings_.outerPointWeight,
+                                       settings_.outerNormalWeight});
+            }
         }
-        // TODO: either re-insert the leftKnotPoint again, or insert 1 point outside the patch (essentially shifting it)
     } else {
-        bool leftKnotPoint = curve_->knotIndices_.count(pIdx) > 0;
-        bool rightKnotPoint = curve_->knotIndices_.count(pIdx + 1) > 0;
-
         // Left middle
         int leftMiddleIdx = pIdx;
+        bool leftKnotPoint = curve_->knotIndices_.count(leftMiddleIdx) > 0;
         patchPoints.push_back({points[leftMiddleIdx],
                                normals[leftMiddleIdx],
                                settings_.middlePointWeight,
                                settings_.middleNormalWeight});
 
         // Right middle
-        int rightMiddleIdx = pIdx + 1;
+        int rightMiddleIdx = (pIdx + 1);
+        bool rightKnotPoint = curve_->knotIndices_.count(rightMiddleIdx) > 0;
         patchPoints.push_back({points[rightMiddleIdx],
                                normals[rightMiddleIdx],
                                settings_.middlePointWeight,
                                settings_.middleNormalWeight});
 
-
-        if (!leftKnotPoint && pIdx > 0) {
-            int leftOuterIdx = pIdx - 1;
-            patchPoints.push_back({points[leftOuterIdx],
-                                   normals[leftOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
+        if (!leftKnotPoint) {
+            int leftOuterIdx = leftMiddleIdx - 1;
+            for (int i = 1; i < patchSize; ++i) {
+                int idx = leftMiddleIdx - i;
+                if (idx < 0 || leftOuterIdx < 0) {
+                    break;
+                }
+                if (!areInSameHalfPlane(points[leftMiddleIdx],
+                                        points[rightMiddleIdx],
+                                        points[leftOuterIdx],
+                                        points[idx])) {
+                    break;
+                }
+                patchPoints.push_back({points[idx],
+                                       normals[idx],
+                                       settings_.outerPointWeight,
+                                       settings_.outerNormalWeight});
+            }
         }
 
-        if (!rightKnotPoint && pIdx < size - 2) {
-            int rightOuterIdx = pIdx + 2;
-            patchPoints.push_back({points[rightOuterIdx],
-                                   normals[rightOuterIdx],
-                                   settings_.outerPointWeight,
-                                   settings_.outerNormalWeight});
+        if (!rightKnotPoint) {
+            int rightOuterIdx = rightMiddleIdx + 1;
+            for (int i = 1; i < patchSize; ++i) {
+                int idx = rightMiddleIdx + i;
+                if (idx >= size || rightOuterIdx >= size) {
+                    break;
+                }
+                if (!areInSameHalfPlane(points[leftMiddleIdx],
+                                        points[rightMiddleIdx],
+                                        points[rightOuterIdx],
+                                        points[idx])) {
+                    break;
+                }
+                patchPoints.push_back({points[idx],
+                                       normals[idx],
+                                       settings_.outerPointWeight,
+                                       settings_.outerNormalWeight});
+            }
         }
     }
 }
@@ -212,7 +266,21 @@ T mix(const T &a, const T &b, long double w) {
     return (1.0 - w) * a + w * b;
 }
 
-void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> &coords, std::vector<Vector2DD> &norms,
+Vector2DD rotate(const Vector2DD &v, double angle) {
+    long double x_new = v.x() * std::cos(angle) - v.y() * std::sin(angle);
+    long double y_new = v.x() * std::sin(angle) + v.y() * std::cos(angle);
+    return Vector2DD(x_new, y_new);
+}
+
+Vector2DD clamp(const Vector2DD &vec, const Vector2DD &a, const Vector2DD &b) {
+    long double clampedX = std::max(std::min(vec.x(), std::max(a.x(), b.x())), std::min(a.x(), b.x()));
+    long double clampedY = std::max(std::min(vec.y(), std::max(a.y(), b.y())), std::min(a.y(), b.y()));
+    return Vector2DD(clampedX, clampedY);
+}
+
+void ConicSubdivider::knotCurve(SubdivisionCurve *curve,
+                                std::vector<Vector2DD> &coords,
+                                std::vector<Vector2DD> &norms,
                                 std::vector<bool> &customNorms) {
 
     curve->knotIndices_.clear();
@@ -236,18 +304,21 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> 
         }
         if (!areInSameHalfPlane(v0, v1, v2, v3)) {
 
-            Vector2DD reflectVec = (v1 - v2).normalized();
-            reflectVec = {-reflectVec.y(), reflectVec.x()};
-            long double angle1 = curve->netNormals_[i].dot(reflectVec);
-            long double angle2 = curve->netNormals_[nextIdx].dot(reflectVec);
+            Vector2DD v1v0 = (v1 - v0).normalized();
+            Vector2DD v1v2 = (v1 - v2).normalized();
+            Vector2DD v3v2 = (v3 - v2).normalized();
+
+            Vector2DD orthogonalV1V2 = {-v1v2.y(), v1v2.x()};
 
             long double ratio = 0.5;
             if (settings_.weightedKnotLocation) {
-                angle1 = (v0 - v1).normalized().dot((v1 - v2).normalized());
-                angle2 = (v3 - v2).normalized().dot((v2 - v1).normalized());
+                long double dot1 = v1v0.dot(orthogonalV1V2);
+                long double dot2 = v3v2.dot(orthogonalV1V2);
+                dot1 = (v0 - v1).normalized().dot((v1 - v2).normalized());
+                dot2 = (v3 - v2).normalized().dot((v2 - v1).normalized());
 
-                long double l1 = std::abs(std::acos(angle1));
-                long double l2 = std::abs(std::acos(angle2));
+                long double l1 = std::abs(std::acos(dot1));
+                long double l2 = std::abs(std::acos(dot2));
                 if (settings_.gravitateSmallerAngles) {
                     ratio = l1 / (l1 + l2);
                 } else {
@@ -257,16 +328,58 @@ void ConicSubdivider::knotCurve(SubdivisionCurve *curve, std::vector<Vector2DD> 
             }
 
             Vector2DD midPoint = mix(v1, v2, ratio);
-            Vector2DD incident = mix(curve->netNormals_[i], curve->netNormals_[nextIdx], ratio).normalized();
-            incident *= -1;
-            incident = angle1 > angle2 ? curve->netNormals_[i] : curve->netNormals_[nextIdx];
 
-            Vector2DD knotNormal = incident - 2 * (incident.dot(reflectVec)) * reflectVec; // reflect
-            knotNormal *= -1;
+
+            Vector2DD diagonal = {1, 1};
+            diagonal.normalize();
+            Vector2DD inflNormalLeft;
+//            Vector2DD normLeft = curve->netNormals_[i].normalized();
+            Vector2DD normLeft = ((v0 - v1).normalized() + (v2 - v1).normalized()).normalized();
+
+            double leftAngle;
+            long double smallestOrthoAngleLeft = std::min(std::abs(std::acos(normLeft.dot(orthogonalV1V2))),
+                                                          std::abs(std::acos(normLeft.dot(-orthogonalV1V2))));
+            long double smallestStraightAngleLeft = std::min(std::abs(std::acos(normLeft.dot(v1v2))),
+                                                             std::abs(std::acos(normLeft.dot(-v1v2))));
+            if (smallestStraightAngleLeft > smallestOrthoAngleLeft) {
+                // The normal makes a sharper angle with the orthogonal vector
+                // Take the normal and reflect it around the orthogonal vector to obtain the left inflection normal
+                inflNormalLeft = normLeft - 2 * (normLeft.dot(orthogonalV1V2)) * orthogonalV1V2;
+                inflNormalLeft *= -1;
+                inflNormalLeft.normalize();
+                leftAngle = smallestOrthoAngleLeft;
+            } else {
+                // The normal makes a sharper angle with the edge itself. Simply rotate by 90 degrees
+                inflNormalLeft = {-normLeft.y(), normLeft.x()};
+                leftAngle = smallestStraightAngleLeft;
+            }
+
+            Vector2DD inflNormalRight;
+//            Vector2DD normRight = curve->netNormals_[nextIdx].normalized();
+            Vector2DD normRight = ((v3 - v2).normalized() + (v1 - v2).normalized()).normalized();
+            double rightAngle;
+
+            long double smallestOrthoAngleRight = std::min(std::abs(std::acos(normRight.dot(orthogonalV1V2))),
+                                                           std::abs(std::acos(normRight.dot(-orthogonalV1V2))));
+            long double smallestStraightAngleRight = std::min(std::abs(std::acos(normRight.dot(v1v2))),
+                                                              std::abs(std::acos(normRight.dot(-v1v2))));
+            if (smallestStraightAngleRight > smallestOrthoAngleRight) {
+                // The normal makes a sharper angle with the orthogonal vector
+                // Take the normal and reflect it around the orthogonal vector to obtain the left inflection normal
+                inflNormalRight = normRight - 2 * (normRight.dot(orthogonalV1V2)) * orthogonalV1V2;
+                inflNormalRight *= -1;
+                inflNormalRight.normalize();
+                rightAngle = smallestOrthoAngleRight;
+            } else {
+                // The normal makes a sharper angle with the edge itself. Simply rotate by 90 degrees
+                inflNormalRight = {normRight.y(), -normRight.x()};
+                rightAngle = smallestStraightAngleRight;
+            }
+            // Take the minimum?
+            Vector2DD knotNormal = leftAngle < rightAngle ? inflNormalLeft : inflNormalRight;
             knotNormal.normalize();
 
-            knotNormal = (1 - settings_.knotTension) * knotNormal + settings_.knotTension * reflectVec;
-            knotNormal.normalize();
+            // save
             coords.emplace_back(midPoint);
             norms.emplace_back(knotNormal);
             customNorms.emplace_back(true);

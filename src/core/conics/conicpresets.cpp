@@ -35,11 +35,11 @@ SubdivisionCurve conics::ConicPresets::getStair() {
     netCoords.emplace_back(-1, 1);
     netCoords.emplace_back(1, 1);
     netCoords.emplace_back(1, -1);
-    netCoords.emplace_back(0.3, -1);
-    netCoords.emplace_back(0.3, -.3);
-    netCoords.emplace_back(-0.3, -.3);
-    netCoords.emplace_back(-0.3, .3);
-    netCoords.emplace_back(-1, .3);
+    netCoords.emplace_back(0.33333, -1);
+    netCoords.emplace_back(0.33333, -.33333);
+    netCoords.emplace_back(-0.33333, -.33333);
+    netCoords.emplace_back(-0.33333, .33333);
+    netCoords.emplace_back(-1, .33333);
     return SubdivisionCurve(settings_, netCoords, true);
 }
 

@@ -51,7 +51,7 @@ void MainWindow::resetView(bool recalculate) {
     if (recalculate) {
         mainView_->recalculateCurve();
     }
-    subdivStepsSpinBox->setValue(0);
+    subdivStepsSpinBox->setVal(0);
 }
 
 
@@ -77,7 +77,7 @@ QDockWidget *MainWindow::initSideMenu() {
         // TODO: extract this
         mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(presetName)));
         presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
-        subdivStepsSpinBox->setValue(0);
+        subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
         mainView_->recalculateCurve();
     });
@@ -98,7 +98,7 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(applySubdivButton, &QPushButton::pressed, [this] {
         mainView_->getSubCurve()->applySubdivision();
         mainView_->recalculateCurve();
-        subdivStepsSpinBox->setValue(0);
+        subdivStepsSpinBox->setVal(0);
     });
     vertLayout->addWidget(applySubdivButton);
 
@@ -125,16 +125,6 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateCurve();
     });
 
-
-    auto *tensionSlider = new DoubleSlider("Tension", 0.8, 0, 1, BoundMode::UPPER_LOWER);
-    tensionSlider->setToolTip(
-            "<html><head/><body><p>Changes how much the normals of newly inserted inflection points gravitate to the normal orthogonal to the edge.</p></body></html>"
-    );
-    connect(tensionSlider, &DoubleSlider::valueUpdated, [this](double value) {
-        settings_.knotTension = value;
-        mainView_->recalculateCurve();
-    });
-
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
     splitConvexityCheckBox->setToolTip(
@@ -142,11 +132,31 @@ QDockWidget *MainWindow::initSideMenu() {
     );
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
     connect(splitConvexityCheckBox, &QCheckBox::toggled,
-            [this, weightedKnotLocation, gravitateAnglesCheckBox, tensionSlider](bool toggled) {
+            [this, weightedKnotLocation, gravitateAnglesCheckBox](bool toggled) {
                 settings_.convexitySplit = toggled;
                 weightedKnotLocation->setEnabled(toggled);
                 gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedKnotLocation);
-                tensionSlider->setEnabled(toggled);
+                mainView_->recalculateCurve();
+            });
+
+    auto *patchSizeSlider = new IntSlider("Patch Size", 2, 1, 5, BoundMode::UPPER_LOWER);
+    patchSizeSlider->setToolTip(
+            "<html><head/><body><p>Changes how much the patch should grow in either direction of the edge. The total size of the patch will be at most 2 times this number.</p></body></html>"
+    );
+    connect(patchSizeSlider, &IntSlider::valueUpdated, [this](int value) {
+        settings_.patchSize = value;
+        mainView_->recalculateCurve();
+    });
+
+    auto *dynamicPatchSizeCheckBox = new QCheckBox("Dynamic Patch Size");
+    dynamicPatchSizeCheckBox->setToolTip(
+            "<html><head/><body><p>If enabled, starting at a patch size of 2, it continuously increases the patch size until a solution is found where all points lie on the same branch of the conic.</body></html>"
+    );
+    dynamicPatchSizeCheckBox->setChecked(settings_.dynamicPatchSize);
+    connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled,
+            [this, patchSizeSlider](bool toggled) {
+                settings_.dynamicPatchSize = toggled;
+                patchSizeSlider->setEnabled(!toggled);
                 mainView_->recalculateCurve();
             });
 
@@ -162,8 +172,12 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(splitConvexityCheckBox);
     vertLayout->addWidget(weightedKnotLocation);
     vertLayout->addWidget(gravitateAnglesCheckBox);
-    vertLayout->addWidget(tensionSlider);
     vertLayout->addWidget(insertKnotsButton);
+
+    vertLayout->addStretch();
+
+    vertLayout->addWidget(patchSizeSlider);
+    vertLayout->addWidget(dynamicPatchSizeCheckBox);
 
     vertLayout->addStretch();
 
@@ -351,7 +365,7 @@ QMenu *MainWindow::getFileMenu() {
         ObjCurveReader reader(settings_);
         mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(reader.loadCurveFromObj(filePath)));
         // TODO: extract function for new curves
-        subdivStepsSpinBox->setValue(0);
+        subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
         mainView_->recalculateCurve();
     });
@@ -401,7 +415,7 @@ QMenu *MainWindow::getPresetMenu() {
             presetName = name;
             mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presets_->getPreset(name)));
             presetLabel->setText(QString("<b>Preset:</b> %1").arg(name));
-            subdivStepsSpinBox->setValue(0);
+            subdivStepsSpinBox->setVal(0);
             closedCurveAction->setChecked(mainView_->getSubCurve()->isClosed());
             mainView_->recalculateCurve();
         });

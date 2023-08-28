@@ -77,13 +77,16 @@ private:
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 
+    void resetViewMatrix();
+
+    void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
+
+    int selectedConicIdx_ = -1;
+
 private slots:
 
     void onMessageLogged(QOpenGLDebugMessage message);
 
 
-    void resetViewMatrix();
-
-    void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
 };
 

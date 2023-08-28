@@ -20,7 +20,8 @@ public:
     void extractPatch(const std::vector<Vector2DD> &points,
                       const std::vector<Vector2DD> &normals,
                       int i,
-                      std::vector<PatchPoint> &patchPoints) const;
+                      std::vector<PatchPoint> &patchPoints,
+                      int patchSize) const;
 
 private:
     const Settings &settings_;
@@ -33,10 +34,11 @@ private:
                    int level);
 
 
-
-
     [[nodiscard]] bool areInSameHalfPlane(const Vector2DD &v0,
                                           const Vector2DD &v1,
                                           const Vector2DD &v2,
                                           const Vector2DD &v3) const;
+
+    void vertexPoint(const std::vector<Vector2DD> &points, const std::vector<Vector2DD> &normals, int i,
+                     std::vector<Vector2DD> &newPoints, std::vector<Vector2DD> &newNormals) const;
 };
