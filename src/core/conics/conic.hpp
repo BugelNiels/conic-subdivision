@@ -6,25 +6,30 @@ class Settings;
 
 class Conic {
 public:
-    Conic(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals,
-          const Settings &settings);
+    Conic(){};
 
-    bool sample(const Vector2DD &origin, const Vector2DD &direction,
-                Vector2DD &point, Vector2DD &normal) const;
+    Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings);
 
-    bool intersects(const Vector2DD &ro, const Vector2DD &rd, double &t) const;
+    bool sample(const Vector2DD &origin,
+                const Vector2DD &direction,
+                Vector2DD &point,
+                Vector2DD &normal) const;
 
-    double getStability() const;
+    bool intersects(const Vector2DD &ro, const Vector2DD &rd, long double &t) const;
+
+    [[nodiscard]] double getStability() const;
+
+    void printConic() const;
+
+    Matrix3DD getMatrix() { return Q_; }
+
+    [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
+    [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p) const;
 
 private:
-    const Settings &settings_;
+    long double epsilon_ = 0;
     Matrix3DD Q_;
     double stability_ = 0;
 
-    Matrix3DD fitConic(const std::vector<Vector2DD> &coords,
-                       const std::vector<Vector2DD> &normals);
-
-    Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
-
-    void printConic() const;
+    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
 };

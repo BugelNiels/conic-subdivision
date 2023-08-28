@@ -5,5 +5,5 @@ in vec4 line_color;
 out vec4 fColor;
 
 void main() {
-  fColor = line_color;
+    fColor = line_color;
 }

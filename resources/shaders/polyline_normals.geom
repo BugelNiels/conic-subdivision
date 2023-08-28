@@ -7,7 +7,6 @@ uniform float curvatureScale;
 
 uniform bool visualize_normals;
 uniform bool visualize_curvature;
-uniform bool stability_colors;
 uniform sampler1D colorMap;
 
 uniform vec3 normalColor;
@@ -17,11 +16,10 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 
 in vec2 norm_vs[];
-in float stability_vs[];
 
 out vec4 line_color;
 
-bool calcNormals = false;
+bool calcNormals = true;
 
 const vec3 curvOutlineCol = vec3(0.66, 0.44, 0.81);
 const vec3 curvLineCol = vec3(0, 1, 0);
@@ -112,7 +110,6 @@ void main() {
     n1 = normalize(n1);
     vec2 n2 = calcNormals ? calcNormal(p1, p2, p3) : -norm_vs[2];
     n2 = normalize(n2);
-
     if (visualize_normals) {
         emitNormal(p0, p1, p2, n1);
         emitNormal(p1, p2, p3, n2);
@@ -128,12 +125,6 @@ void main() {
     }
 
     // Emit the curve itself
-    if (stability_colors) {
-        emitLine(p1, p2, stability_vs[1]);
-        line_color = vec4(lineColor, 1);
-    } else {
-        line_color = vec4(lineColor, 1);
-        emitLine(p1, p2);
-    }
-
+    line_color = vec4(lineColor, 1);
+    emitLine(p1, p2);
 }

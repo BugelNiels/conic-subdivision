@@ -2,44 +2,44 @@
 
 #include <utility>
 
-#include "settings.hpp"
 #include "core/conics/conic.hpp"
-
+#include "settings.hpp"
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
-        : settings_(settings),
-          closed_(true),
-          subdivider(settings_) {
+    : settings_(settings),
+      closed_(true),
+      subdivider(settings_) {}
 
-}
-
-
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords, bool closed)
-        : settings_(settings),
-          closed_(closed),
-          netCoords_(std::move(coords)),
-          subdivider(settings_) {
+SubdivisionCurve::SubdivisionCurve(const Settings &settings,
+                                   std::vector<Vector2DD> coords,
+                                   bool closed)
+    : settings_(settings),
+      closed_(closed),
+      netCoords_(std::move(coords)),
+      subdivider(settings_) {
     netNormals_ = calcNormals(netCoords_);
     customNormals_.resize(netNormals_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-
-SubdivisionCurve::SubdivisionCurve(const Settings &settings, std::vector<Vector2DD> coords,
+SubdivisionCurve::SubdivisionCurve(const Settings &settings,
+                                   std::vector<Vector2DD> coords,
                                    std::vector<Vector2DD> normals,
                                    bool closed)
-        : settings_(settings),
-          closed_(closed),
-          netCoords_(std::move(coords)),
-          netNormals_(std::move(normals)),
-          subdivider(settings_) {
+    : settings_(settings),
+      closed_(closed),
+      netCoords_(std::move(coords)),
+      netNormals_(std::move(normals)),
+      subdivider(settings_) {
     int size = netCoords_.size();
     customNormals_.resize(size);
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
-                     const Vector2DD &c, bool areaWeighted) {
+Vector2DD SubdivisionCurve::calcNormal(const Vector2DD &a,
+                                       const Vector2DD &b,
+                                       const Vector2DD &c,
+                                       bool areaWeighted) const {
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
@@ -58,12 +58,10 @@ Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b,
         t1.normalize();
         t2.normalize();
     }
-
     return (t1 + t2).normalized();
 }
 
-std::vector<Vector2DD> SubdivisionCurve::calcNormals(
-        const std::vector<Vector2DD> &coords) const {
+std::vector<Vector2DD> SubdivisionCurve::calcNormals(const std::vector<Vector2DD> &coords) const {
     std::vector<Vector2DD> normals;
     int n = int(coords.size());
     normals.resize(n);
@@ -73,9 +71,9 @@ std::vector<Vector2DD> SubdivisionCurve::calcNormals(
     return normals;
 }
 
-Vector2DD
-SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords, const std::vector<Vector2DD> &normals,
-                                    int i) const {
+Vector2DD SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
+                                              const std::vector<Vector2DD> &normals,
+                                              int i) const {
     int n = int(normals.size());
     int nextIdx;
     int prevIdx;
@@ -99,16 +97,16 @@ SubdivisionCurve::calcNormalAtIndex(const std::vector<Vector2DD> &coords, const 
             normal.x() *= -1;
             return Vector2DD(normal.y(), normal.x()).normalized();
         } else {
-            double d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) +
-                            c.x() * (a.y() - b.y()));
-            double ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
-                        d;
-            double uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
-                        d;
+            long double d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) +
+                                 c.x() * (a.y() - b.y()));
+            long double ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
+                              (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
+                              (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
+                             d;
+            long double uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
+                              (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
+                              (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
+                             d;
             Vector2DD oscCircleCenter = Vector2DD(ux, uy);
             Vector2DD norm = (oscCircleCenter - b).normalized();
 
@@ -203,7 +201,7 @@ int SubdivisionCurve::getPrevIdx(int idx) const {
     return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
-double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
+static double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
     Vector2DD AB = B - A;
     Vector2DD AP = P - A;
     double AB_len2 = AB.squaredNorm();
@@ -271,7 +269,6 @@ void SubdivisionCurve::recalculateNormal(int idx) {
     netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
 }
 
-
 bool SubdivisionCurve::isClosed() const {
     return closed_;
 }
@@ -297,20 +294,15 @@ void SubdivisionCurve::applySubdivision() {
     subdivisionLevel_ = 0;
 }
 
-void SubdivisionCurve::insertKnots() {
+void SubdivisionCurve::insertInflPoints() {
     std::vector<Vector2DD> coords;
     std::vector<Vector2DD> norms;
     std::vector<bool> customNorms;
-    subdivider.knotCurve(this, coords, norms, customNorms);
+    subdivider.insertInflPoints(this, coords, norms, customNorms);
 
     netCoords_ = coords;
     netNormals_ = norms;
     customNormals_ = customNorms;
-
-}
-
-std::vector<double> SubdivisionCurve::getStabilityVals() const {
-    return subdivider.getStabilityVals();
 }
 
 void SubdivisionCurve::translate(const Vector2DD &translation) {
@@ -318,4 +310,16 @@ void SubdivisionCurve::translate(const Vector2DD &translation) {
         c += translation;
     }
     reSubdivide();
+}
+
+Conic SubdivisionCurve::getConicAtIndex(int idx) {
+    std::vector<PatchPoint> patch = subdivider.extractPatch(netCoords_,
+                                                            netNormals_,
+                                                            idx,
+                                                            settings_.patchSize);
+    return Conic(patch, settings_);
+}
+
+int SubdivisionCurve::numPoints() const {
+    return subdivisionLevel_ == 0 ? netCoords_.size() : curveCoords_.size();
 }

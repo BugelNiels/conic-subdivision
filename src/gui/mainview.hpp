@@ -1,17 +1,17 @@
 #pragma once
 
-#include <QOpenGLWidget>
 #include <QOpenGLDebugLogger>
+#include <QOpenGLWidget>
 
-#include "ui/renderers/curvenetrenderer.hpp"
-#include "ui/renderers/curverenderer.hpp"
+#include "gui/renderers/conicrenderer.hpp"
+#include "gui/renderers/curvenetrenderer.hpp"
+#include "gui/renderers/curverenderer.hpp"
 #include "util/vector.hpp"
-
 
 class SubdivisionCurve;
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     explicit MainView(Settings &settings, QWidget *parent = nullptr);
@@ -56,11 +56,11 @@ protected:
 private:
     Settings &settings_;
 
-
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
     CurveNetRenderer cnr_;
     CurveRenderer cr_;
+    ConicRenderer conicR_;
 
     std::shared_ptr<SubdivisionCurve> subCurve_;
 
@@ -75,13 +75,13 @@ private:
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 
-private slots:
-
-    void onMessageLogged(QOpenGLDebugMessage message);
-
-
     void resetViewMatrix();
 
     void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
-};
 
+    int selectedConicIdx_ = -1;
+
+private slots:
+
+    void onMessageLogged(QOpenGLDebugMessage message);
+};

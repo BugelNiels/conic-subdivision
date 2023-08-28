@@ -7,7 +7,6 @@ uniform float curvatureScale;
 
 uniform bool visualize_normals;
 uniform bool visualize_curvature;
-uniform bool stability_colors;
 uniform sampler1D colorMap;
 
 uniform vec3 normalColor;
@@ -18,13 +17,12 @@ uniform mat4 viewMatrix;
 
 in dvec2 coords_dvs[];
 in vec2 norm_vs[];
-in float stability_vs[];
 
 out vec4 line_color;
 
 bool calcNormals = false;
 
-const vec3 curvOutlineCol = vec3(168f/255f, 113/255f, 208/255f);
+const vec3 curvOutlineCol = vec3(0.66, 0.44, 0.81);
 const vec3 curvLineCol = vec3(0, 1, 0);
 const vec3 curvLineCol2 = vec3(0.95);
 
@@ -64,7 +62,7 @@ void emitLine(vec4 b, vec4 a, float u) {
     EndPrimitive();
 }
 
-void emitNormal(vec4 a, vec4 b, vec4 c, vec2 norm) {
+void emitNormal(vec4 a, vec4 b, vec4 c, dvec2 norm) {
 
     vec4 norm4 = vec4(norm, 0, 0);
 
@@ -84,7 +82,7 @@ float calcCurvature(vec4 a, vec4 b, vec4 c) {
     return curvature;
 }
 
-float calcCurvature(dvec2 a, dvec2 b, dvec2 c) {
+double calcCurvatureDouble(dvec2 a, dvec2 b, dvec2 c) {
     dvec2 ab = a - b;
     dvec2 cb = c - b;
 
@@ -92,7 +90,7 @@ float calcCurvature(dvec2 a, dvec2 b, dvec2 c) {
     double normCB = length(cb);
 
     double curvature = 2.0 * length(cross(dvec3(ab, 0.0), dvec3(cb, 0.0))) / (normAB * normCB * (normAB + normCB));
-    return float(curvature);
+    return curvature;
 }
 
 vec2 calcNormal(vec4 a, vec4 b, vec4 c) {
@@ -100,12 +98,17 @@ vec2 calcNormal(vec4 a, vec4 b, vec4 c) {
     return normal;
 }
 
-vec4 calcToothTip(vec4 a, vec4 b, vec4 c, vec2 normal, float curvature) {
-    float curvatureVisualisationSize = 0.05 * curvatureScale;
+dvec2 calcNormal(dvec2 a, dvec2 b, dvec2 c) {
+    dvec2 normal = normalize(b - (b + normalize(c - b) + normalize(a - b)));
+    return normal;
+}
+
+vec4 calcToothTip(vec4 a, vec4 b, vec4 c, dvec2 normal, double curvature) {
+    double curvatureVisualisationSize = 0.05 * curvatureScale;
     vec4 toothTip = b;
     if (length(normal) > 0) {
-        vec2 offset = normal * curvature * curvatureVisualisationSize;
-        toothTip.xy += offset;
+        dvec2 offset = normal * curvature * curvatureVisualisationSize;
+        toothTip.xy += vec2(offset);
     }
     return toothTip;
 }
@@ -124,9 +127,18 @@ void main() {
 
 
     line_color = vec4(lineColor, 1);
-    vec2 n1 = calcNormals ? calcNormal(p0, p1, p2) : -norm_vs[1];
+    dvec2 nc1 = calcNormal(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
+    dvec2 n1 = calcNormals ? nc1 : dvec2(-norm_vs[1]);
+    if (dot(n1, nc1) < 0) {
+        n1 *= -1;
+    }
+
     n1 = normalize(n1);
-    vec2 n2 = calcNormals ? calcNormal(p1, p2, p3) : -norm_vs[2];
+    dvec2 nc2 = calcNormal(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
+    dvec2 n2 = calcNormals ? nc2 : dvec2(-norm_vs[2]);
+    if (dot(n2, nc2) < 0) {
+        n2 *= -1;
+    }
     n2 = normalize(n2);
     if (visualize_normals) {
         emitNormal(p0, p1, p2, n1);
@@ -135,10 +147,10 @@ void main() {
 
     if (visualize_curvature) {
         line_color = vec4(curvLineCol, 1.0);
-        float curv1 = calcCurvature(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
-        vec4 firstToothTip = calcToothTip(p0, p1, p2, n1, curv1);
+        double curv1 = calcCurvatureDouble(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
+        double curv2 = calcCurvatureDouble(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
 
-        float curv2 = calcCurvature(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
+        vec4 firstToothTip = calcToothTip(p0, p1, p2, n1, curv1);
         vec4 secondToothTip = calcToothTip(p1, p2, p3, n2, curv2);
         emitLine(p2, secondToothTip, curvLineCol2, curvLineCol);
         line_color = vec4(curvOutlineCol, 1.0);
@@ -146,13 +158,6 @@ void main() {
     }
 
     // Emit the curve itself
-    if (stability_colors) {
-        emitLine(p1, p2, stability_vs[1]);
-        line_color = vec4(lineColor, 1);
-    } else {
-        line_color = vec4(lineColor, 1);
-        emitLine(vec4(coords_dvs[1], 0, 0), vec4(coords_dvs[2], 0, 0));
-//        emitLine(p1, p2);
-    }
-
+    line_color = vec4(lineColor, 1);
+    emitLine(p1, p2);
 }

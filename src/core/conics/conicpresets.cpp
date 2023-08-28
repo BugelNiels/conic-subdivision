@@ -15,7 +15,6 @@ conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(setting
     presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8, 0.3));
 }
 
-
 conics::ConicPresets::~ConicPresets() = default;
 
 SubdivisionCurve conics::ConicPresets::getBlank() {
@@ -35,11 +34,11 @@ SubdivisionCurve conics::ConicPresets::getStair() {
     netCoords.emplace_back(-1, 1);
     netCoords.emplace_back(1, 1);
     netCoords.emplace_back(1, -1);
-    netCoords.emplace_back(0.3, -1);
-    netCoords.emplace_back(0.3, -.3);
-    netCoords.emplace_back(-0.3, -.3);
-    netCoords.emplace_back(-0.3, .3);
-    netCoords.emplace_back(-1, .3);
+    netCoords.emplace_back(0.33333, -1);
+    netCoords.emplace_back(0.33333, -.33333);
+    netCoords.emplace_back(-0.33333, -.33333);
+    netCoords.emplace_back(-0.33333, .33333);
+    netCoords.emplace_back(-1, .33333);
     return SubdivisionCurve(settings_, netCoords, true);
 }
 
@@ -144,11 +143,15 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, d
     return {settings_, netCoords, netNormals};
 }
 
-
 SubdivisionCurve conics::ConicPresets::getPreset(const QString &name) const {
-    return *presets_[name];
+    return *presets_.at(name);
 }
 
-QList<QString> conics::ConicPresets::getPresetNames() const {
-    return presets_.keys();
+std::vector<QString> conics::ConicPresets::getPresetNames() const {
+    std::vector<QString> keys;
+    keys.reserve(presets_.size());
+    for (const auto &[key, value]: presets_) {
+        keys.emplace_back(key);
+    }
+    return keys;
 }

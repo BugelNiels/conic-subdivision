@@ -1,44 +1,44 @@
 #pragma once
 
-#include <QString>
-#include <QMap>
 #include "src/core/subdivisioncurve.hpp"
+#include <QMap>
+#include <QString>
 
 namespace conics {
 
-    class ConicPresets {
+class ConicPresets {
 
-    public:
-        explicit ConicPresets(const Settings &settings);
+public:
+    explicit ConicPresets(const Settings &settings);
 
-        ~ConicPresets();
+    ~ConicPresets();
 
-        SubdivisionCurve getPreset(const QString &name) const;
+    [[nodiscard]] SubdivisionCurve getPreset(const QString &name) const;
 
-        QList<QString> getPresetNames() const;
+    [[nodiscard]] std::vector<QString> getPresetNames() const;
 
-    private:
-        const Settings &settings_;
+private:
+    const Settings &settings_;
 
-        QMap<QString, std::shared_ptr<SubdivisionCurve>> presets_;
+    std::map<QString, std::shared_ptr<SubdivisionCurve>> presets_;
 
-        SubdivisionCurve getPentagon();
+    SubdivisionCurve getPentagon();
 
-        SubdivisionCurve getBasis();
+    SubdivisionCurve getBasis();
 
-        SubdivisionCurve getG();
+    SubdivisionCurve getG();
 
-        SubdivisionCurve getCircle(int numPoints, double radius);
+    SubdivisionCurve getCircle(int numPoints, double radius);
 
-        SubdivisionCurve getEllipse(int numPoints, double width, double height);
+    SubdivisionCurve getEllipse(int numPoints, double width, double height);
 
-        SubdivisionCurve getBlank();
+    SubdivisionCurve getBlank();
 
-        SubdivisionCurve getLine();
+    SubdivisionCurve getLine();
 
-        SubdivisionCurve getStair();
+    SubdivisionCurve getStair();
 
-        SubdivisionCurve getStar();
-    };
+    SubdivisionCurve getStar();
+};
 
-} // conics
+} // namespace conics
