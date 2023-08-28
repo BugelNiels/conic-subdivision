@@ -61,13 +61,6 @@ QDockWidget *MainWindow::initSideMenu() {
 
     presetLabel = new QLabel("Preset: ");
     vertLayout->addWidget(presetLabel);
-    vertLayout->addStretch();
-
-    auto *recalcButton = new QPushButton("Reset Normals");
-    connect(recalcButton, &QPushButton::pressed, this, [this] {
-        mainView_->recalculateNormals();
-    });
-    vertLayout->addWidget(recalcButton);
     auto *resetPresetButton = new QPushButton("Reset Preset");
     connect(resetPresetButton, &QPushButton::pressed, this, [this] {
         // TODO: extract this
@@ -81,7 +74,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Subdivision Steps"));
-    subdivStepsSpinBox = new IntSlider("Steps", 0, 0, 8, BoundMode::UPPER_LOWER);
+    subdivStepsSpinBox = new IntSlider("Steps", 0, 0, 8, BoundMode::LOWER_ONLY);
     connect(subdivStepsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
         mainView_->subdivideCurve(numSteps);
         mainView_->updateBuffers();
@@ -97,6 +90,7 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(applySubdivButton);
 
+#ifndef NDEBUG
     auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
     gravitateAnglesCheckBox->setToolTip(
             "<html><head/><body><p>If enabled, the weighted inflection point locations gravitate "
@@ -104,23 +98,23 @@ QDockWidget *MainWindow::initSideMenu() {
             "lets the weighted inflection points gravitate towards the vertex having the largest "
             "angle.</body></html>");
     gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
-    gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
+    gravitateAnglesCheckBox->setEnabled(settings_.weightedInflPointLocation);
     connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         settings_.gravitateSmallerAngles = toggled;
         mainView_->recalculateCurve();
     });
 
-    auto *weightedKnotLocation = new QCheckBox("Weighted Inflection Points");
-    weightedKnotLocation->setToolTip(
+    auto *weightedInflPointLoc = new QCheckBox("Weighted Inflection Points");
+    weightedInflPointLoc->setToolTip(
             "<html><head/><body><p>If enabled, does not insert the inflection points in the "
             "midpoint of each edge, but instead lets the position depend on the ratio between the "
             "the two outgoing edges.</body></html>");
-    weightedKnotLocation->setChecked(settings_.weightedKnotLocation);
-    connect(weightedKnotLocation,
+    weightedInflPointLoc->setChecked(settings_.weightedInflPointLocation);
+    connect(weightedInflPointLoc,
             &QCheckBox::toggled,
             [this, gravitateAnglesCheckBox](bool toggled) {
-                settings_.weightedKnotLocation = toggled;
-                gravitateAnglesCheckBox->setEnabled(settings_.weightedKnotLocation);
+                settings_.weightedInflPointLocation = toggled;
+                gravitateAnglesCheckBox->setEnabled(settings_.weightedInflPointLocation);
                 mainView_->recalculateCurve();
             });
 
@@ -131,12 +125,16 @@ QDockWidget *MainWindow::initSideMenu() {
     splitConvexityCheckBox->setChecked(settings_.convexitySplit);
     connect(splitConvexityCheckBox,
             &QCheckBox::toggled,
-            [this, weightedKnotLocation, gravitateAnglesCheckBox](bool toggled) {
+            [this, weightedInflPointLoc, gravitateAnglesCheckBox](bool toggled) {
                 settings_.convexitySplit = toggled;
-                weightedKnotLocation->setEnabled(toggled);
-                gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedKnotLocation);
+                weightedInflPointLoc->setEnabled(toggled);
+                gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedInflPointLocation);
                 mainView_->recalculateCurve();
             });
+    vertLayout->addWidget(splitConvexityCheckBox);
+    vertLayout->addWidget(weightedInflPointLoc);
+    vertLayout->addWidget(gravitateAnglesCheckBox);
+#endif
 
     auto *patchSizeSlider = new IntSlider("Patch Size", 2, 1, 5, BoundMode::UPPER_LOWER);
     patchSizeSlider->setToolTip("<html><head/><body><p>Changes how much the patch should grow in "
@@ -153,24 +151,20 @@ QDockWidget *MainWindow::initSideMenu() {
             "increases the patch size until a solution is found where all points lie on the same "
             "branch of the conic.</body></html>");
     dynamicPatchSizeCheckBox->setChecked(settings_.dynamicPatchSize);
-    connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled, [this, patchSizeSlider](bool toggled) {
+    connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         settings_.dynamicPatchSize = toggled;
-        patchSizeSlider->setEnabled(!toggled);
         mainView_->recalculateCurve();
     });
 
-    auto *insertKnotsButton = new QPushButton("Insert Inflection Points");
-    insertKnotsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points "
+    auto *insertInflPointsButton = new QPushButton("Insert Inflection Points");
+    insertInflPointsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points "
                                   "points to improve convexity properties.</body></html>");
-    connect(insertKnotsButton, &QPushButton::pressed, [this] {
-        mainView_->getSubCurve()->insertKnots();
+    connect(insertInflPointsButton, &QPushButton::pressed, [this] {
+        mainView_->getSubCurve()->insertInflPoints();
         mainView_->recalculateCurve();
     });
 
-    vertLayout->addWidget(splitConvexityCheckBox);
-    vertLayout->addWidget(weightedKnotLocation);
-    vertLayout->addWidget(gravitateAnglesCheckBox);
-    vertLayout->addWidget(insertKnotsButton);
+    vertLayout->addWidget(insertInflPointsButton);
 
     vertLayout->addStretch();
 
@@ -251,6 +245,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(midNormWeightSpinBox);
 
     vertLayout->addStretch();
+#ifndef NDEBUG
     auto *testToggleCheckBox = new QCheckBox("Test Toggle");
     testToggleCheckBox->setChecked(settings_.testToggle);
     connect(testToggleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
@@ -259,6 +254,14 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(testToggleCheckBox);
     vertLayout->addStretch();
+#endif
+
+
+    auto *recalcButton = new QPushButton("Reset Normals");
+    connect(recalcButton, &QPushButton::pressed, this, [this] {
+        mainView_->recalculateNormals();
+    });
+    vertLayout->addWidget(recalcButton);
 
     auto *regularNormalsRadioButton = new QRadioButton("Regular Normals");
     regularNormalsRadioButton->setToolTip(
@@ -282,7 +285,7 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(lengthWeightedRadioButton);
-
+#ifndef NDEBUG
     auto *circleNormsRadioButton = new QRadioButton("Circle Normals");
     circleNormsRadioButton->setToolTip("<html><head/><body><p>Estimate the normals using "
                                        "oscilating circles.</p></body></html>");
@@ -292,34 +295,7 @@ QDockWidget *MainWindow::initSideMenu() {
         mainView_->recalculateNormals();
     });
     vertLayout->addWidget(circleNormsRadioButton);
-
-    vertLayout->addStretch();
-
-    auto *recalcNormsCheckBox = new QCheckBox("Recalculate Normals");
-    recalcNormsCheckBox->setToolTip(
-            "<html><head/><body><p>If this option is enabled, the normals will be re-evaluated at "
-            "every step. If this option is disabled, the vertex points will keep their normals. "
-            "Any new edge points will obtain the normal of the conic they were sampled "
-            "from.</p></body></html>");
-    recalcNormsCheckBox->setChecked(settings_.recalculateNormals);
-    connect(recalcNormsCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.recalculateNormals = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(recalcNormsCheckBox);
-
-    auto *edgeSampleCheckBox = new QCheckBox("Edge Normal");
-    edgeSampleCheckBox->setToolTip(
-            "<html><head/><body><p>If enabled, uses a ray perpendicular to the edge to intersect "
-            "with the conic and sample the new point from. If disabled, uses the average of the "
-            "edge point normals.</p><p><br/></p><p>In both cases, the ray originates from the "
-            "middle of the edge.</p></body></html>");
-    edgeSampleCheckBox->setChecked(settings_.edgeTangentSample);
-    connect(edgeSampleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.edgeTangentSample = toggled;
-        mainView_->recalculateCurve();
-    });
-    vertLayout->addWidget(edgeSampleCheckBox);
+#endif
     vertLayout->addStretch();
 
     auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale",

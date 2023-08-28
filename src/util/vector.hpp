@@ -15,3 +15,9 @@ typedef struct PatchPoint {
     double pointWeight;
     double normWeight;
 } PatchPoint;
+
+
+template<typename T>
+T mix(const T &a, const T &b, long double w) {
+    return (1.0 - w) * a + w * b;
+}

@@ -65,7 +65,7 @@ public:
 
     void setClosed(bool closed);
 
-    void insertKnots();
+    void insertInflPoints();
 
     void applySubdivision();
 
@@ -83,7 +83,7 @@ private:
     std::vector<Vector2DD> curveCoords_;
     std::vector<Vector2DD> curveNormals_;
     std::vector<bool> customNormals_;
-    std::set<int> knotIndices_;
+    std::set<int> inflPointsIndices_;
 
     std::vector<Vector2DD> netCoords_;
     std::vector<Vector2DD> netNormals_;

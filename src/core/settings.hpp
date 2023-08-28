@@ -29,13 +29,10 @@ typedef struct Settings {
 
     // Calculation settings
     bool circleNormals = false;
-    bool recalculateNormals = false;
-    bool edgeTangentSample = true;
     bool convexitySplit = true;
     bool areaWeightedNormals = true;
-    bool weightedKnotLocation = false;
+    bool weightedInflPointLocation = false;
     bool gravitateSmallerAngles = true;
-    double knotTension = 0.8;
     long double epsilon = 1e-40;
     bool dynamicPatchSize = true;
 

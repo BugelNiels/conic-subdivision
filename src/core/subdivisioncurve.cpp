@@ -294,11 +294,11 @@ void SubdivisionCurve::applySubdivision() {
     subdivisionLevel_ = 0;
 }
 
-void SubdivisionCurve::insertKnots() {
+void SubdivisionCurve::insertInflPoints() {
     std::vector<Vector2DD> coords;
     std::vector<Vector2DD> norms;
     std::vector<bool> customNorms;
-    subdivider.knotCurve(this, coords, norms, customNorms);
+    subdivider.insertInflPoints(this, coords, norms, customNorms);
 
     netCoords_ = coords;
     netNormals_ = norms;
@@ -313,8 +313,10 @@ void SubdivisionCurve::translate(const Vector2DD &translation) {
 }
 
 Conic SubdivisionCurve::getConicAtIndex(int idx) {
-    std::vector<PatchPoint> patch;
-    subdivider.extractPatch(netCoords_, netNormals_, idx, patch, settings_.patchSize);
+    std::vector<PatchPoint> patch = subdivider.extractPatch(netCoords_,
+                                                            netNormals_,
+                                                            idx,
+                                                            settings_.patchSize);
     return Conic(patch, settings_);
 }
 
