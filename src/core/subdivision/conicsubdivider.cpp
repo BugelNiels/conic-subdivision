@@ -273,12 +273,10 @@ void ConicSubdivider::insertInflPoints(SubdivisionCurve *curve,
 
             auto [inflNormalLeft, leftAngle] = inflNormal(v0v1, -v1v2, orthogonalV1V2);
             auto [inflNormalRight, rightAngle] = inflNormal(v3v2, v1v2, orthogonalV1V2);
-
             // The location is the midpoint of the edge
             const Vector2DD midPoint = mix(v1, v2, ratio);
             // The normal is the normal of either of the edge point normals resulting in the least curvature change (i.e. the flattest curve)
             const Vector2DD inflNormal = leftAngle < rightAngle ? inflNormalLeft : inflNormalRight;
-
             // save
             coords.emplace_back(midPoint);
             norms.emplace_back(inflNormal);
@@ -292,22 +290,18 @@ void ConicSubdivider::insertInflPoints(SubdivisionCurve *curve,
 std::pair<Vector2DD, real_t> ConicSubdivider::inflNormal(const Vector2DD &edgeAB,
                                                          const Vector2DD &edgeBC,
                                                          const Vector2DD &orthogonal) const {
-    const Vector2DD pointNormal = (edgeAB.normalized() + edgeBC.normalized()).normalized();
-    const real_t smallestOrthoAngle = std::min(std::abs(std::acos(pointNormal.dot(orthogonal))),
-                                               std::abs(std::acos(pointNormal.dot(-orthogonal))));
-    const real_t smallestEdgeAngle = std::min(std::abs(std::acos(pointNormal.dot(edgeBC))),
-                                              std::abs(std::acos(pointNormal.dot(-edgeBC))));
-    Vector2DD normal;
-    if (smallestEdgeAngle > smallestOrthoAngle) {
-        // The normal makes a sharper angle with the orthogonal vector
-        // Take the normal and reflect it around the orthogonal vector to obtain the left inflection normal
-        normal = pointNormal - 2 * (pointNormal.dot(orthogonal)) * orthogonal;
-        normal *= -1;
-        normal.normalize();
-    } else {
-        // The normal makes a sharper angle with the edge itself. Simply rotate by 90 degrees
-        normal = {-pointNormal.y(), pointNormal.x()};
-    }
+    // angle is between is between pi and 0
+    const real_t angle = std::acos(edgeAB.normalized().dot(edgeBC.normalized()));
+    //               angle  / M_PI        is between 1 and 0
+    //               angle  / M_PI - 0.5  is between 0.5 and -0.5
+    //      std::abs(angle) / M_PI - 0.5) is between 0.5 and 0
+    // 0.5  std::abs(angle) / M_PI - 0.5) is between 0 and 0.5
+    const real_t gamma = 0.5 - std::abs(angle / M_PI - 0.5);
+    // Set the normal in the correct direction to ensure the inflection normal makes the correct angle
+    const auto reflectFlatNormal = edgeAB.dot(orthogonal) < 0 ? edgeBC : -edgeBC;
+    // linear blend, gamma is in the range [0,0.5]
+    Vector2DD normal = mix(orthogonal, reflectFlatNormal, gamma).normalized();
+
     // Make sure we use the orthogonal vector pointing in the same general direction as the normal
     const Vector2DD correctedOrtho = normal.dot(orthogonal) < 0 ? -orthogonal : orthogonal;
     if (settings_.areaWeightedNormals) {
@@ -317,6 +311,6 @@ std::pair<Vector2DD, real_t> ConicSubdivider::inflNormal(const Vector2DD &edgeAB
         normal = mix(normal, correctedOrtho, lr);
     }
     // The angle the normal makes with the orthogonal vector
-    const real_t angle = std::abs(std::acos(normal.dot(correctedOrtho)));
-    return {normal, angle};
+    const real_t angleOrtho = std::abs(std::acos(normal.dot(correctedOrtho)));
+    return {normal, angleOrtho};
 }

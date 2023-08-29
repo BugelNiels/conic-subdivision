@@ -24,7 +24,7 @@ using Settings = struct Settings {
     // Calculation Weights
     real_t middlePointWeight = 100000.0;
     real_t middleNormalWeight = 100000.0;
-    real_t outerPointWeight = 10.0;
+    real_t outerPointWeight = 100.0;
     real_t outerNormalWeight = 1.0;
     int patchSize = 2;
 
