@@ -1,10 +1,18 @@
 #include "mainview.hpp"
 
 #include "core/settings.hpp"
+#include "qmessagebox.h"
 #include "src/core/subdivisioncurve.hpp"
 #include <QMouseEvent>
 #include <QOpenGLVersionFunctionsFactory>
 #include <utility>
+
+#include <fstream>
+#include <iostream>
+#include "util/vector.hpp"
+#include <Eigen/Core>
+
+#include <iomanip>
 
 MainView::MainView(Settings &settings, QWidget *parent)
     : QOpenGLWidget(parent),
@@ -253,8 +261,11 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             }
             if (settings_.selectedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
-                // Update position of the control point
+                // Update position of the control normal
                 subCurve_->setNormalPosition(settings_.selectedNormal, scenePos);
+                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedNormal)
+                                                  .getMatrix();
+                conicR_.updateBuffers(selectedConic);
                 updateBuffers();
             }
             break;
@@ -435,4 +446,82 @@ void MainView::recalculateNormals() {
 
 const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
     return subCurve_;
+}
+
+bool MainView::saveCurve(const char *fileName) {
+
+    std::shared_ptr<SubdivisionCurve> crv;
+    crv = getSubCurve();
+    std::ofstream file;
+    file.open(fileName);
+
+    int prec = 16;
+
+    if(!file.is_open())
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Could not open file!");
+        msgBox.exec();
+        return false;
+    }
+    else
+    {
+//        file << "Curve data: x and y coordinates only" << std::endl;
+
+        std::vector<Vector2DD> coords;
+        coords = crv->getCurveCoords();
+
+        for (int i = 0; i < coords.size(); i++)
+        {
+            file << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed << std::setprecision(prec) << coords[i].y() << std::endl;
+        }
+        if (crv->isClosed())
+        {
+            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
+        }
+
+    }
+    file.close();
+    return true;
+}
+
+bool MainView::saveCurveN(const char *fileName) {
+
+    std::shared_ptr<SubdivisionCurve> crv;
+    crv = getSubCurve();
+    std::ofstream file;
+    file.open(fileName);
+
+    int prec = 16;
+
+    if(!file.is_open())
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Could not open file!");
+        msgBox.exec();
+        return false;
+    }
+    else
+    {
+        std::vector<Vector2DD> coords;
+        std::vector<Vector2DD> normals;
+        coords = crv->getCurveCoords();
+        normals = crv->getCurveNormals();
+
+        for (int i = 0; i < coords.size(); i++)
+        {
+            file << "v " << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed << std::setprecision(prec) << coords[i].y() << std::endl;
+        }
+        for (int i = 0; i < normals.size(); i++)
+        {
+            file << "vn " << std::fixed << std::setprecision(prec) << normals[i].x() << " " << std::fixed << std::setprecision(prec) << normals[i].y() << std::endl;
+        }
+//        if (crv->isClosed())
+//        {
+//            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
+//        }
+
+    }
+    file.close();
+    return true;
 }

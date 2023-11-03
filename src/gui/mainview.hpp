@@ -32,6 +32,9 @@ public:
 
     const std::shared_ptr<SubdivisionCurve> &getSubCurve() const;
 
+    bool saveCurve(const char *fileName);
+    bool saveCurveN(const char *fileName);
+
 protected:
     void initializeGL() override;
 

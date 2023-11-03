@@ -180,7 +180,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                    settings_.middlePointWeight,
                                                    0,
                                                    maxWeight);
-    edgeVertWeightSpinBox->setStepSize(1.0);
+//    edgeVertWeightSpinBox->setStepSize(1.0);
     edgeVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
             "font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the "
@@ -196,7 +196,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                   settings_.outerPointWeight,
                                                   0,
                                                   maxWeight);
-    midVertWeightSpinBox->setStepSize(1.0);
+//    midVertWeightSpinBox->setStepSize(1.0);
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
             "font-weight:600;&quot;>b</span>-c<span style=&quot; "
@@ -216,7 +216,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                    settings_.middleNormalWeight,
                                                    0,
                                                    maxWeight);
-    edgeNormWeightSpinBox->setStepSize(1.0);
+//    edgeNormWeightSpinBox->setStepSize(1.0);
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
             "font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the "
@@ -232,7 +232,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                   settings_.outerNormalWeight,
                                                   0,
                                                   maxWeight);
-    midNormWeightSpinBox->setStepSize(1.0);
+//    midNormWeightSpinBox->setStepSize(1.0);
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
             "font-weight:600;&quot;>b</span>-c<span style=&quot; "
@@ -302,7 +302,7 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale",
                                                   settings_.curvatureScale,
                                                   0.01,
-                                                  2);
+                                                  10);
     curvatureScaleSlider->setToolTip(
             "<html><head/><body><p>Changes how long the curvature combs are.</p></body></html>");
     connect(curvatureScaleSlider, &DoubleSlider::valueUpdated, [this](double value) {
@@ -362,7 +362,8 @@ QMenu *MainWindow::getFileMenu() {
         QString filePath = QFileDialog::getOpenFileName(nullptr,
                                                         "Load Curve",
                                                         "../curves/",
-                                                        tr("Obj Files (*.obj)"));
+//                                                        tr("Obj Files (*.obj)"));
+                                                        tr("Txt Files (*.txt)"));
         if (filePath == "") {
             return;
         }
@@ -403,6 +404,70 @@ QMenu *MainWindow::getFileMenu() {
                              "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveAction);
+
+    // outputs list of points (x y coords) in a text file (for Lucia/Matlab)
+    auto *saveCurveAction = new QAction(QStringLiteral("SaveCurve"), fileMenu);
+    saveCurveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
+    connect(saveCurveAction, &QAction::triggered, [this]() {
+        QString filePath = QFileDialog::getSaveFileName(
+                nullptr,
+                "Save Curve",
+                "../curves/",
+                tr("TXT File (*.txt)"));
+        if (filePath != "") {
+            QByteArray bytes = filePath.toStdString().c_str();
+            char 		*file_name;
+            file_name = bytes.data();
+
+            bool success = mainView_->saveCurve(file_name);
+
+            if (success) {
+                QMessageBox::information(this, "Curve Saved", filePath);
+                return;
+            } else {
+                QMessageBox::warning(this,
+                                     "Failed to save curve",
+                                     "Ensure you provided a file extension:\n:" + filePath);
+                return;
+            }
+        }
+        QMessageBox::warning(this,
+                             "Failed to save curve",
+                             "Ensure you provided a valid path:\n: " + filePath);
+    });
+    fileMenu->addAction(saveCurveAction);
+
+    // outputs list of points and normals
+    auto *saveCurveNAction = new QAction(QStringLiteral("SaveCurveN"), fileMenu);
+//    saveCurveNAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
+    connect(saveCurveNAction, &QAction::triggered, [this]() {
+        QString filePath = QFileDialog::getSaveFileName(
+                nullptr,
+                "Save Curve",
+                "../curves/",
+                tr("Obj File (*.obj)"));
+        if (filePath != "") {
+            QByteArray bytes = filePath.toStdString().c_str();
+            char 		*file_name;
+            file_name = bytes.data();
+
+            bool success = mainView_->saveCurveN(file_name);
+
+            if (success) {
+                QMessageBox::information(this, "Curve Saved", filePath);
+                return;
+            } else {
+                QMessageBox::warning(this,
+                                     "Failed to save curve",
+                                     "Ensure you provided a file extension:\n:" + filePath);
+                return;
+            }
+        }
+        QMessageBox::warning(this,
+                             "Failed to save curve",
+                             "Ensure you provided a valid path:\n: " + filePath);
+    });
+    fileMenu->addAction(saveCurveNAction);
 
     auto *quitAction = new QAction(QStringLiteral("Quit"), fileMenu);
     quitAction->setShortcutContext(Qt::ApplicationShortcut);

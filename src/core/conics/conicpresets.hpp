@@ -39,6 +39,8 @@ private:
     SubdivisionCurve getStair();
 
     SubdivisionCurve getStar();
+
+    SubdivisionCurve getJiriTest();
 };
 
 } // namespace conics
