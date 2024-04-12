@@ -7,10 +7,10 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <utility>
 
-#include <fstream>
-#include <iostream>
 #include "util/vector.hpp"
 #include <Eigen/Core>
+#include <fstream>
+#include <iostream>
 
 #include <iomanip>
 
@@ -457,29 +457,25 @@ bool MainView::saveCurve(const char *fileName) {
 
     int prec = 16;
 
-    if(!file.is_open())
-    {
+    if (!file.is_open()) {
         QMessageBox msgBox;
         msgBox.setText("Could not open file!");
         msgBox.exec();
         return false;
-    }
-    else
-    {
-//        file << "Curve data: x and y coordinates only" << std::endl;
+    } else {
+        //        file << "Curve data: x and y coordinates only" << std::endl;
 
         std::vector<Vector2DD> coords;
         coords = crv->getCurveCoords();
 
-        for (int i = 0; i < coords.size(); i++)
-        {
-            file << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed << std::setprecision(prec) << coords[i].y() << std::endl;
+        for (int i = 0; i < coords.size(); i++) {
+            file << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed
+                 << std::setprecision(prec) << coords[i].y() << std::endl;
         }
-        if (crv->isClosed())
-        {
-            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
+        if (crv->isClosed()) {
+            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed
+                 << std::setprecision(prec) << coords[0].y() << std::endl;
         }
-
     }
     file.close();
     return true;
@@ -494,33 +490,29 @@ bool MainView::saveCurveN(const char *fileName) {
 
     int prec = 16;
 
-    if(!file.is_open())
-    {
+    if (!file.is_open()) {
         QMessageBox msgBox;
         msgBox.setText("Could not open file!");
         msgBox.exec();
         return false;
-    }
-    else
-    {
+    } else {
         std::vector<Vector2DD> coords;
         std::vector<Vector2DD> normals;
         coords = crv->getCurveCoords();
         normals = crv->getCurveNormals();
 
-        for (int i = 0; i < coords.size(); i++)
-        {
-            file << "v " << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed << std::setprecision(prec) << coords[i].y() << std::endl;
+        for (int i = 0; i < coords.size(); i++) {
+            file << "v " << std::fixed << std::setprecision(prec) << coords[i].x() << " "
+                 << std::fixed << std::setprecision(prec) << coords[i].y() << std::endl;
         }
-        for (int i = 0; i < normals.size(); i++)
-        {
-            file << "vn " << std::fixed << std::setprecision(prec) << normals[i].x() << " " << std::fixed << std::setprecision(prec) << normals[i].y() << std::endl;
+        for (int i = 0; i < normals.size(); i++) {
+            file << "vn " << std::fixed << std::setprecision(prec) << normals[i].x() << " "
+                 << std::fixed << std::setprecision(prec) << normals[i].y() << std::endl;
         }
-//        if (crv->isClosed())
-//        {
-//            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
-//        }
-
+        //        if (crv->isClosed())
+        //        {
+        //            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
+        //        }
     }
     file.close();
     return true;

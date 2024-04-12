@@ -111,7 +111,7 @@ SubdivisionCurve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
                 Vector2DD normal;
                 normal.x() = parts[1].toDouble();
                 normal.y() = parts[2].toDouble();
-                normal /= sqrt(normal.x()*normal.x() + normal.y()*normal.y());
+                normal /= sqrt(normal.x() * normal.x() + normal.y() * normal.y());
                 normals.emplace_back(normal);
             }
         }
