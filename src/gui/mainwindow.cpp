@@ -196,7 +196,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                   settings_.outerPointWeight,
                                                   0,
                                                   maxWeight);
-    //    midVertWeightSpinBox->setStepSize(1.0);
+    midVertWeightSpinBox->setStepSize(1.0);
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
             "font-weight:600;&quot;>b</span>-c<span style=&quot; "
@@ -216,7 +216,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                    settings_.middleNormalWeight,
                                                    0,
                                                    maxWeight);
-    //    edgeNormWeightSpinBox->setStepSize(1.0);
+    edgeNormWeightSpinBox->setStepSize(1.0);
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
             "font-weight:600;&quot;>c-d</span>-e-f</p><p>this value changes the weights of the "
@@ -232,7 +232,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                                   settings_.outerNormalWeight,
                                                   0,
                                                   maxWeight);
-    //    midNormWeightSpinBox->setStepSize(1.0);
+    midNormWeightSpinBox->setStepSize(1.0);
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
             "font-weight:600;&quot;>b</span>-c<span style=&quot; "
