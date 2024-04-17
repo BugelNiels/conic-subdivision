@@ -13,6 +13,8 @@ conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(setting
     presets_["G"] = std::make_shared<SubdivisionCurve>(getG());
     presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(4, 0.5));
     presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8, 0.3));
+
+    presets_["JiriTest"] = std::make_shared<SubdivisionCurve>(getJiriTest());
 }
 
 conics::ConicPresets::~ConicPresets() = default;
@@ -154,4 +156,18 @@ std::vector<QString> conics::ConicPresets::getPresetNames() const {
         keys.emplace_back(key);
     }
     return keys;
+}
+
+SubdivisionCurve conics::ConicPresets::getJiriTest() {
+    std::vector<Vector2DD> netCoords;
+    std::vector<Vector2DD> netNormals;
+    netCoords.emplace_back(-0.75, 0);
+    netCoords.emplace_back(0.75, 0);
+    netCoords.emplace_back(0.75, 0.5);
+
+    netNormals.emplace_back(Vector2DD(0.3, 0.3).normalized());
+    netNormals.emplace_back(Vector2DD(0.3, 0.3).normalized());
+    netNormals.emplace_back(Vector2DD(0.3, 0.3).normalized());
+
+    return SubdivisionCurve(settings_, netCoords, netNormals, false);
 }
