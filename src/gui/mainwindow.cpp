@@ -301,9 +301,15 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *refineNormalsButton = new QPushButton("Refine Normals");
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
-        mainView_->refineNormals(10);
+        mainView_->refineNormals(1);
     });
     vertLayout->addWidget(refineNormalsButton);
+
+    auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
+    connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
+        mainView_->refineSelectedNormal(1);
+    });
+    vertLayout->addWidget(refineSelectedNormalButton);
 
     vertLayout->addStretch();
 

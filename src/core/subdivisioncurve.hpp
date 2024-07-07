@@ -29,6 +29,8 @@ public:
 
     [[nodiscard]] inline const std::vector<Vector2DD> &getNetNormals() const { return netNormals_; }
 
+    [[nodiscard]] inline std::vector<Vector2DD> &getNetNormals() { return netNormals_; }
+
     [[nodiscard]] inline const std::vector<Vector2DD> &getCurveCoords() const {
         return curveCoords_;
     }
@@ -36,6 +38,8 @@ public:
     [[nodiscard]] inline const std::vector<Vector2DD> &getCurveNormals() const {
         return curveNormals_;
     }
+
+    [[nodiscard]] inline std::vector<Vector2DD> &getCurveNormals() { return curveNormals_; }
 
     [[nodiscard]] inline int getSubdivLevel() const { return subdivisionLevel_; }
 
@@ -62,6 +66,7 @@ public:
     void recalculateNormal(int idx);
 
     void refineNormals(int maxIter);
+    void refineSelectedNormal(int maxIter);
 
     Conic getConicAtIndex(int idx);
 

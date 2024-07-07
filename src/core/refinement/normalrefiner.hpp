@@ -8,9 +8,10 @@ class NormalRefiner {
 public:
     explicit NormalRefiner(int maxIter);
 
-    std::vector<Vector2DD> refine(const SubdivisionCurve& curve) const;
+    void refine(SubdivisionCurve& curve) const;
+    void refineSelected(SubdivisionCurve& curve, int idx) const;
 
 private:
-    int maxIter = 0;
+    int maxIter = 1;
 
 };

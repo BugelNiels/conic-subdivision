@@ -147,31 +147,32 @@ Vector2DD MainView::toNormalizedScreenCoordinates(double x, double y) {
     return Vector2DD(from.x(), from.y());
 }
 
-bool MainView::attemptVertexSelect(const Vector2DD &scenePos) {
-    settings_.selectedNormal = -1;
+bool MainView::attemptVertexHighlight(const Vector2DD &scenePos) {
+    settings_.highlightedNormal = -1;
     float maxDist = settings_.selectRadius;
-    if (settings_.selectedVertex != -1) {
+    if (settings_.highlightedVertex != -1) {
         // Smaller click radius for easy de-selection of points
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.selectedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
-    if (settings_.selectedVertex > -1) {
+    settings_.highlightedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
+    if (settings_.highlightedVertex > -1) {
+        settings_.selectedVertex = settings_.highlightedVertex;
         return true;
     }
     return false;
 }
 
-bool MainView::attemptNormalSelect(const Vector2DD &scenePos) {
+bool MainView::attemptNormalHighlight(const Vector2DD &scenePos) {
     float maxDist = settings_.selectRadius;
-    if (settings_.selectedNormal != -1) {
+    if (settings_.highlightedNormal != -1) {
         // Smaller click radius for easy de-selection of points
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.selectedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
-    if (settings_.selectedNormal > -1) {
-        settings_.selectedVertex = -1;
+    settings_.highlightedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
+    if (settings_.highlightedNormal > -1) {
+        settings_.highlightedVertex = -1;
         return true;
     }
     return false;
@@ -202,18 +203,18 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
                 int idx = subCurve_->addPoint(scenePos);
-                settings_.selectedNormal = -1;
-                settings_.selectedVertex = idx;
+                settings_.highlightedNormal = -1;
+                settings_.highlightedVertex = idx;
                 updateBuffers();
             } else {
                 // First attempt to select a vertex. If unsuccessful, select a normal
-                if (!attemptVertexSelect(scenePos)) {
-                    attemptNormalSelect(scenePos);
+                if (!attemptVertexHighlight(scenePos)) {
+                    attemptNormalHighlight(scenePos);
                 } else {
-                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex)
+                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
                                                       .getMatrix();
                     conicR_.updateBuffers(selectedConic);
-                    selectedConicIdx_ = settings_.selectedVertex;
+                    selectedConicIdx_ = settings_.highlightedVertex;
                 }
             }
             update();
@@ -222,8 +223,8 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         case Qt::RightButton: {
             // Add new control point
             int idx = subCurve_->addPoint(scenePos);
-            settings_.selectedNormal = -1;
-            settings_.selectedVertex = idx;
+            settings_.highlightedNormal = -1;
+            settings_.highlightedVertex = idx;
             updateBuffers();
             break;
         }
@@ -241,8 +242,8 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
     if (event->buttons() == Qt::LeftButton && event->modifiers().testFlag(Qt::ShiftModifier)) {
         setCursor(Qt::ClosedHandCursor);
         translationUpdate(scenePos, event->position());
-        settings_.selectedVertex = -1;
-        settings_.selectedNormal = -1;
+        settings_.highlightedVertex = -1;
+        settings_.highlightedNormal = -1;
         update();
         return;
     }
@@ -250,20 +251,20 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
     switch (event->buttons()) {
         case Qt::RightButton:
         case Qt::LeftButton: {
-            if (settings_.selectedVertex > -1) {
+            if (settings_.highlightedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                subCurve_->setVertexPosition(settings_.selectedVertex, scenePos);
-                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedVertex)
+                subCurve_->setVertexPosition(settings_.highlightedVertex, scenePos);
+                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
                                                   .getMatrix();
                 conicR_.updateBuffers(selectedConic);
                 updateBuffers();
             }
-            if (settings_.selectedNormal > -1) {
+            if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                subCurve_->setNormalPosition(settings_.selectedNormal, scenePos);
-                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.selectedNormal)
+                subCurve_->setNormalPosition(settings_.highlightedNormal, scenePos);
+                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedNormal)
                                                   .getMatrix();
                 conicR_.updateBuffers(selectedConic);
                 updateBuffers();
@@ -275,8 +276,8 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             break;
         }
         default: {
-            if (!attemptVertexSelect(scenePos)) {
-                attemptNormalSelect(scenePos);
+            if (!attemptVertexHighlight(scenePos)) {
+                attemptNormalHighlight(scenePos);
             }
             updateCursor(event->modifiers());
             update();
@@ -324,10 +325,10 @@ void MainView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         case Qt::Key_X:
-            if (settings_.selectedVertex > -1) {
+            if (settings_.highlightedVertex > -1) {
                 // Remove selected control point
-                subCurve_->removePoint(settings_.selectedVertex);
-                settings_.selectedVertex = -1;
+                subCurve_->removePoint(settings_.highlightedVertex);
+                settings_.highlightedVertex = -1;
                 updateBuffers();
             }
             break;
@@ -349,10 +350,10 @@ void MainView::keyReleaseEvent(QKeyEvent *event) {
 
 void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
     QWidget::mouseDoubleClickEvent(event);
-    if (subCurve_ == nullptr || settings_.selectedNormal < 0) {
+    if (subCurve_ == nullptr || settings_.highlightedNormal < 0) {
         return;
     }
-    subCurve_->recalculateNormal(settings_.selectedNormal);
+    subCurve_->recalculateNormal(settings_.highlightedNormal);
     recalculateCurve();
 }
 
@@ -388,7 +389,7 @@ void MainView::updateCursor(const Qt::KeyboardModifiers &flags) {
             setCursor(Qt::CrossCursor);
             break;
         default:
-            if (settings_.selectedVertex > -1 || settings_.selectedNormal > -1) {
+            if (settings_.highlightedVertex > -1 || settings_.highlightedNormal > -1) {
                 setCursor(Qt::OpenHandCursor);
             } else {
                 unsetCursor();
@@ -450,7 +451,14 @@ void MainView::refineNormals(int maxIter) {
     }
     subCurve_->refineNormals(maxIter);
     recalculateCurve();
+}
 
+void MainView::refineSelectedNormal(int maxIter) {
+    if (subCurve_ == nullptr) {
+        return;
+    }
+    subCurve_->refineSelectedNormal(maxIter);
+    recalculateCurve();
 }
 
 const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {

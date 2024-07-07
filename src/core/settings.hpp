@@ -11,8 +11,9 @@
  */
 using Settings = struct Settings {
     // Selection data
+    int highlightedVertex = -1;
+    int highlightedNormal = -1;
     int selectedVertex = -1;
-    int selectedNormal = -1;
 
     // View Settings
     bool visualizeNormals = false;
