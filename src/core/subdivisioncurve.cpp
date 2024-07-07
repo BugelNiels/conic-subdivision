@@ -4,6 +4,7 @@
 
 #include "core/conics/conic.hpp"
 #include "settings.hpp"
+#include "refinement/normalrefiner.hpp"
 
 SubdivisionCurve::SubdivisionCurve(const Settings &settings)
     : settings_(settings),
@@ -267,6 +268,14 @@ void SubdivisionCurve::recalculateNormals() {
 void SubdivisionCurve::recalculateNormal(int idx) {
     customNormals_[idx] = false;
     netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
+}
+
+void SubdivisionCurve::refineNormals(int maxIter) {
+    NormalRefiner nr(maxIter);
+    netNormals_ = nr.refine(*this);
+    for (int i = 0; i < netNormals_.size(); i++) {
+        customNormals_[i] = false;
+    }
 }
 
 bool SubdivisionCurve::isClosed() const {
