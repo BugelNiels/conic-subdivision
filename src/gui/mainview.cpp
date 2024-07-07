@@ -157,7 +157,6 @@ bool MainView::attemptVertexHighlight(const Vector2DD &scenePos) {
     // Select control point
     settings_.highlightedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
     if (settings_.highlightedVertex > -1) {
-        settings_.selectedVertex = settings_.highlightedVertex;
         return true;
     }
     return false;
@@ -211,6 +210,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
                 if (!attemptVertexHighlight(scenePos)) {
                     attemptNormalHighlight(scenePos);
                 } else {
+                    settings_.selectedVertex = settings_.highlightedVertex;
                     Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
                                                       .getMatrix();
                     conicR_.updateBuffers(selectedConic);
@@ -445,19 +445,19 @@ void MainView::recalculateNormals() {
     recalculateCurve();
 }
 
-void MainView::refineNormals(int maxIter) {
+void MainView::refineNormals() {
     if (subCurve_ == nullptr) {
         return;
     }
-    subCurve_->refineNormals(maxIter);
+    subCurve_->refineNormals(settings_.maxRefinementIterations);
     recalculateCurve();
 }
 
-void MainView::refineSelectedNormal(int maxIter) {
+void MainView::refineSelectedNormal() {
     if (subCurve_ == nullptr) {
         return;
     }
-    subCurve_->refineSelectedNormal(maxIter);
+    subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
     recalculateCurve();
 }
 

@@ -301,15 +301,23 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *refineNormalsButton = new QPushButton("Refine Normals");
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
-        mainView_->refineNormals(1);
+        mainView_->refineNormals();
     });
     vertLayout->addWidget(refineNormalsButton);
 
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
-        mainView_->refineSelectedNormal(1);
+        mainView_->refineSelectedNormal();
     });
     vertLayout->addWidget(refineSelectedNormalButton);
+
+
+    vertLayout->addWidget(new QLabel("Max iterations"));
+    IntSlider* refinementIterationsSpinBox = new IntSlider("Iterations", 1, 1, 100, BoundMode::LOWER_ONLY);
+    connect(refinementIterationsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
+        settings_.maxRefinementIterations = numSteps;
+    });
+    vertLayout->addWidget(refinementIterationsSpinBox);
 
     vertLayout->addStretch();
 

@@ -28,6 +28,7 @@ using Settings = struct Settings {
     real_t outerPointWeight = 100.0; // The ratio between this and outerNormalWeight is Tau in the paper
     real_t outerNormalWeight = 1.0;
     int patchSize = 2;
+    int maxRefinementIterations = 1;
 
     // Calculation settings
     bool circleNormals = false;
