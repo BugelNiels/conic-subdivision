@@ -1,5 +1,6 @@
 **/*.pro.*
 build*/
+_build/
 **/.qmake.stash
 **/*.o
 **/Makefile*
