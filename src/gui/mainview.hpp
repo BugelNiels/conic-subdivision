@@ -24,6 +24,8 @@ public:
 
     void refineNormals(int maxIter);
 
+    void refineSelectedNormal(int maxIter);
+
     void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
 
     void updateBuffers();
@@ -74,9 +76,9 @@ private:
     Vector2DD oldMouseCoords_;
     QMatrix4x4 toWorldCoordsMatrix_;
 
-    bool attemptNormalSelect(const Vector2DD &scenePos);
+    bool attemptNormalHighlight(const Vector2DD &scenePos);
 
-    bool attemptVertexSelect(const Vector2DD &scenePos);
+    bool attemptVertexHighlight(const Vector2DD &scenePos);
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 

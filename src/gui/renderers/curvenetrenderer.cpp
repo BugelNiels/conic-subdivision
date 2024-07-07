@@ -128,12 +128,12 @@ void CurveNetRenderer::draw() {
     }
 
     // Highlight selected control point
-    if (settings_.selectedVertex > -1) {
+    if (settings_.highlightedVertex > -1) {
         QColor qCol = settings_.style.selectedVertCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
         gl_->glPointSize(settings_.selectedPointRadius);
-        gl_->glDrawArrays(GL_POINTS, settings_.selectedVertex, 1);
+        gl_->glDrawArrays(GL_POINTS, settings_.highlightedVertex, 1);
     }
 
     if (settings_.normalHandles) {
@@ -147,12 +147,12 @@ void CurveNetRenderer::draw() {
         shader->setUniformValue(shader->uniformLocation("lineColor"), col);
         gl_->glPointSize(settings_.drawPointRadius);
         gl_->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
-        if (settings_.selectedNormal > -1) {
+        if (settings_.highlightedNormal > -1) {
             gl_->glPointSize(settings_.selectedPointRadius);
             QColor secQCol = settings_.style.selectedNormCol;
             QVector3D secCol(secQCol.redF(), secQCol.greenF(), secQCol.blueF());
             shader->setUniformValue(shader->uniformLocation("lineColor"), secCol);
-            gl_->glDrawArrays(GL_POINTS, settings_.selectedNormal, 1);
+            gl_->glDrawArrays(GL_POINTS, settings_.highlightedNormal, 1);
         }
     }
 

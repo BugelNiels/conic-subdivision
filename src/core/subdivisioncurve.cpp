@@ -271,11 +271,25 @@ void SubdivisionCurve::recalculateNormal(int idx) {
 }
 
 void SubdivisionCurve::refineNormals(int maxIter) {
-    NormalRefiner nr(maxIter);
-    netNormals_ = nr.refine(*this);
-    for (int i = 0; i < netNormals_.size(); i++) {
-        customNormals_[i] = false;
+    qDebug() << settings_.selectedVertex;
+    if(settings_.selectedVertex < 0) {
+        return;
     }
+    NormalRefiner nr(maxIter);
+    nr.refine(*this);
+    for (int i = 0; i < netNormals_.size(); i++) {
+        customNormals_[i] = true;
+    }
+}
+
+void SubdivisionCurve::refineSelectedNormal(int maxIter) {
+    qDebug() << settings_.selectedVertex;
+    if(settings_.selectedVertex < 0) {
+        return;
+    }
+    NormalRefiner nr(maxIter);
+    nr.refineSelected(*this, settings_.selectedVertex);
+    customNormals_[settings_.selectedVertex] = true;
 }
 
 bool SubdivisionCurve::isClosed() const {
