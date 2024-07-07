@@ -22,9 +22,9 @@ public:
 
     void recalculateNormals();
 
-    void refineNormals(int maxIter);
+    void refineNormals();
 
-    void refineSelectedNormal(int maxIter);
+    void refineSelectedNormal();
 
     void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
 
