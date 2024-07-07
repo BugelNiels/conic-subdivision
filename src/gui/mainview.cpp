@@ -444,6 +444,15 @@ void MainView::recalculateNormals() {
     recalculateCurve();
 }
 
+void MainView::refineNormals(int maxIter) {
+    if (subCurve_ == nullptr) {
+        return;
+    }
+    subCurve_->refineNormals(maxIter);
+    recalculateCurve();
+
+}
+
 const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
     return subCurve_;
 }

@@ -22,6 +22,8 @@ public:
 
     void recalculateNormals();
 
+    void refineNormals(int maxIter);
+
     void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
 
     void updateBuffers();

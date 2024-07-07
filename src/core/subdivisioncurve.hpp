@@ -61,6 +61,8 @@ public:
 
     void recalculateNormal(int idx);
 
+    void refineNormals(int maxIter);
+
     Conic getConicAtIndex(int idx);
 
     void setClosed(bool closed);

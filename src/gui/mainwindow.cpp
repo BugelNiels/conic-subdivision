@@ -299,6 +299,14 @@ QDockWidget *MainWindow::initSideMenu() {
 #endif
     vertLayout->addStretch();
 
+    auto *refineNormalsButton = new QPushButton("Refine Normals");
+    connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
+        mainView_->refineNormals(10);
+    });
+    vertLayout->addWidget(refineNormalsButton);
+
+    vertLayout->addStretch();
+
     auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale",
                                                   settings_.curvatureScale,
                                                   0.01,
