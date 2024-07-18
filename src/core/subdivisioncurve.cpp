@@ -271,15 +271,12 @@ void SubdivisionCurve::recalculateNormal(int idx) {
 }
 
 void SubdivisionCurve::refineNormals(int maxIter) {
-    qDebug() << settings_.selectedVertex;
-    if(settings_.selectedVertex < 0) {
-        return;
-    }
-    NormalRefiner nr(maxIter);
+    NormalRefiner nr(settings_);
     nr.refine(*this);
     for (int i = 0; i < netNormals_.size(); i++) {
         customNormals_[i] = true;
     }
+    reSubdivide();
 }
 
 void SubdivisionCurve::refineSelectedNormal(int maxIter) {
@@ -287,9 +284,10 @@ void SubdivisionCurve::refineSelectedNormal(int maxIter) {
     if(settings_.selectedVertex < 0) {
         return;
     }
-    NormalRefiner nr(maxIter);
+    NormalRefiner nr(settings_);
     nr.refineSelected(*this, settings_.selectedVertex);
     customNormals_[settings_.selectedVertex] = true;
+    reSubdivide();
 }
 
 bool SubdivisionCurve::isClosed() const {
@@ -345,4 +343,8 @@ Conic SubdivisionCurve::getConicAtIndex(int idx) {
 
 int SubdivisionCurve::numPoints() const {
     return subdivisionLevel_ == 0 ? netCoords_.size() : curveCoords_.size();
+}
+
+int SubdivisionCurve::numControlPoints() const {
+    return netCoords_.size();
 }

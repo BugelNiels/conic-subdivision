@@ -311,13 +311,38 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
+    vertLayout->addWidget(new QLabel("Test Subdiv Level"));
+    IntSlider *testSubdivLevelSpinBox = new IntSlider("Test Subdiv Level",
+                                                      settings_.testSubdivLevel,
+                                                      1,
+                                                      7,
+                                                      BoundMode::LOWER_ONLY);
+    connect(testSubdivLevelSpinBox, &IntSlider::valueUpdated, [this](int subdivLvl) {
+        settings_.testSubdivLevel = subdivLvl;
+    });
+    vertLayout->addWidget(testSubdivLevelSpinBox);
 
     vertLayout->addWidget(new QLabel("Max iterations"));
-    IntSlider* refinementIterationsSpinBox = new IntSlider("Iterations", 1, 1, 100, BoundMode::LOWER_ONLY);
+    IntSlider *refinementIterationsSpinBox = new IntSlider("Iterations",
+                                                           settings_.maxRefinementIterations,
+                                                           1,
+                                                           100,
+                                                           BoundMode::LOWER_ONLY);
     connect(refinementIterationsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
         settings_.maxRefinementIterations = numSteps;
     });
     vertLayout->addWidget(refinementIterationsSpinBox);
+
+    vertLayout->addWidget(new QLabel("Angle limit (* 1e-8)"));
+    DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
+                                                       settings_.angleLimit * 1e8,
+                                                       1.0e-12,
+                                                       1,
+                                                       BoundMode::UPPER_LOWER);
+    connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
+        settings_.angleLimit = angleLimit / 1e8;
+    });
+    vertLayout->addWidget(angleLimitSpinBox);
 
     vertLayout->addStretch();
 
