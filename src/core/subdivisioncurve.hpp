@@ -80,6 +80,8 @@ public:
 
     int numPoints() const;
 
+    int numControlPoints() const;
+
 private:
     const Settings &settings_;
     ConicSubdivider subdivider;

@@ -28,7 +28,11 @@ using Settings = struct Settings {
     real_t outerPointWeight = 100.0; // The ratio between this and outerNormalWeight is Tau in the paper
     real_t outerNormalWeight = 1.0;
     int patchSize = 2;
+
+    // Normal refinement
     int maxRefinementIterations = 1;
+    real_t angleLimit = 1.0e-8;
+    int testSubdivLevel = 6;
 
     // Calculation settings
     bool circleNormals = false;

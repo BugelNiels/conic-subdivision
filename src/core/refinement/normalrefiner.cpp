@@ -1,16 +1,35 @@
 #include "normalrefiner.hpp"
 #include <iostream>
 
-NormalRefiner::NormalRefiner(int maxIter) : maxIter(maxIter) {}
+NormalRefiner::NormalRefiner(const Settings &settings) : settings(settings) {}
 
 // Calculates the curvature at point b for the segment a-b-c
-real_t calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c) {
+real_t NormalRefiner::calcCurvature(const Vector2DD &a,
+                                    const Vector2DD &b,
+                                    const Vector2DD &c) const {
     Vector2DD ab = a - b;
     Vector2DD cb = c - b;
     real_t normAB = ab.norm();
     real_t normCB = cb.norm();
     real_t crossLength = std::abs(ab.x() * cb.y() - ab.y() * cb.x());
     return 2.0 * crossLength / (normAB * normCB * (normAB + normCB));
+}
+
+real_t NormalRefiner::curvatureAtControlIdx(SubdivisionCurve &curve, int idx) const {
+    int i = idx * std::pow(2, settings.testSubdivLevel);
+    int n = curve.numPoints();
+
+    const auto &points = curve.getCurveCoords();
+
+    const auto &p_2 = points[(i - 2 + n) % n];
+    const auto &p_1 = points[(i - 1 + n) % n];
+    const auto &p0 = points[i];
+    const auto &p1 = points[(i + 1) % n];
+    const auto &p2 = points[(i + 2) % n];
+    real_t c_1 = std::abs(calcCurvature(p_2, p_1, p0));
+    real_t c0 = std::abs(calcCurvature(p_1, p0, p1));
+    real_t c1 = std::abs(calcCurvature(p0, p1, p2));
+    return std::abs(c_1 + c1 - 2 * c0);
 }
 
 /**
@@ -20,41 +39,39 @@ real_t calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c)
  * @param idx The index of the point on the curve for which to calculate the smoothness
  * @return int A number representing how smooth the curve is. Lower numbers are better (i.e. a smoother curve)
  */
-int smoothnessPenalty(SubdivisionCurve &curve, int idx) {
-    int n = curve.numPoints();
-
-    const auto &points = curve.getCurveCoords();
-
-    const auto &p_2 = points[(idx - 2 + n) % n];
-    const auto &p_1 = points[(idx - 1 + n) % n];
-    const auto &p0 = points[idx];
-    const auto &p1 = points[(idx + 1) % n];
-    const auto &p2 = points[(idx + 2) % n];
-
-    real_t p_1Curv = calcCurvature(p_2, p_1, p0);
-    real_t p0Curv =  calcCurvature(p_1, p0, p1);
-    real_t p1Curv = calcCurvature(p0, p1, p2);
-
-    std::cout << "p_1: " << p_1Curv << "  -  p0: " << p0Curv << "  -  p1: " << p1Curv << std::endl;
-
-    // TODO: this is not a correct smoothness measure by a long shot
-    real_t curvMeasure = std::fabs(p_1Curv + p1Curv - 2 * p0Curv);
-    std::cout << curvMeasure << std::endl;
-    std::cout.flush();
-    return curvMeasure;
+real_t NormalRefiner::smoothnessPenalty(SubdivisionCurve &curve, int idx) const {
+    real_t penalty_1 = curvatureAtControlIdx(curve,
+                                             (idx - 1 + curve.numControlPoints()) %
+                                                     curve.numControlPoints());
+    real_t penalty0 = curvatureAtControlIdx(curve, idx);
+    real_t penalty1 = curvatureAtControlIdx(curve, (idx + 1) % curve.numControlPoints());
+    // This puts more weight on the middle one. Perhaps we can improve something here
+    return penalty_1 + 2 * penalty0 + penalty1;
+    // return penalty0;
 }
 
-void binarySearchBestNormal(SubdivisionCurve &curve, Vector2DD &normal, int idx) {
+void NormalRefiner::binarySearchBestNormal(SubdivisionCurve &curve,
+                                           Vector2DD &normal,
+                                           int idx) const {
     // To search the full unit, this should start at 0.5 (45 degrees)
     // This generally rotates too much and leads to difficult cases
-    real_t angle = 0.1;
+    const auto &controlPoints = curve.getNetCoords();
+    int nc = curve.numControlPoints();
+    // Find the normal of the line segment to the left
+    Vector2DD ab = controlPoints[(idx - 1 + nc) % nc] - controlPoints[idx];
+    ab = {-ab.y(), ab.x()};
+    ab.normalize();
+    // Find the normal of the line segment to the right
+    Vector2DD cb = controlPoints[(idx + 1) % nc] - controlPoints[idx];
+    cb = {cb.y(), -cb.x()};
+    cb.normalize();
+    // Put the normal halfway in between and set the search angle. This constrains the search
+    normal = (ab + cb).normalized();
+    // divide by 4, because half the angle is the angle between the normal (which is in the middle) and its two bounds
+    // Since we are doing binary search, we need to half that again to ensure we don't go out of bounds
+    real_t angle = acos(ab.dot(cb)) / 4.0;
 
-    // TODO: put this in settings
-    real_t angleThreshold = 0.0001;
-
-    // The subdivision level at which to test the smoothness
-    // TODO: put this in settings
-    int testSubdivLevel = 4;
+    real_t angleThreshold = settings.angleLimit;
 
     int n = curve.numPoints();
     Eigen::Matrix<real_t, 2, 2> rotationMatrix;
@@ -65,26 +82,24 @@ void binarySearchBestNormal(SubdivisionCurve &curve, Vector2DD &normal, int idx)
     // Depending on what the starting angle is, this can search (part of) the unit circle efficiently
     while (angle > angleThreshold) {
         // Get the index of the net normal in the curve
-        int normalIdxAtSubdivLevel = idx * std::pow(2, testSubdivLevel);
 
         // Clockwise setup
-        real_t radians = angle * M_PI;
-        rotationMatrix << std::cos(radians), std::sin(radians),
-                         -std::sin(radians), std::cos(radians);
+        real_t radians = angle;
+        rotationMatrix << std::cos(radians), std::sin(radians), -std::sin(radians),
+                std::cos(radians);
         Vector2DD clockwiseNormal = (rotationMatrix * normal).normalized();
         rotationMatrix.transposeInPlace();
         Vector2DD counterclockwiseNormal = (rotationMatrix * normal).normalized();
 
         // Calc curvature difference rotating clockwise
         normal = clockwiseNormal;
-        curve.subdivide(testSubdivLevel);
-        real_t clockwisePenalty = smoothnessPenalty(curve, normalIdxAtSubdivLevel);
+        curve.subdivide(settings.testSubdivLevel);
+        real_t clockwisePenalty = smoothnessPenalty(curve, idx);
 
         // Calc curvature difference rotating counterclockwise
         normal = counterclockwiseNormal;
-        curve.subdivide(testSubdivLevel);
-        real_t counterclockwisePenalty = smoothnessPenalty(curve, normalIdxAtSubdivLevel);
-
+        curve.subdivide(settings.testSubdivLevel);
+        real_t counterclockwisePenalty = smoothnessPenalty(curve, idx);
         // We pick whichever one results in the lower curvature penalty
         if (clockwisePenalty < counterclockwisePenalty) {
             normal = clockwiseNormal;
@@ -99,10 +114,12 @@ void NormalRefiner::refine(SubdivisionCurve &curve) const {
     int n = norms.size();
 
     // TODO: do this until convergence with a maxIter being a max bound
-    for (int i = 0; i < maxIter; i++) {
+    for (int i = 0; i < settings.maxRefinementIterations; i++) {
         for (int j = 0; j < n; j++) {
             binarySearchBestNormal(curve, norms[j], j);
+            std::cout << "Refined idx: " << j << std::endl;
         }
+        std::cout << "Iteration done: " << i << std::endl;
     }
 }
 
