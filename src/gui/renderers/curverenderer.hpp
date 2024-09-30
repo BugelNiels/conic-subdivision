@@ -1,11 +1,11 @@
-#pragma once
+    #pragma once
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/subdivisioncurve.hpp"
+#include "src/core/curve.hpp"
 
 class CurveRenderer : public Renderer {
 public:
@@ -13,7 +13,7 @@ public:
 
     ~CurveRenderer() override;
 
-    void updateBuffers(SubdivisionCurve &sc);
+    void updateBuffers(Curve &curve);
 
     void draw();
 

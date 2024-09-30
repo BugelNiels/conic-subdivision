@@ -1,6 +1,6 @@
 #include "curverenderer.hpp"
 
-#include "core/settings.hpp"
+#include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
 #define COORDS_IDX 0
@@ -64,16 +64,9 @@ void CurveRenderer::initBuffers() {
     gl_->glBindVertexArray(0);
 }
 
-void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
-    std::vector<QVector2D> coords;
-    std::vector<QVector2D> normals;
-    if (sc.getSubdivLevel() == 0) {
-        coords = qVecToVec(sc.getNetCoords());
-        normals = qVecToVec(sc.getNetNormals());
-    } else {
-        coords = qVecToVec(sc.getCurveCoords());
-        normals = qVecToVec(sc.getCurveNormals());
-    }
+void CurveRenderer::updateBuffers(Curve &curve) {
+    std::vector<QVector2D> coords = qVecToVec(curve.getCoords());
+    std::vector<QVector2D> normals = qVecToVec(curve.getNormals());
     for (auto &norm: normals) {
         norm *= settings_.curvatureSign;
         norm.normalize();
@@ -96,7 +89,7 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
                       GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
-    const auto &coords_d = sc.getSubdivLevel() == 0 ? sc.getNetCoords() : sc.getCurveCoords();
+    const auto &coords_d = curve.getCoords();
 
     std::vector<double> doubleData;
     doubleData.reserve(coords_d.size() * 2);
@@ -115,11 +108,11 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
     int coordSize = coords.size();
     std::vector<int> indices;
     indices.reserve(coordSize + 2);
-    indices.emplace_back(sc.isClosed() ? coordSize - 1 : 0);
+    indices.emplace_back(curve.isClosed() ? coordSize - 1 : 0);
     for (int i = 0; i < coordSize; i++) {
         indices.emplace_back(i);
     }
-    if (sc.isClosed()) {
+    if (curve.isClosed()) {
         indices.emplace_back(0);
         indices.emplace_back(1);
     } else {

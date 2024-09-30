@@ -1,37 +1,21 @@
-#include "conicpresets.hpp"
+#include "conicpresetfactory.hpp"
 
 #include "util/vector.hpp"
 
-conics::ConicPresets::ConicPresets(const Settings &settings) : settings_(settings) {
 
-    presets_["Blank"] = std::make_shared<SubdivisionCurve>(getBlank());
-    presets_["Line"] = std::make_shared<SubdivisionCurve>(getLine());
-    presets_["Step"] = std::make_shared<SubdivisionCurve>(getStair());
-    presets_["Star"] = std::make_shared<SubdivisionCurve>(getStar());
-    presets_["Pentagon"] = std::make_shared<SubdivisionCurve>(getPentagon());
-    presets_["Basis"] = std::make_shared<SubdivisionCurve>(getBasis());
-    presets_["G"] = std::make_shared<SubdivisionCurve>(getG());
-    presets_["Circle"] = std::make_shared<SubdivisionCurve>(getCircle(4, 0.5));
-    presets_["Ellipse"] = std::make_shared<SubdivisionCurve>(getEllipse(5, 0.8, 0.3));
-
-    presets_["JiriTest"] = std::make_shared<SubdivisionCurve>(getJiriTest());
-}
-
-conics::ConicPresets::~ConicPresets() = default;
-
-SubdivisionCurve conics::ConicPresets::getBlank() {
+Curve getBlank() {
     std::vector<Vector2DD> netCoords;
-    return SubdivisionCurve(settings_, netCoords, true);
+    return Curve(netCoords, true);
 }
 
-SubdivisionCurve conics::ConicPresets::getLine() {
+Curve getLine() {
     std::vector<Vector2DD> netCoords;
     netCoords.emplace_back(-0.75, 0);
     netCoords.emplace_back(0.75, 0);
-    return SubdivisionCurve(settings_, netCoords, false);
+    return Curve(netCoords, false);
 }
 
-SubdivisionCurve conics::ConicPresets::getStair() {
+Curve getStair() {
     std::vector<Vector2DD> netCoords;
     netCoords.emplace_back(-1, 1);
     netCoords.emplace_back(1, 1);
@@ -41,10 +25,10 @@ SubdivisionCurve conics::ConicPresets::getStair() {
     netCoords.emplace_back(-0.33333, -.33333);
     netCoords.emplace_back(-0.33333, .33333);
     netCoords.emplace_back(-1, .33333);
-    return SubdivisionCurve(settings_, netCoords, true);
+    return Curve(netCoords, true);
 }
 
-SubdivisionCurve conics::ConicPresets::getStar() {
+Curve getStar() {
     std::vector<Vector2DD> netCoords;
     int numPoints = 5;
     netCoords.reserve(numPoints * 2);
@@ -63,10 +47,10 @@ SubdivisionCurve conics::ConicPresets::getStar() {
         y = 0.3 * radius * std::sin(theta);
         netCoords.emplace_back(x, y);
     }
-    return SubdivisionCurve(settings_, netCoords, true);
+    return Curve(netCoords, true);
 }
 
-SubdivisionCurve conics::ConicPresets::getPentagon() {
+Curve getPentagon() {
     std::vector<Vector2DD> netCoords;
     netCoords.reserve(5);
     netCoords.emplace_back(-0.25, -0.5);
@@ -74,10 +58,10 @@ SubdivisionCurve conics::ConicPresets::getPentagon() {
     netCoords.emplace_back(-0.25, 0.75);
     netCoords.emplace_back(0.75, 0.5);
     netCoords.emplace_back(0.5, -0.75);
-    return SubdivisionCurve(settings_, netCoords);
+    return Curve(netCoords);
 }
 
-SubdivisionCurve conics::ConicPresets::getBasis() {
+Curve getBasis() {
     std::vector<Vector2DD> netCoords;
     netCoords.reserve(9);
     netCoords.emplace_back(-1.0, -0.25);
@@ -89,10 +73,10 @@ SubdivisionCurve conics::ConicPresets::getBasis() {
     netCoords.emplace_back(0.5, -0.25);
     netCoords.emplace_back(0.75, -0.25);
     netCoords.emplace_back(1.0, -0.25);
-    return SubdivisionCurve(settings_, netCoords, false);
+    return Curve(netCoords, false);
 }
 
-SubdivisionCurve conics::ConicPresets::getG() {
+Curve getG() {
     std::vector<Vector2DD> netCoords;
     netCoords.reserve(14);
     netCoords.emplace_back(0.75, 0.35);
@@ -109,10 +93,12 @@ SubdivisionCurve conics::ConicPresets::getG() {
     netCoords.emplace_back(-0.55, 0.55);
     netCoords.emplace_back(0.55, 0.55);
     netCoords.emplace_back(0.55, 0.35);
-    return SubdivisionCurve(settings_, netCoords);
+    return Curve(netCoords);
 }
 
-SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, double radius) {
+Curve getCircle() {
+    int numPoints = 4;
+    double radius = 0.5;
     std::vector<Vector2DD> netCoords;
     std::vector<Vector2DD> netNormals;
     netCoords.reserve(numPoints);
@@ -124,10 +110,13 @@ SubdivisionCurve conics::ConicPresets::getCircle(int numPoints, double radius) {
         netCoords.emplace_back(x, y);
         netNormals.emplace_back(Vector2DD(x, y).normalized());
     }
-    return {settings_, netCoords, netNormals};
+    return {netCoords, netNormals};
 }
 
-SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, double height) {
+Curve getEllipse() {
+    int numPoints = 5;
+    double width = 0.8;
+    double height = 0.3;
     std::vector<Vector2DD> netCoords;
     std::vector<Vector2DD> netNormals;
     netCoords.reserve(numPoints);
@@ -142,23 +131,10 @@ SubdivisionCurve conics::ConicPresets::getEllipse(int numPoints, double width, d
         const Vector2DD normal(ty, -tx);
         netNormals.emplace_back(normal.normalized());
     }
-    return {settings_, netCoords, netNormals};
+    return {netCoords, netNormals};
 }
 
-SubdivisionCurve conics::ConicPresets::getPreset(const QString &name) const {
-    return *presets_.at(name);
-}
-
-std::vector<QString> conics::ConicPresets::getPresetNames() const {
-    std::vector<QString> keys;
-    keys.reserve(presets_.size());
-    for (const auto &[key, value]: presets_) {
-        keys.emplace_back(key);
-    }
-    return keys;
-}
-
-SubdivisionCurve conics::ConicPresets::getJiriTest() {
+Curve getJiriTest() {
     std::vector<Vector2DD> netCoords;
     std::vector<Vector2DD> netNormals;
     netCoords.emplace_back(-0.75, 0);
@@ -169,5 +145,36 @@ SubdivisionCurve conics::ConicPresets::getJiriTest() {
     netNormals.emplace_back(Vector2DD(0.3, 0.3).normalized());
     netNormals.emplace_back(Vector2DD(0.3, 0.3).normalized());
 
-    return SubdivisionCurve(settings_, netCoords, netNormals, false);
+    return Curve(netCoords, netNormals, false);
 }
+
+
+conics::ConicPresetFactory::ConicPresetFactory() {
+    // TODO: these should probably return functions instead of objects
+    presets_["Blank"] = getBlank;
+    presets_["Line"] = getLine;
+    presets_["Step"] = getStair;
+    presets_["Star"] = getStar;
+    presets_["Pentagon"] = getPentagon;
+    presets_["Basis"] = getBasis;
+    presets_["G"] = getG;
+    presets_["Circle"] = getCircle;
+    presets_["Ellipse"] = getEllipse;
+    presets_["JiriTest"] = getJiriTest;
+}
+
+
+Curve conics::ConicPresetFactory::getPreset(const QString &name) const {
+    return presets_.at(name)();
+}
+
+std::vector<QString> conics::ConicPresetFactory::getPresetNames() const {
+    std::vector<QString> keys;
+    keys.reserve(presets_.size());
+    for (const auto &[key, value]: presets_) {
+        keys.emplace_back(key);
+    }
+    return keys;
+}
+
+conics::ConicPresetFactory::~ConicPresetFactory() = default;

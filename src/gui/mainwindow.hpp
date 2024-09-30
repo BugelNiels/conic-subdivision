@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/settings.hpp"
+#include "core/settings/settings.hpp"
 #include "external/qt-value-slider/include/doubleslider.hpp"
 #include "external/qt-value-slider/include/intslider.hpp"
-#include "src/core/conics/conicpresets.hpp"
+#include "src/core/conics/conicpresetfactory.hpp"
 #include <QLabel>
 #include <QMainWindow>
 #include <QSpinBox>
@@ -21,29 +21,27 @@ public:
 private:
     const int maxWeight = 10E8;
 
-    conics::ConicPresets *presets_;
+    QString presetName;
+    QAction *closedCurveAction;
+    QDockWidget *dock_;
+    QLabel *presetLabel;
+    ValueSliders::IntSlider *subdivStepsSpinBox;
+
+    conics::ConicPresetFactory presetFactory_;
     Settings settings_;
     MainView *mainView_;
-
-    QMenu *getPresetMenu();
-
-    QMenu *getRenderMenu();
 
     QMenuBar *initMenuBar();
 
     QDockWidget *initSideMenu();
 
+    QMenu *getPresetMenu();
+
+    QMenu *getRenderMenu();
+
     QMenu *getFileMenu();
-
-    QLabel *presetLabel;
-
-    void resetView(bool recalculate = true);
-
-    ValueSliders::IntSlider *subdivStepsSpinBox;
-    QAction *closedCurveAction;
-    QString presetName;
 
     QMenu *getWindowMenu();
 
-    QDockWidget *dock_;
+    void resetView(bool recalculate = true);
 };

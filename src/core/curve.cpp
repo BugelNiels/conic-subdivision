@@ -3,41 +3,25 @@
 #include <utility>
 
 #include "core/conics/conic.hpp"
-#include "settings/settings.hpp"
 
-Curve::Curve(const Settings &settings)
-    : settings_(settings),
-      closed_(true) {}
+Curve::Curve() : closed_(true) {}
 
-Curve::Curve(const Settings &settings,
-                                   std::vector<Vector2DD> coords,
-                                   bool closed)
-    : settings_(settings),
-      closed_(closed),
-      coords(std::move(coords)) {
-    normals_ = calcNormals(coords_);
-    customNormals_.resize(normals_.size());
-    std::fill(customNormals_.begin(), customNormals_.end(), false);
-}
+Curve::Curve(std::vector<Vector2DD> coords, bool closed)
+    : Curve(std::move(coords), calcNormals(coords), closed) {}
 
-Curve::Curve(const Settings &settings,
-                                   std::vector<Vector2DD> coords,
-                                   std::vector<Vector2DD> normals,
-                                   bool closed)
-    : settings_(settings),
-      closed_(closed),
-      netCoords_(std::move(coords)),
-      netNormals_(std::move(normals)),
-      subdivider(settings_) {
-    int size = netCoords_.size();
+Curve::Curve(std::vector<Vector2DD> coords, std::vector<Vector2DD> normals, bool closed)
+    : closed_(closed),
+      coords_(std::move(coords)),
+      normals_(std::move(normals)) {
+    int size = coords_.size();
     customNormals_.resize(size);
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
 Vector2DD Curve::calcNormal(const Vector2DD &a,
-                                       const Vector2DD &b,
-                                       const Vector2DD &c,
-                                       bool areaWeighted) const {
+                            const Vector2DD &b,
+                            const Vector2DD &c,
+                            bool areaWeighted) const {
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
@@ -70,8 +54,8 @@ std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &coords) 
 }
 
 Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
-                                              const std::vector<Vector2DD> &normals,
-                                              int i) const {
+                                   const std::vector<Vector2DD> &normals,
+                                   int i) const {
     int n = int(normals.size());
     int nextIdx;
     int prevIdx;
@@ -121,18 +105,17 @@ Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
 
 int Curve::addPoint(const Vector2DD &p) {
     int idx = findInsertIdx(p);
-    netCoords_.insert(netCoords_.begin() + idx, p);
-    netNormals_.insert(netNormals_.begin() + idx, Vector2DD());
+    coords_.insert(coords_.begin() + idx, p);
+    normals_.insert(normals_.begin() + idx, Vector2DD());
     customNormals_.insert(customNormals_.begin() + idx, false);
-    netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
-    netNormals_[getNextIdx(idx)] = calcNormalAtIndex(netCoords_, netNormals_, getNextIdx(idx));
-    netNormals_[getPrevIdx(idx)] = calcNormalAtIndex(netCoords_, netNormals_, getPrevIdx(idx));
-    reSubdivide();
+    normals_[idx] = calcNormalAtIndex(coords_, normals_, idx);
+    normals_[getNextIdx(idx)] = calcNormalAtIndex(coords_, normals_, getNextIdx(idx));
+    normals_[getPrevIdx(idx)] = calcNormalAtIndex(coords_, normals_, getPrevIdx(idx));
     return idx;
 }
 
 void Curve::setVertexPosition(int idx, const Vector2DD &p) {
-    netCoords_[idx] = p;
+    coords_[idx] = p;
     if (!customNormals_[idx]) {
         recalculateNormal(idx);
     }
@@ -144,19 +127,17 @@ void Curve::setVertexPosition(int idx, const Vector2DD &p) {
     if (!customNormals_[prevIdx]) {
         recalculateNormal(prevIdx);
     }
-    reSubdivide();
 }
 
 void Curve::setNormalPosition(int idx, const Vector2DD &p) {
-    netNormals_[idx] = p - netCoords_[idx];
-    netNormals_[idx].normalize();
+    normals_[idx] = p - coords_[idx];
+    normals_[idx].normalize();
     customNormals_[idx] = true;
-    reSubdivide();
 }
 
 void Curve::removePoint(int idx) {
-    netCoords_.erase(netCoords_.begin() + idx);
-    netNormals_.erase(netNormals_.begin() + idx);
+    coords_.erase(coords_.begin() + idx);
+    normals_.erase(normals_.begin() + idx);
     customNormals_.erase(customNormals_.begin() + idx);
     int prevIdx = getPrevIdx(idx);
     if (!customNormals_[prevIdx]) {
@@ -168,15 +149,14 @@ void Curve::removePoint(int idx) {
     if (!customNormals_[idx]) {
         recalculateNormal(idx);
     }
-    reSubdivide();
 }
 
 int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
     int ptIndex = -1;
     double currentDist, minDist = std::numeric_limits<double>::infinity();
 
-    for (int k = 0; k < netCoords_.size(); k++) {
-        currentDist = (netCoords_[k] - p).norm();
+    for (int k = 0; k < coords_.size(); k++) {
+        currentDist = (coords_[k] - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -190,12 +170,12 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
 }
 
 int Curve::getNextIdx(int idx) const {
-    int n = int(netCoords_.size());
+    int n = int(coords_.size());
     return closed_ ? (idx + 1) % n : std::min(idx + 1, n - 1);
 }
 
 int Curve::getPrevIdx(int idx) const {
-    int n = int(netCoords_.size());
+    int n = int(coords_.size());
     return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
@@ -210,14 +190,14 @@ static double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vecto
 }
 
 int Curve::findInsertIdx(const Vector2DD &p) const {
-    if (netCoords_.empty()) {
+    if (coords_.empty()) {
         return 0;
     }
     int ptIndex = -1;
     double currentDist, minDist = std::numeric_limits<double>::infinity();
 
-    for (int k = 0; k < netCoords_.size(); k++) {
-        currentDist = distanceToEdge(netCoords_[k], netCoords_[getPrevIdx(k)], p);
+    for (int k = 0; k < coords_.size(); k++) {
+        currentDist = distanceToEdge(coords_[k], coords_[getPrevIdx(k)], p);
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -231,8 +211,8 @@ int Curve::findClosestNormal(const Vector2DD &p, const double maxDist) const {
     int ptIndex = -1;
     double currentDist, minDist = 4;
 
-    for (int k = 0; k < netCoords_.size(); k++) {
-        Vector2DD normPos = netCoords_[k] + settings_.normalLength * netNormals_[k];
+    for (int k = 0; k < coords_.size(); k++) {
+        Vector2DD normPos = coords_[k] + settings_.normalLength * normals_[k];
         currentDist = (normPos - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
@@ -246,25 +226,16 @@ int Curve::findClosestNormal(const Vector2DD &p, const double maxDist) const {
     return ptIndex;
 }
 
-void Curve::reSubdivide() {
-    subdivide(subdivisionLevel_);
-}
-
-void Curve::subdivide(int level) {
-    subdivider.subdivide(this, level);
-    subdivisionLevel_ = level;
-}
-
 void Curve::recalculateNormals() {
-    netNormals_ = calcNormals(netCoords_);
-    for (int i = 0; i < netNormals_.size(); i++) {
+    normals_ = calcNormals(coords_);
+    for (int i = 0; i < normals_.size(); i++) {
         customNormals_[i] = false;
     }
 }
 
 void Curve::recalculateNormal(int idx) {
     customNormals_[idx] = false;
-    netNormals_[idx] = calcNormalAtIndex(netCoords_, netNormals_, idx);
+    normals_[idx] = calcNormalAtIndex(coords_, normals_, idx);
 }
 
 bool Curve::isClosed() const {
@@ -273,7 +244,7 @@ bool Curve::isClosed() const {
 
 void Curve::setClosed(bool closed) {
     closed_ = closed;
-    if (netCoords_.empty()) {
+    if (coords_.empty()) {
         return;
     }
     if (!customNormals_[0]) {
@@ -282,42 +253,14 @@ void Curve::setClosed(bool closed) {
     if (!customNormals_[customNormals_.size() - 1]) {
         recalculateNormal(int(customNormals_.size()) - 1);
     }
-    reSubdivide();
-}
-
-void Curve::applySubdivision() {
-    netCoords_ = curveCoords_;
-    netNormals_ = curveNormals_;
-    customNormals_.resize(netCoords_.size());
-    subdivisionLevel_ = 0;
-}
-
-void Curve::insertInflPoints() {
-    std::vector<Vector2DD> coords;
-    std::vector<Vector2DD> norms;
-    std::vector<bool> customNorms;
-    subdivider.insertInflPoints(this, coords, norms, customNorms);
-
-    netCoords_ = coords;
-    netNormals_ = norms;
-    customNormals_ = customNorms;
 }
 
 void Curve::translate(const Vector2DD &translation) {
-    for (auto &c: netCoords_) {
+    for (auto &c: coords_) {
         c += translation;
     }
-    reSubdivide();
-}
-
-Conic Curve::getConicAtIndex(int idx) {
-    std::vector<PatchPoint> patch = subdivider.extractPatch(netCoords_,
-                                                            netNormals_,
-                                                            idx,
-                                                            settings_.patchSize);
-    return Conic(patch, settings_);
 }
 
 int Curve::numPoints() const {
-    return subdivisionLevel_ == 0 ? netCoords_.size() : curveCoords_.size();
+    return coords_.size();
 }

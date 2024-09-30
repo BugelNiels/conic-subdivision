@@ -1,7 +1,8 @@
 #include "mainview.hpp"
 
-#include "core/settings.hpp"
+#include "core/settings/settings.hpp"
 #include "qmessagebox.h"
+#include "src/core/subdivision/conicsubdivider.hpp"
 #include "src/core/subdivisioncurve.hpp"
 #include <QMouseEvent>
 #include <QOpenGLVersionFunctionsFactory>
@@ -17,11 +18,14 @@
 MainView::MainView(Settings &settings, QWidget *parent)
     : QOpenGLWidget(parent),
       settings_(settings),
-      cnr_(settings),
+      //   cnr_(settings),
       cr_(settings),
       conicR_(settings) {
 
-    subCurve_ = std::make_shared<SubdivisionCurve>(SubdivisionCurve(settings_));
+    subCurve_ = std::make_shared<SubdivisionCurve>(
+            SubdivisionCurve(settings_,
+                             controlCurve,
+                             std::make_shared<ConicSubdivider>(ConicSubdivider(settings))));
     setMinimumWidth(200);
     QSurfaceFormat format;
     format.setSamples(4); // Set the number of samples used for multisampling
@@ -56,7 +60,7 @@ void MainView::initializeGL() {
     // grab the opengl context
     auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(
             this->context());
-    cnr_.init(functions);
+    // cnr_.init(functions);
     cr_.init(functions);
     conicR_.init(functions);
     updateBuffers();
@@ -91,10 +95,11 @@ void MainView::recalculateCurve() {
         return;
     }
 
-    if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
-        Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
-        conicR_.updateBuffers(selectedConic);
-    }
+    // TODO
+    // if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
+    //     Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
+    //     conicR_.updateBuffers(selectedConic);
+    // }
     subCurve_->reSubdivide();
     updateBuffers();
 }
@@ -107,8 +112,8 @@ void MainView::updateBuffers() {
     if (subCurve_ == nullptr) {
         return;
     }
-    cnr_.updateBuffers(*subCurve_);
-    cr_.updateBuffers(*subCurve_);
+    // cnr_.updateBuffers(*subCurve_);
+    cr_.updateBuffers(subCurve_->controlCurve());
 
     update();
 }
@@ -123,7 +128,7 @@ void MainView::paintGL() {
 
     if (subCurve_ != nullptr) {
         cr_.draw();
-        cnr_.draw();
+        // cnr_.draw();
         if (settings_.testToggle) {
             conicR_.draw();
         }
@@ -155,7 +160,7 @@ bool MainView::attemptVertexHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedVertex = subCurve_->findClosestVertex(scenePos, maxDist);
+    settings_.highlightedVertex = subCurve_->controlCurve().findClosestVertex(scenePos, maxDist);
     if (settings_.highlightedVertex > -1) {
         return true;
     }
@@ -169,7 +174,7 @@ bool MainView::attemptNormalHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedNormal = subCurve_->findClosestNormal(scenePos, maxDist);
+    settings_.highlightedNormal = subCurve_->controlCurve().findClosestNormal(scenePos, maxDist);
     if (settings_.highlightedNormal > -1) {
         settings_.highlightedVertex = -1;
         return true;
@@ -201,19 +206,21 @@ void MainView::mousePressEvent(QMouseEvent *event) {
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
-                int idx = subCurve_->addPoint(scenePos);
+                int idx = subCurve_->controlCurve().addPoint(scenePos);
                 settings_.highlightedNormal = -1;
                 settings_.highlightedVertex = idx;
-                updateBuffers();
+                recalculateCurve();
             } else {
                 // First attempt to select a vertex. If unsuccessful, select a normal
                 if (!attemptVertexHighlight(scenePos)) {
                     attemptNormalHighlight(scenePos);
                 } else {
                     settings_.selectedVertex = settings_.highlightedVertex;
-                    Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
-                                                      .getMatrix();
-                    conicR_.updateBuffers(selectedConic);
+                    // TODO
+                    // Matrix3DD selectedConic = subCurve_
+                    //                                   ->getConicAtIndex(settings_.highlightedVertex)
+                    //                                   .getMatrix();
+                    // conicR_.updateBuffers(selectedConic);
                     selectedConicIdx_ = settings_.highlightedVertex;
                 }
             }
@@ -222,10 +229,10 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         }
         case Qt::RightButton: {
             // Add new control point
-            int idx = subCurve_->addPoint(scenePos);
+            int idx = subCurve_->controlCurve().addPoint(scenePos);
             settings_.highlightedNormal = -1;
             settings_.highlightedVertex = idx;
-            updateBuffers();
+            recalculateCurve();
             break;
         }
         case Qt::MiddleButton: {
@@ -254,20 +261,22 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             if (settings_.highlightedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                subCurve_->setVertexPosition(settings_.highlightedVertex, scenePos);
-                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
-                                                  .getMatrix();
-                conicR_.updateBuffers(selectedConic);
-                updateBuffers();
+                subCurve_->controlCurve().setVertexPosition(settings_.highlightedVertex, scenePos);
+                // TODO
+                // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
+                //                                   .getMatrix();
+                // conicR_.updateBuffers(selectedConic);
+                recalculateCurve();
             }
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                subCurve_->setNormalPosition(settings_.highlightedNormal, scenePos);
-                Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedNormal)
-                                                  .getMatrix();
-                conicR_.updateBuffers(selectedConic);
-                updateBuffers();
+                subCurve_->controlCurve().setNormalPosition(settings_.highlightedNormal, scenePos);
+                // TODO
+                // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedNormal)
+                //                                   .getMatrix();
+                // conicR_.updateBuffers(selectedConic);
+                recalculateCurve();
             }
             break;
         }
@@ -300,20 +309,20 @@ void MainView::keyPressEvent(QKeyEvent *event) {
     // Only works when the widget has focus!
     switch (event->key()) {
         case Qt::Key_Up:
-            subCurve_->translate({0, movementSpeed});
-            updateBuffers();
+            subCurve_->controlCurve().translate({0, movementSpeed});
+            recalculateCurve();
             break;
         case Qt::Key_Down:
-            subCurve_->translate({0, -movementSpeed});
-            updateBuffers();
+            subCurve_->controlCurve().translate({0, -movementSpeed});
+            recalculateCurve();
             break;
         case Qt::Key_Left:
-            subCurve_->translate({-movementSpeed, 0});
-            updateBuffers();
+            subCurve_->controlCurve().translate({-movementSpeed, 0});
+            recalculateCurve();
             break;
         case Qt::Key_Right:
-            subCurve_->translate({movementSpeed, 0});
-            updateBuffers();
+            subCurve_->controlCurve().translate({movementSpeed, 0});
+            recalculateCurve();
             break;
         case Qt::Key_Shift:
             break;
@@ -327,9 +336,9 @@ void MainView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_X:
             if (settings_.highlightedVertex > -1) {
                 // Remove selected control point
-                subCurve_->removePoint(settings_.highlightedVertex);
+                subCurve_->controlCurve().removePoint(settings_.highlightedVertex);
                 settings_.highlightedVertex = -1;
-                updateBuffers();
+                recalculateCurve();
             }
             break;
     }
@@ -353,7 +362,7 @@ void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
     if (subCurve_ == nullptr || settings_.highlightedNormal < 0) {
         return;
     }
-    subCurve_->recalculateNormal(settings_.highlightedNormal);
+    subCurve_->controlCurve().recalculateNormal(settings_.highlightedNormal);
     recalculateCurve();
 }
 
@@ -441,7 +450,7 @@ void MainView::recalculateNormals() {
     if (subCurve_ == nullptr) {
         return;
     }
-    subCurve_->recalculateNormals();
+    subCurve_->controlCurve().recalculateNormals();
     recalculateCurve();
 }
 
@@ -449,7 +458,7 @@ void MainView::refineNormals() {
     if (subCurve_ == nullptr) {
         return;
     }
-    subCurve_->refineNormals(settings_.maxRefinementIterations);
+    // subCurve_->controlCurve().refineNormals(settings_.maxRefinementIterations);
     recalculateCurve();
 }
 
@@ -457,7 +466,8 @@ void MainView::refineSelectedNormal() {
     if (subCurve_ == nullptr) {
         return;
     }
-    subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
+    // TODO
+    // subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
     recalculateCurve();
 }
 
@@ -465,10 +475,7 @@ const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
     return subCurve_;
 }
 
-bool MainView::saveCurve(const char *fileName) {
-
-    std::shared_ptr<SubdivisionCurve> crv;
-    crv = getSubCurve();
+bool MainView::saveCurve(const char *fileName, const Curve &curve) {
     std::ofstream file;
     file.open(fileName);
 
@@ -483,13 +490,13 @@ bool MainView::saveCurve(const char *fileName) {
         //        file << "Curve data: x and y coordinates only" << std::endl;
 
         std::vector<Vector2DD> coords;
-        coords = crv->getCurveCoords();
+        coords = curve.getCoords();
 
         for (int i = 0; i < coords.size(); i++) {
             file << std::fixed << std::setprecision(prec) << coords[i].x() << " " << std::fixed
                  << std::setprecision(prec) << coords[i].y() << std::endl;
         }
-        if (crv->isClosed()) {
+        if (curve.isClosed()) {
             file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed
                  << std::setprecision(prec) << coords[0].y() << std::endl;
         }
@@ -498,10 +505,7 @@ bool MainView::saveCurve(const char *fileName) {
     return true;
 }
 
-bool MainView::saveCurveN(const char *fileName) {
-
-    std::shared_ptr<SubdivisionCurve> crv;
-    crv = getSubCurve();
+bool MainView::saveCurveWithNormals(const char *fileName, const Curve &curve) {
     std::ofstream file;
     file.open(fileName);
 
@@ -515,8 +519,8 @@ bool MainView::saveCurveN(const char *fileName) {
     } else {
         std::vector<Vector2DD> coords;
         std::vector<Vector2DD> normals;
-        coords = crv->getCurveCoords();
-        normals = crv->getCurveNormals();
+        coords = curve.getCoords();
+        normals = curve.getNormals();
 
         for (int i = 0; i < coords.size(); i++) {
             file << "v " << std::fixed << std::setprecision(prec) << coords[i].x() << " "
@@ -526,10 +530,6 @@ bool MainView::saveCurveN(const char *fileName) {
             file << "vn " << std::fixed << std::setprecision(prec) << normals[i].x() << " "
                  << std::fixed << std::setprecision(prec) << normals[i].y() << std::endl;
         }
-        //        if (crv->isClosed())
-        //        {
-        //            file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec) << coords[0].y() << std::endl;
-        //        }
     }
     file.close();
     return true;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/core/settings.hpp"
+#include "src/core/settings/settings.hpp"
 #include "util/vector.hpp"
 #include <Eigen/Core>
 

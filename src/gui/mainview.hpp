@@ -36,8 +36,8 @@ public:
 
     const std::shared_ptr<SubdivisionCurve> &getSubCurve() const;
 
-    bool saveCurve(const char *fileName);
-    bool saveCurveN(const char *fileName);
+    bool saveCurve(const char *fileName, const Curve& curve);
+    bool saveCurveWithNormals(const char *fileName, const Curve& curve);
 
 protected:
     void initializeGL() override;
@@ -62,10 +62,11 @@ protected:
 
 private:
     Settings &settings_;
+    Curve controlCurve; // TODO see if this can be simplified
 
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
-    CurveNetRenderer cnr_;
+    // CurveNetRenderer cnr_;
     CurveRenderer cr_;
     ConicRenderer conicR_;
 

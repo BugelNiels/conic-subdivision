@@ -1,118 +1,36 @@
 #pragma once
 
-#include "core/conics/conic.hpp"
-#include "core/subdivision/conicsubdivider.hpp"
+#include <memory>
+
+#include "core/curve.hpp"
+#include "core/subdivision/subdivider.hpp"
 #include "util/vector.hpp"
-#include <QString>
-#include <set>
 
 class Settings;
 
 /**
- * @brief The SubdivisionCurve class contains the data of a 2D subdivision
- * curve.
+ * @brief The SubdivisionCurve class allows for easy subdivision of the provided using the provided subdivider.
  */
 class SubdivisionCurve {
 public:
-    explicit SubdivisionCurve(const Settings &settings);
+    explicit SubdivisionCurve(const Settings &settings, Curve& controlCurve, std::shared_ptr<Subdivider> subdivider);
 
-    explicit SubdivisionCurve(const Settings &settings,
-                              std::vector<Vector2DD> coords,
-                              bool closed = true);
+    [[nodiscard]] inline Curve& controlCurve() const { return controlCurve_; }
 
-    SubdivisionCurve(const Settings &settings,
-                     std::vector<Vector2DD> coords,
-                     std::vector<Vector2DD> normals,
-                     bool closed = true);
-
-    [[nodiscard]] inline const std::vector<Vector2DD> &getNetCoords() const { return netCoords_; }
-
-    [[nodiscard]] inline const std::vector<Vector2DD> &getNetNormals() const { return netNormals_; }
-
-    [[nodiscard]] inline std::vector<Vector2DD> &getNetNormals() { return netNormals_; }
-
-    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveCoords() const {
-        return curveCoords_;
-    }
-
-    [[nodiscard]] inline const std::vector<Vector2DD> &getCurveNormals() const {
-        return curveNormals_;
-    }
-
-    [[nodiscard]] inline std::vector<Vector2DD> &getCurveNormals() { return curveNormals_; }
+    [[nodiscard]] inline Curve& subdividedCurve() { return subdividedCurve_; }
 
     [[nodiscard]] inline int getSubdivLevel() const { return subdivisionLevel_; }
-
-    [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
-
-    [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist) const;
-
-    [[nodiscard]] bool isClosed() const;
-
-    int addPoint(const Vector2DD &p);
-
-    void setVertexPosition(int idx, const Vector2DD &p);
-
-    void setNormalPosition(int idx, const Vector2DD &p);
-
-    void removePoint(int idx);
 
     void subdivide(int level);
 
     void reSubdivide();
 
-    void recalculateNormals();
-
-    void recalculateNormal(int idx);
-
-    void refineNormals(int maxIter);
-    void refineSelectedNormal(int maxIter);
-
-    Conic getConicAtIndex(int idx);
-
-    void setClosed(bool closed);
-
-    void insertInflPoints();
-
-    void applySubdivision();
-
-    void translate(const Vector2DD &translation);
-
-    int numPoints() const;
-
-    int numControlPoints() const;
-
 private:
     const Settings &settings_;
-    ConicSubdivider subdivider;
+    std::shared_ptr<Subdivider> subdivider_;
+
+    Curve& controlCurve_;
+    Curve subdividedCurve_;
 
     int subdivisionLevel_ = 0;
-    bool closed_ = false;
-
-    std::vector<Vector2DD> curveCoords_;
-    std::vector<Vector2DD> curveNormals_;
-    std::vector<bool> customNormals_;
-    std::set<int> inflPointsIndices_;
-
-    std::vector<Vector2DD> netCoords_;
-    std::vector<Vector2DD> netNormals_;
-
-    [[nodiscard]] std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
-
-    [[nodiscard]] Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords,
-                                              const std::vector<Vector2DD> &normals,
-                                              int i) const;
-
-    [[nodiscard]] int findInsertIdx(const Vector2DD &p) const;
-
-    [[nodiscard]] int getNextIdx(int idx) const;
-
-    [[nodiscard]] int getPrevIdx(int idx) const;
-
-    friend class ConicSubdivider;
-
-    Vector2DD calcNormal(const Vector2DD &a,
-                         const Vector2DD &b,
-                         const Vector2DD &c,
-                         bool areaWeighted) const;
 };

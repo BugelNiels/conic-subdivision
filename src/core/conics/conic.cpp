@@ -4,7 +4,7 @@
 
 #include "conicfitter.hpp"
 
-#include "src/core/settings.hpp"
+#include "src/core/settings/settings.hpp"
 #include <iostream>
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {

@@ -1,6 +1,6 @@
 #include "conicrenderer.hpp"
 
-#include "core/settings.hpp"
+#include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
 ConicRenderer::ConicRenderer(const Settings &settings) : Renderer(settings) {}
