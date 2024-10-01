@@ -85,12 +85,19 @@ void MainView::subdivideCurve(int numSteps) {
     updateBuffers();
 }
 
+Conic MainView::getConicAtIndex(int idx) const {
+    ConicSubdivider subdivider(settings_);
+    std::vector<PatchPoint> patch = subdivider.extractPatch(controlCurve_,
+                                                            idx,
+                                                            settings_.patchSize);
+    return Conic(patch, settings_);
+}
+
 void MainView::recalculateCurve() {
-    // TODO
-    // if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
-    //     Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
-    //     conicR_.updateBuffers(selectedConic);
-    // }
+    if (selectedConicIdx_ >= 0 && selectedConicIdx_ < controlCurve_.numPoints()) {
+        Matrix3DD selectedConic = getConicAtIndex(selectedConicIdx_).getMatrix();
+        conicR_.updateBuffers(selectedConic);
+    }
     subdivideCurve(lastSubdivLevel_);
 }
 
@@ -200,11 +207,9 @@ void MainView::mousePressEvent(QMouseEvent *event) {
                     attemptNormalHighlight(scenePos);
                 } else {
                     settings_.selectedVertex = settings_.highlightedVertex;
-                    // TODO
-                    // Matrix3DD selectedConic = subCurve_
-                    //                                   ->getConicAtIndex(settings_.highlightedVertex)
-                    //                                   .getMatrix();
-                    // conicR_.updateBuffers(selectedConic);
+                    Matrix3DD selectedConic = getConicAtIndex(settings_.highlightedVertex)
+                                                      .getMatrix();
+                    conicR_.updateBuffers(selectedConic);
                     selectedConicIdx_ = settings_.highlightedVertex;
                 }
             }
@@ -246,20 +251,16 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
                 controlCurve_.setVertexPosition(settings_.highlightedVertex, scenePos);
-                // TODO
-                // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
-                //                                   .getMatrix();
-                // conicR_.updateBuffers(selectedConic);
+                Matrix3DD selectedConic = getConicAtIndex(settings_.highlightedVertex).getMatrix();
+                conicR_.updateBuffers(selectedConic);
                 recalculateCurve();
             }
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
                 controlCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
-                // TODO
-                // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedNormal)
-                //                                   .getMatrix();
-                // conicR_.updateBuffers(selectedConic);
+                Matrix3DD selectedConic = getConicAtIndex(settings_.highlightedNormal).getMatrix();
+                conicR_.updateBuffers(selectedConic);
                 recalculateCurve();
             }
             break;

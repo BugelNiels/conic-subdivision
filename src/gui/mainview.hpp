@@ -7,6 +7,7 @@
 #include "gui/renderers/curvenetrenderer.hpp"
 #include "gui/renderers/curverenderer.hpp"
 #include "util/vector.hpp"
+#include "core/conics/conic.hpp"
 
 class SubdivisionCurve;
 
@@ -87,6 +88,8 @@ private:
     void resetViewMatrix();
 
     void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
+
+    Conic getConicAtIndex(int idx) const;
 
     int selectedConicIdx_ = -1;
 

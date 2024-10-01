@@ -37,7 +37,7 @@ public:
      * For example, maxPatchSize = 1 means only the edge points are included, while maxPatchSize = 2 means a total maximum size of 4.
      * @return A collection of patch points.
      */
-    std::vector<PatchPoint> extractPatch(Curve &curve, // TODO: update docs
+    std::vector<PatchPoint> extractPatch(const Curve &curve, // TODO: update docs
                                          int i,
                                          int maxPatchSize) const;
 

@@ -106,14 +106,14 @@ void ConicSubdivider::edgePoint(Curve& curve,
     newNormals[i] = sampledNormal;
 }
 
-std::vector<PatchPoint> ConicSubdivider::extractPatch(Curve &curve,
+std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
                                                       int pIdx,
                                                       int maxPatchSize) const {
 
     std::vector<PatchPoint> patchPoints;
     patchPoints.reserve(4);
-    std::vector<Vector2DD> &points = curve.getCoords();
-    std::vector<Vector2DD> &normals = curve.getNormals();
+    const std::vector<Vector2DD> &points = curve.getCoords();
+    const std::vector<Vector2DD> &normals = curve.getNormals();
     const int size = int(points.size());
     // Left middle
     const int leftMiddleIdx = pIdx;
