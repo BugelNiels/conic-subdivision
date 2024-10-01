@@ -72,7 +72,7 @@ public:
 
 private:
     bool closed_ = true;
-    bool areaWeightedNormals_ = false;
+    bool areaWeightedNormals_ = true;
     bool circleNormals_ = false;
 
     std::vector<Vector2DD> coords_;

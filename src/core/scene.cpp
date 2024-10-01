@@ -28,16 +28,15 @@ Conic Scene::getConicAtIndex(int idx) const {
 
 void Scene::resubdivide() {
     subdivideCurve(lastSubdivLevel_);
-    notifyListeners();
 }
 
 void Scene::setControlCurve(Curve controlCurve) {
     controlCurve_ = controlCurve;
-    notifyListeners();
+    resubdivide();
 }
 
 void Scene::recalculateNormals() {
-    controlCurve_.recalculateNormals();
+    controlCurve_.recalculateNormals(settings_.areaWeightedNormals, settings_.circleNormals);
     resubdivide();
 }
 
@@ -49,6 +48,40 @@ void Scene::refineNormals() {
 void Scene::refineSelectedNormal() {
     // TODO
     // subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
+    resubdivide();
+}
+
+int Scene::addPoint(const Vector2DD &p) {
+    int idx = controlCurve_.addPoint(p);
+    resubdivide();
+    return idx;
+}
+
+void Scene::removePoint(int idx) {
+    controlCurve_.removePoint(idx);
+    resubdivide();
+}
+
+void Scene::setControlCurveClosed(bool closed) {
+    controlCurve_.setClosed(closed);
+    resubdivide();
+}
+
+void Scene::recalculateNormal(int idx) {
+    controlCurve_.recalculateNormal(idx);
+    resubdivide();
+}
+
+void Scene::setVertexPosition(int idx, const Vector2DD &p) {
+    controlCurve_.setVertexPosition(idx, p);
+    resubdivide();
+}
+void Scene::redirectNormalToPoint(int idx, const Vector2DD &p) {
+    controlCurve_.redirectNormalToPoint(idx, p);
+    resubdivide();
+}
+void Scene::translate(const Vector2DD& d) {
+    controlCurve_.translate(d);
     resubdivide();
 }
 

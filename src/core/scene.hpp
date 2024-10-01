@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/conics/conic.hpp"
 #include "core/curve/curve.hpp"
+#include "core/scenelistener.hpp"
 #include "core/settings/settings.hpp"
 #include "core/vector.hpp"
-#include "core/conics/conic.hpp"
-#include "core/scenelistener.hpp"
 
 namespace conics::core {
 
@@ -18,29 +18,31 @@ public:
     [[nodiscard]] inline const Curve &getControlCurve() const { return controlCurve_; }
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
 
-    [[nodiscard]] inline Curve &getControlCurve() { return controlCurve_; }
-    [[nodiscard]] inline Curve &getSubdivCurve() { return subdivCurve_; }
+    Conic getConicAtIndex(int idx) const;
 
     void resubdivide();
-
     void recalculateNormals();
-
+    void recalculateNormal(int idx);
     void refineNormals();
-
     void refineSelectedNormal();
 
     void setControlCurve(Curve curve);
-
     void subdivideCurve(int numSteps);
 
-    Conic getConicAtIndex(int idx) const;
+    int addPoint(const Vector2DD &p);
+    void removePoint(int idx);
 
-    void addListener(SceneListener* listener);
-    void removeListener(SceneListener* listener);
+    void setControlCurveClosed(bool closed);
+    void setVertexPosition(int idx, const Vector2DD &p);
+    void redirectNormalToPoint(int idx, const Vector2DD &p);
+    void translate(const Vector2DD &d);
+
+    void addListener(SceneListener *listener);
+    void removeListener(SceneListener *listener);
     void notifyListeners();
 
 private:
-    std::vector<SceneListener*> listeners;
+    std::vector<SceneListener *> listeners;
     Settings &settings_;
     Curve controlCurve_;
     Curve subdivCurve_;

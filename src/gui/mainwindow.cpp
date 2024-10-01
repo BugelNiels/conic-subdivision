@@ -32,7 +32,7 @@ using BoundMode = ValueSliders::BoundMode;
 
 namespace conics::ui {
 
-MainWindow::MainWindow(conics::core::Settings settings, conics::core::Scene &scene, QWidget *parent) : QMainWindow(parent), settings_(settings) {
+MainWindow::MainWindow(conics::core::Settings& settings, conics::core::Scene &scene, QWidget *parent) : QMainWindow(parent), settings_(settings) {
     setWindowTitle("Conic Subdivision Test Tool");
     mainView_ = new MainView(settings_, scene, this);
 
@@ -67,9 +67,9 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *resetPresetButton = new QPushButton("Reset Preset");
     connect(resetPresetButton, &QPushButton::pressed, this, [this] {
         auto &scene = mainView_->getScene();
-        scene.setControlCurve(presetFactory_.getPreset(presetName));
-        presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
         subdivStepsSpinBox->setVal(0);
+        presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
+        scene.setControlCurve(presetFactory_.getPreset(presetName));
         closedCurveAction->setChecked(scene.getControlCurve().isClosed());
     });
     vertLayout->addWidget(resetPresetButton);
@@ -584,8 +584,7 @@ QMenu *MainWindow::getRenderMenu() {
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {
         auto &scene = mainView_->getScene();
-        scene.getControlCurve().setClosed(toggled);
-        scene.resubdivide();
+        scene.setControlCurveClosed(toggled);
     });
     renderMenu->addAction(closedCurveAction);
 

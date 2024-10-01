@@ -93,7 +93,6 @@ void MainView::controlCurveUpdated() {
 void MainView::updateBuffers() {
     cr_.updateBuffers(scene_.getSubdivCurve());
     cnr_.updateBuffers(scene_.getControlCurve());
-
     update();
 }
 
@@ -184,10 +183,9 @@ void MainView::mousePressEvent(QMouseEvent *event) {
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
-                int idx = controlCurve.addPoint(scenePos);
+                int idx = scene_.addPoint(scenePos);
                 settings_.highlightedNormal = -1;
                 settings_.highlightedVertex = idx;
-                controlCurveUpdated();
             } else {
                 // First attempt to select a vertex. If unsuccessful, select a normal
                 if (!attemptVertexHighlight(scenePos)) {
@@ -205,10 +203,9 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         }
         case Qt::RightButton: {
             // Add new control point
-            int idx = controlCurve.addPoint(scenePos);
+            int idx = scene_.addPoint(scenePos);
             settings_.highlightedNormal = -1;
             settings_.highlightedVertex = idx;
-            controlCurveUpdated();
             break;
         }
         case Qt::MiddleButton: {
@@ -238,20 +235,18 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             if (settings_.highlightedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                controlCurve.setVertexPosition(settings_.highlightedVertex, scenePos);
+                scene_.setVertexPosition(settings_.highlightedVertex, scenePos);
                 Matrix3DD selectedConic = scene_.getConicAtIndex(settings_.highlightedVertex)
                                                   .getMatrix();
                 conicR_.updateBuffers(selectedConic);
-                controlCurveUpdated();
             }
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                controlCurve.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
+                scene_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
                 Matrix3DD selectedConic = scene_.getConicAtIndex(settings_.highlightedNormal)
                                                   .getMatrix();
                 conicR_.updateBuffers(selectedConic);
-                controlCurveUpdated();
             }
             break;
         }
@@ -282,20 +277,16 @@ void MainView::keyPressEvent(QKeyEvent *event) {
     auto &controlCurve = scene_.getControlCurve();
     switch (event->key()) {
         case Qt::Key_Up:
-            controlCurve.translate({0, movementSpeed});
-            controlCurveUpdated();
+            scene_.translate({0, movementSpeed});
             break;
         case Qt::Key_Down:
-            controlCurve.translate({0, -movementSpeed});
-            controlCurveUpdated();
+            scene_.translate({0, -movementSpeed});
             break;
         case Qt::Key_Left:
-            controlCurve.translate({-movementSpeed, 0});
-            controlCurveUpdated();
+            scene_.translate({-movementSpeed, 0});
             break;
         case Qt::Key_Right:
-            controlCurve.translate({movementSpeed, 0});
-            controlCurveUpdated();
+            scene_.translate({movementSpeed, 0});
             break;
         case Qt::Key_Shift:
             break;
@@ -309,9 +300,8 @@ void MainView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_X:
             if (settings_.highlightedVertex > -1) {
                 // Remove selected control point
-                controlCurve.removePoint(settings_.highlightedVertex);
+                scene_.removePoint(settings_.highlightedVertex);
                 settings_.highlightedVertex = -1;
-                controlCurveUpdated();
             }
             break;
     }
@@ -335,8 +325,7 @@ void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
     if (settings_.highlightedNormal < 0) {
         return;
     }
-    auto &controlCurve = scene_.getControlCurve();
-    controlCurve.recalculateNormal(settings_.highlightedNormal);
+    scene_.recalculateNormal(settings_.highlightedNormal);
     controlCurveUpdated();
 }
 

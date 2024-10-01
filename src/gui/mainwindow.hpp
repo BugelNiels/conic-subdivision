@@ -19,7 +19,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(conics::core::Settings settings, conics::core::Scene &scene, QWidget *parent = nullptr);
+    explicit MainWindow(conics::core::Settings& settings, conics::core::Scene &scene, QWidget *parent = nullptr);
 
     ~MainWindow() override;
 
