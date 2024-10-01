@@ -3,7 +3,9 @@
 #include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
-ConicRenderer::ConicRenderer(const Settings &settings) : Renderer(settings) {}
+namespace conics::ui {
+
+ConicRenderer::ConicRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
 
 ConicRenderer::~ConicRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -53,7 +55,7 @@ void ConicRenderer::initBuffers() {
     gl_->glBindVertexArray(0);
 }
 
-void ConicRenderer::updateBuffers(Matrix3DD &q) {
+void ConicRenderer::updateBuffers(conics::core::Matrix3DD &q) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             conicCoefs_(i, j) = qreal(q(i, j));
@@ -78,3 +80,5 @@ void ConicRenderer::draw() {
     shader->release();
     gl_->glBindVertexArray(0);
 }
+
+} // namespace conics::ui

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "util/vector.hpp"
+#include "core/vector.hpp"
+
+namespace conics::core {
 
 class Settings;
 
 class Conic {
 public:
-    Conic(){};
+    Conic() {};
 
     Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings);
 
@@ -33,3 +35,5 @@ private:
 
     Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
 };
+
+} // namespace conics::core

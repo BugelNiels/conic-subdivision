@@ -1,10 +1,11 @@
 #include "renderer.hpp"
-#include "util/vector.hpp"
+
+namespace conics::ui {
 
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
-Renderer::Renderer(const Settings &settings) : gl_(nullptr), settings_(settings) {}
+Renderer::Renderer(const conics::core::Settings &settings) : gl_(nullptr), settings_(settings) {}
 
 /**
  * @brief Renderer::~Renderer Deconstructs the renderer by deleting all shaders.
@@ -75,11 +76,13 @@ QOpenGLShaderProgram *Renderer::constructDefaultShader(const QString &name) {
     return shader;
 }
 
-std::vector<QVector2D> Renderer::qVecToVec(const std::vector<Vector2DD> &items) {
+std::vector<QVector2D> Renderer::qVecToVec(const std::vector<conics::core::Vector2DD> &items) {
     std::vector<QVector2D> qItems;
     qItems.reserve(items.size());
     for (auto &item: items) {
         qItems.emplace_back(float(item.x()), float(item.y()));
     }
     return qItems;
+}
+
 }

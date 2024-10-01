@@ -3,12 +3,13 @@
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLShaderProgram>
 
+#include "core/vector.hpp"
+#include "core/settings/settings.hpp"
 #include "shadertypes.hpp"
-#include "util/vector.hpp"
 
-// #define SHADER_DOUBLE_PRECISION
+namespace conics::ui {
 
-class Settings;
+#define SHADER_DOUBLE_PRECISION
 
 /**
  * @brief The Renderer class represents a generic renderer class. The class is
@@ -17,14 +18,14 @@ class Settings;
  */
 class Renderer {
 public:
-    explicit Renderer(const Settings &settings);
+    explicit Renderer(const conics::core::Settings &settings);
 
     virtual ~Renderer();
 
     void init(QOpenGLFunctions_4_1_Core *f);
 
 protected:
-    const Settings &settings_;
+    const conics::core::Settings &settings_;
 
     QMap<ShaderType, QOpenGLShaderProgram *> shaders_;
     QOpenGLFunctions_4_1_Core *gl_ = nullptr;
@@ -37,10 +38,10 @@ protected:
 
     static QOpenGLShaderProgram *constructPolyLineShader();
 
-    static std::vector<QVector2D> qVecToVec(const std::vector<Vector2DD> &items);
+    static std::vector<QVector2D> qVecToVec(const std::vector<conics::core::Vector2DD> &items);
 
     template<class T>
-    static std::vector<T> qVecToVec(const std::vector<Vector2DD> &items) {
+    static std::vector<T> qVecToVec(const std::vector<conics::core::Vector2DD> &items) {
         std::vector<T> qItems;
         qItems.reserve(items.size() * 2);
         for (auto &item: items) {
@@ -50,3 +51,5 @@ protected:
         return qItems;
     }
 };
+
+} // namespace conics::ui

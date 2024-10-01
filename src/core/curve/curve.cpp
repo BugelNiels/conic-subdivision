@@ -4,6 +4,8 @@
 
 #include "core/conics/conic.hpp"
 
+namespace conics::core {
+
 Curve::Curve() : Curve({}, {}, false) {}
 
 Curve::Curve(bool closed) : Curve({}, {}, closed) {}
@@ -210,7 +212,9 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
 
 // Returns index of the point normal handle
 // TODO: move this outside of this class?
-int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
+int Curve::findClosestNormal(const Vector2DD &p,
+                             const double maxDist,
+                             const double normalLength) const {
     int ptIndex = -1;
     double currentDist, minDist = 4;
 
@@ -269,3 +273,5 @@ void Curve::translate(const Vector2DD &translation) {
 int Curve::numPoints() const {
     return coords_.size();
 }
+
+} // namespace conics::core

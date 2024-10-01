@@ -1,9 +1,13 @@
 #pragma once
 
+#include <QMatrix4x4>
+
 #include "gui/renderers/shadertypes.hpp"
 #include "gui/stylepresets.hpp"
-#include "util/vector.hpp"
-#include <QMatrix4x4>
+#include "core/vector.hpp"
+
+// TODO: move this outside of code (and split)
+namespace conics::core {
 
 /**
  * Struct that contains all the settings of the program. Initialised with a
@@ -11,6 +15,7 @@
  */
 using Settings = struct Settings {
     // Selection data
+    // TODO: move into controller
     int highlightedVertex = -1;
     int highlightedNormal = -1;
     int selectedVertex = -1;
@@ -25,7 +30,8 @@ using Settings = struct Settings {
     // Calculation Weights
     real_t middlePointWeight = 100000.0;
     real_t middleNormalWeight = 100000.0;
-    real_t outerPointWeight = 100.0; // The ratio between this and outerNormalWeight is Tau in the paper
+    // The ratio between this and outerNormalWeight is Tau in the paper
+    real_t outerPointWeight = 100.0;
     real_t outerNormalWeight = 1.0;
     int patchSize = 2;
 
@@ -67,3 +73,5 @@ using Settings = struct Settings {
     float zoomStrength = 1.2;
     float dragSensitivity = 1;
 };
+
+} // namespace conics::core

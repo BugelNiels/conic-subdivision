@@ -1,11 +1,12 @@
 #include "conic.hpp"
 
 #include <cmath>
-
-#include "conicfitter.hpp"
-
-#include "src/core/settings/settings.hpp"
 #include <iostream>
+
+#include "core/conics/conicfitter.hpp"
+#include "core/settings/settings.hpp"
+
+namespace conics::core {
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {
     real_t a = coefs[0]; // A - x*x
@@ -159,4 +160,6 @@ void Conic::printConic() const {
 
 real_t Conic::getStability() const {
     return stability_;
+}
+
 }

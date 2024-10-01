@@ -1,7 +1,10 @@
 #pragma once
 
-#include "util/vector.hpp"
 #include <set>
+
+#include "core/vector.hpp"
+
+namespace conics::core {
 
 class Settings;
 
@@ -23,7 +26,9 @@ public:
 
     [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
     [[nodiscard]] inline const std::vector<Vector2DD> &getNormals() const { return normals_; }
-    [[nodiscard]] inline const std::vector<bool> &getCustomNormals() const { return customNormals_; }
+    [[nodiscard]] inline const std::vector<bool> &getCustomNormals() const {
+        return customNormals_;
+    }
 
     [[nodiscard]] inline std::vector<Vector2DD> &getCoords() { return coords_; }
     [[nodiscard]] inline std::vector<Vector2DD> &getNormals() { return normals_; }
@@ -31,11 +36,15 @@ public:
 
     inline void setCoords(std::vector<Vector2DD> coords) { coords_ = coords; }
     inline void setNormals(std::vector<Vector2DD> normals) { normals_ = normals; }
-    inline void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = customNormals; }
+    inline void setCustomNormals(std::vector<bool> customNormals) {
+        customNormals_ = customNormals;
+    }
 
     [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
 
-    [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist, const double normalLength) const;
+    [[nodiscard]] int findClosestNormal(const Vector2DD &p,
+                                        double maxDist,
+                                        const double normalLength) const;
 
     [[nodiscard]] bool isClosed() const;
 
@@ -83,3 +92,5 @@ private:
                          const Vector2DD &c,
                          bool areaWeighted) const;
 };
+
+} // namespace conics::core

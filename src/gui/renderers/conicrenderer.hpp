@@ -6,13 +6,15 @@
 #include "renderer.hpp"
 #include "shadertypes.hpp"
 
+namespace conics::ui {
+
 class ConicRenderer : public Renderer {
 public:
-    explicit ConicRenderer(const Settings &settings);
+    explicit ConicRenderer(const conics::core::Settings &settings);
 
     ~ConicRenderer() override;
 
-    void updateBuffers(Matrix3DD &q);
+    void updateBuffers(conics::core::Matrix3DD &q);
 
     void draw();
 
@@ -34,3 +36,5 @@ private:
     int vboSize_ = 0;
     bool shouldDraw_ = true;
 };
+
+} // namespace conics::ui

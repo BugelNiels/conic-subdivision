@@ -1,6 +1,8 @@
 #pragma once
 
-#include "core/curve.hpp"
+#include "core/curve/curve.hpp"
+
+namespace conics::core {
 
 class Subdivider {
 public:
@@ -9,5 +11,7 @@ public:
      * @param curve The curve to subdivide.
      * @param level The level to subdivide to.
      */
-    virtual void subdivide(Curve& curve, int level) = 0;
+    virtual void subdivide(Curve &curve, int level) = 0;
 };
+
+} // namespace conics::core

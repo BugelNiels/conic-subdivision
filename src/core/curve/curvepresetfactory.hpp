@@ -1,26 +1,25 @@
 #pragma once
 
-#include <map>
 #include <QString>
+#include <map>
 
-#include "core/curve.hpp"
+#include "core/curve/curve.hpp"
 
-namespace conics {
+namespace conics::core {
 
-class ConicPresetFactory {
+class CurvePresetFactory {
 
 public:
-    explicit ConicPresetFactory();
+    explicit CurvePresetFactory();
 
-    ~ConicPresetFactory();
+    ~CurvePresetFactory();
 
     [[nodiscard]] Curve getPreset(const QString &name) const;
 
     [[nodiscard]] std::vector<QString> getPresetNames() const;
 
 private:
-
     std::map<QString, std::function<Curve()>> presets_;
 };
 
-} // namespace conics
+} // namespace conics::core

@@ -1,10 +1,13 @@
 #pragma once
 
-#include "util/colormap.hpp"
 #include <QColor>
 #include <QPalette>
 
+#include "util/colormap.hpp"
+
+namespace conics::core {
 class Settings;
+} // namespace conics::core
 
 namespace conics::ui {
 
@@ -16,14 +19,15 @@ using StylePreset = struct StylePreset {
     QColor selectedVertCol;
     QColor selectedNormCol;
     QColor normCol;
-    ColorMapName colorMapName;
+    conics::util::ColorMapName colorMapName;
 
     QPalette palette;
 };
 
-void applyStylePreset(Settings &settings, const StylePreset &preset);
+void applyStylePreset(conics::core::Settings &settings, const StylePreset &preset);
 
 StylePreset getDarkModePalette();
 
 StylePreset getLightModePalette();
+
 } // namespace conics::ui

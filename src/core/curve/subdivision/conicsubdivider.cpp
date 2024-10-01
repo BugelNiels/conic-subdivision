@@ -1,12 +1,15 @@
 #include "conicsubdivider.hpp"
+
 #include "core/conics/conic.hpp"
+
+namespace conics::core {
 
 ConicSubdivider::ConicSubdivider(const Settings &settings) : settings_(settings) {}
 
 void ConicSubdivider::subdivide(Curve &curve, int level) {
     const auto &coords = curve.getCoords();
     const auto &norms = curve.getNormals();
-    if (coords.size() == 0  || level == 0) {
+    if (coords.size() == 0 || level == 0) {
         return;
     }
     if (settings_.convexitySplit) {
@@ -60,7 +63,7 @@ void ConicSubdivider::subdivideRecursive(Curve &curve, int level) {
     subdivideRecursive(curve, level - 1);
 }
 
-void ConicSubdivider::edgePoint(Curve& curve,
+void ConicSubdivider::edgePoint(Curve &curve,
                                 int i,
                                 std::vector<Vector2DD> &newPoints,
                                 std::vector<Vector2DD> &newNormals) const {
@@ -128,8 +131,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
     // Right middle
     const int rightMiddleIdx = (pIdx + 1) % size;
     const bool rightInflPoint = std::find(inflPointIndices_.begin(),
-                                         inflPointIndices_.end(),
-                                         rightMiddleIdx) != inflPointIndices_.end();
+                                          inflPointIndices_.end(),
+                                          rightMiddleIdx) != inflPointIndices_.end();
     patchPoints.push_back({points[rightMiddleIdx],
                            normals[rightMiddleIdx],
                            settings_.middlePointWeight,
@@ -230,16 +233,16 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
     return dotProduct2 * sign >= 0;
 }
 
-Curve ConicSubdivider::getInflPointCurve(Curve& curve) {
+Curve ConicSubdivider::getInflPointCurve(Curve &curve) {
     // Setup
     const int n = int(curve.numPoints());
     inflPointIndices_.reserve(n);
     Curve inflCurve(curve.isClosed());
-    auto& coords = inflCurve.getCoords();
+    auto &coords = inflCurve.getCoords();
     coords.reserve(n);
-    auto& norms = inflCurve.getNormals();
+    auto &norms = inflCurve.getNormals();
     norms.reserve(n);
-    auto& customNorms = inflCurve.getCustomNormals();
+    auto &customNorms = inflCurve.getCustomNormals();
     customNorms.reserve(n);
     int idx = 0;
     // For all points
@@ -324,3 +327,5 @@ std::pair<Vector2DD, real_t> ConicSubdivider::inflNormal(const Vector2DD &edgeAB
     const real_t angleOrtho = std::abs(std::acos(normal.dot(correctedOrtho)));
     return {normal, angleOrtho};
 }
+
+} // namespace conics::core

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "src/core/settings/settings.hpp"
-#include "util/vector.hpp"
 #include <Eigen/Core>
+
+#include "core/vector.hpp"
+#include "core/settings/settings.hpp"
+
+namespace conics::core {
 
 class ConicFitter {
 public:
@@ -23,3 +26,5 @@ private:
 
     Eigen::VectorX<real_t> solveLinSystem(const Eigen::MatrixX<real_t> &A);
 };
+
+} // namespace conics::core

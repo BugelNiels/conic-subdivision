@@ -7,8 +7,11 @@
 #include "external/qt-value-slider/include/doubleslider.hpp"
 #include "external/qt-value-slider/include/intslider.hpp"
 
-#include "core/conics/conicpresetfactory.hpp"
+#include "core/curve/curvepresetfactory.hpp"
+#include "core/scene.hpp"
 #include "core/settings/settings.hpp"
+
+namespace conics::ui {
 
 class MainView;
 
@@ -16,7 +19,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(conics::core::Settings settings, conics::core::Scene &scene, QWidget *parent = nullptr);
 
     ~MainWindow() override;
 
@@ -29,8 +32,8 @@ private:
     QLabel *presetLabel;
     ValueSliders::IntSlider *subdivStepsSpinBox;
 
-    conics::ConicPresetFactory presetFactory_;
-    Settings settings_;
+    conics::core::CurvePresetFactory presetFactory_;
+    conics::core::Settings& settings_;
     MainView *mainView_;
 
     QMenuBar *initMenuBar();
@@ -46,5 +49,6 @@ private:
     QMenu *getWindowMenu();
 
     void resetView(bool recalculate = true);
-
 };
+
+} // namespace conics::ui

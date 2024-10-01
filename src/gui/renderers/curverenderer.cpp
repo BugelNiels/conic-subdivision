@@ -3,11 +3,13 @@
 #include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
+namespace conics::ui {
+
 static const int COORDS_IDX = 0;
 static const int NORM_IDX = 1;
 static const int DOUBLE_IDX = 2;
 
-CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {}
+CurveRenderer::CurveRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
 
 CurveRenderer::~CurveRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -48,7 +50,7 @@ void CurveRenderer::initBuffers() {
     gl_->glGenBuffers(1, &ibo_);
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
-    ColorMap colMap;
+    conics::util::ColorMap colMap;
     auto colMapVals = colMap.getColorMap(settings_.style.colorMapName);
 
     texture_ = new QOpenGLTexture(QOpenGLTexture::Target1D);
@@ -64,7 +66,7 @@ void CurveRenderer::initBuffers() {
     gl_->glBindVertexArray(0);
 }
 
-void CurveRenderer::updateBuffers(const Curve &curve) {
+void CurveRenderer::updateBuffers(const conics::core::Curve &curve) {
     std::vector<QVector2D> coords = qVecToVec(curve.getCoords());
     std::vector<QVector2D> normals = qVecToVec(curve.getNormals());
     for (auto &norm: normals) {
@@ -133,10 +135,8 @@ void CurveRenderer::draw() {
     }
     auto shader = shaders_[ShaderType::POLYLINE];
     shader->bind();
-    shader->setUniformValue("visualize_normals",
-                            settings_.visualizeNormals);
-    shader->setUniformValue("visualize_curvature",
-                            settings_.visualizeCurvature);
+    shader->setUniformValue("visualize_normals", settings_.visualizeNormals);
+    shader->setUniformValue("visualize_curvature", settings_.visualizeCurvature);
     shader->setUniformValue("viewMatrix", settings_.viewMatrix);
     shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue("curvatureScale", settings_.curvatureScale);
@@ -152,10 +152,11 @@ void CurveRenderer::draw() {
     QVector3D normCol(normQCol.redF(), normQCol.greenF(), normQCol.blueF());
     shader->setUniformValue("normalColor", normCol);
 
-
     gl_->glBindVertexArray(vao_);
 
     gl_->glDrawElements(GL_LINE_STRIP_ADJACENCY, vboSize_, GL_UNSIGNED_INT, nullptr);
 
     shader->release();
 }
+
+} // namespace conics::ui

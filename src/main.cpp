@@ -3,7 +3,9 @@
 
 #include <QDockWidget>
 
-#include "src/gui/mainwindow.hpp"
+#include "gui/mainwindow.hpp"
+#include "core/scene.hpp"
+#include "core/settings/settings.hpp"
 
 /**
  * @brief main Starts up the QT application and UI.
@@ -13,7 +15,7 @@
  */
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    qDebug() << "Using " << sizeof(real_t) << "byte calculations";
+    qDebug() << "Using " << sizeof(conics::core::real_t) << "byte calculations";
 
     QSurfaceFormat glFormat;
     glFormat.setProfile(QSurfaceFormat::CoreProfile);
@@ -25,7 +27,10 @@ int main(int argc, char *argv[]) {
     font.setPixelSize(14);
     QApplication::setFont(font);
 
-    MainWindow w;
+    conics::core::Settings settings;
+    conics::core::Scene scene(settings);
+
+    conics::ui::MainWindow w(settings, scene);
     w.showMaximized();
     return QApplication::exec();
 }

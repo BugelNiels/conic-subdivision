@@ -3,48 +3,41 @@
 #include <QOpenGLDebugLogger>
 #include <QOpenGLWidget>
 
+#include "core/conics/conic.hpp"
+#include "core/scene.hpp"
+#include "core/vector.hpp"
+#include "core/scenelistener.hpp"
 #include "gui/renderers/conicrenderer.hpp"
 #include "gui/renderers/curvenetrenderer.hpp"
 #include "gui/renderers/curverenderer.hpp"
-#include "util/vector.hpp"
-#include "core/conics/conic.hpp"
 
-class SubdivisionCurve;
+namespace conics::ui {
 
-class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
+class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core, public conics::core::SceneListener  {
     Q_OBJECT
 
 public:
-    explicit MainView(Settings &settings, QWidget *parent = nullptr);
+    MainView(conics::core::Settings &settings,
+             conics::core::Scene &scene,
+             QWidget *parent = nullptr);
 
     ~MainView() override;
 
-    void recalculateCurve();
-
-    void recalculateNormals();
-
-    void refineNormals();
-
-    void refineSelectedNormal();
-
-    void setControlCurve(Curve curve);
+    void controlCurveUpdated();
 
     void updateBuffers();
 
-    void subdivideCurve(int numSteps);
-
     void paintGL() override;
 
-    bool saveCurve(const char *fileName, const Curve &curve);
-    bool saveCurveWithNormals(const char *fileName, const Curve &curve);
+    [[nodiscard]] inline const conics::core::Scene &getScene() const { return scene_; }
+    [[nodiscard]] inline conics::core::Scene &getScene() { return scene_; }
 
-    Curve& getControlCurve() { return controlCurve_; }
-    const Curve& getSubdivCurve() const { return subdivCurve_; }
+    void sceneUpdated();
 
 protected:
     void initializeGL() override;
 
-    Vector2DD toNormalizedScreenCoordinates(double x, double y);
+    conics::core::Vector2DD toNormalizedScreenCoordinates(double x, double y);
 
     void mousePressEvent(QMouseEvent *event) override;
 
@@ -63,10 +56,8 @@ protected:
     void resizeGL(int width, int height) override;
 
 private:
-    Settings &settings_;
-    Curve controlCurve_;
-    Curve subdivCurve_;
-    int lastSubdivLevel_ = 0;
+    conics::core::Settings &settings_;
+    conics::core::Scene &scene_;
 
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
@@ -75,25 +66,24 @@ private:
     ConicRenderer conicR_;
 
     bool dragging_ = false;
+    int selectedConicIdx_ = -1;
 
-    Vector2DD oldMouseCoords_;
+    conics::core::Vector2DD oldMouseCoords_;
     QMatrix4x4 toWorldCoordsMatrix_;
 
-    bool attemptNormalHighlight(const Vector2DD &scenePos);
+    bool attemptNormalHighlight(const conics::core::Vector2DD &scenePos);
 
-    bool attemptVertexHighlight(const Vector2DD &scenePos);
+    bool attemptVertexHighlight(const conics::core::Vector2DD &scenePos);
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 
     void resetViewMatrix();
 
-    void translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos);
-
-    Conic getConicAtIndex(int idx) const;
-
-    int selectedConicIdx_ = -1;
+    void translationUpdate(const conics::core::Vector2DD &scenePos, const QPointF &mousePos);
 
 private slots:
 
     void onMessageLogged(QOpenGLDebugMessage message);
 };
+
+} // namespace conics::ui

@@ -2,7 +2,9 @@
 
 #include "core/settings/settings.hpp"
 
-CurveNetRenderer::CurveNetRenderer(const Settings &settings) : Renderer(settings) {}
+namespace conics::ui {
+
+CurveNetRenderer::CurveNetRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
 
 /**
  * @brief CurveNetRenderer::~CurveNetRenderer Destructor of the control curve
@@ -52,7 +54,7 @@ void CurveNetRenderer::initBuffers() {
  * @param curve The curve containing the information to update the
  * buffer(s) with.
  */
-void CurveNetRenderer::updateBuffers(const Curve &curve) {
+void CurveNetRenderer::updateBuffers(const conics::core::Curve &curve) {
     coords_ = qVecToVec(curve.getCoords());
     normals_ = qVecToVec(curve.getNormals());
     int numVerts = coords_.size();
@@ -155,3 +157,5 @@ void CurveNetRenderer::draw() {
 
     shader->release();
 }
+
+} // namespace conics::ui

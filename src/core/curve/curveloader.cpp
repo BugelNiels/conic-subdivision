@@ -1,10 +1,13 @@
-#include "objcurvereader.hpp"
+#include "curveloader.hpp"
+
+#include <QDebug>
 #include <QFile>
 #include <QMap>
-#include <QDebug>
 #include <QTextStream>
 
-ObjCurveReader::ObjCurveReader() {}
+namespace conics::core {
+
+CurveLoader::CurveLoader() {}
 
 static void insertLineSegment(QMap<int, int> &lineSegments, int startIdx, int endIdx) {
     if (!lineSegments.contains(startIdx)) {
@@ -16,7 +19,7 @@ static void insertLineSegment(QMap<int, int> &lineSegments, int startIdx, int en
     lineSegments.insert(startIdx, endIdx);
 }
 
-Curve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
+Curve CurveLoader::loadCurveFromFile(const QString &filePath) {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug() << "Failed to open file:" << file.errorString();
@@ -60,3 +63,5 @@ Curve ObjCurveReader::loadCurveFromObj(const QString &filePath) {
     }
     return Curve(coords, normals, closed);
 }
+
+} // namespace conics::core

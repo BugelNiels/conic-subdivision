@@ -1,8 +1,10 @@
 #pragma once
 
+#include "core/curve/subdivision/subdivider.hpp"
 #include "core/settings/settings.hpp"
-#include "core/subdivision/subdivider.hpp"
-#include "util/vector.hpp"
+#include "core/vector.hpp"
+
+namespace conics::core {
 
 class SubdivisionCurve;
 
@@ -68,7 +70,7 @@ private:
      * @param newPoints The coordinates at subdivision level d+1.
      * @param newNormals The normals at subdivision level d+1.
      */
-    void edgePoint(Curve& curve,
+    void edgePoint(Curve &curve,
                    int i,
                    std::vector<Vector2DD> &newPoints,
                    std::vector<Vector2DD> &newNormals) const; // TODO: update docs
@@ -84,3 +86,5 @@ private:
                                             const Vector2DD &edgeBC,
                                             const Vector2DD &orthogonal) const;
 };
+
+} // namespace conics::core

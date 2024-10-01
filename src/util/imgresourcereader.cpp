@@ -1,11 +1,12 @@
 #include "imgresourcereader.hpp"
+
 #include <QPainter>
 
-QMap<QString, QPixmap> util::ImgResourceReader::loadedIcons_;
+namespace conics::util {
 
-QPixmap util::ImgResourceReader::getPixMap(const QString &path,
-                                           const QSize &size,
-                                           const QColor &color) {
+QMap<QString, QPixmap> ImgResourceReader::loadedIcons_;
+
+QPixmap ImgResourceReader::getPixMap(const QString &path, const QSize &size, const QColor &color) {
     QString key = QString("%1?color=%2&size=%3x%4")
                           .arg(path)
                           .arg(color.name())
@@ -30,3 +31,5 @@ QPixmap util::ImgResourceReader::getPixMap(const QString &path,
     loadedIcons_[key] = newIcon;
     return newIcon;
 }
+
+} // namespace conics::util

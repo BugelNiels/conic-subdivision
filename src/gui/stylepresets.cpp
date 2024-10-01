@@ -3,12 +3,14 @@
 #include "core/settings/settings.hpp"
 #include <QApplication>
 
-void conics::ui::applyStylePreset(Settings &settings, const StylePreset &preset) {
+namespace conics::ui {
+
+void applyStylePreset(conics::core::Settings &settings, const StylePreset &preset) {
     QApplication::setPalette(preset.palette);
     settings.style = preset;
 }
 
-conics::ui::StylePreset conics::ui::getDarkModePalette() {
+StylePreset getDarkModePalette() {
     QPalette palette;
     palette.setColor(QPalette::Window, QColor(34, 34, 36));             // Window background color
     palette.setColor(QPalette::WindowText, QColor(239, 239, 239));      // Text color
@@ -40,11 +42,11 @@ conics::ui::StylePreset conics::ui::getDarkModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName = ColorMapName::KINDLMANN;
+    preset.colorMapName = conics::util::ColorMapName::KINDLMANN;
     return preset;
 }
 
-conics::ui::StylePreset conics::ui::getLightModePalette() {
+StylePreset getLightModePalette() {
     QPalette palette;
     palette.setColor(QPalette::Window, QColor(222, 222, 222));          // Window background color
     palette.setColor(QPalette::WindowText, QColor(70, 70, 70));         // Text color
@@ -66,7 +68,7 @@ conics::ui::StylePreset conics::ui::getLightModePalette() {
     palette.setColor(QPalette::Disabled, QPalette::AlternateBase, QColor(238, 238, 238));
     palette.setColor(QPalette::Disabled, QPalette::Window, QColor(218, 218, 218));
 
-    StylePreset preset;
+    ui::StylePreset preset;
     preset.palette = palette;
 
     preset.backgroundCol = QColor(255, 255, 255);
@@ -76,6 +78,8 @@ conics::ui::StylePreset conics::ui::getLightModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName = ColorMapName::SMOOTH_COOL_WARM;
+    preset.colorMapName = conics::util::ColorMapName::SMOOTH_COOL_WARM;
     return preset;
+}
+
 }

@@ -1,19 +1,21 @@
-    #pragma once
+#pragma once
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
+#include "core/curve/curve.hpp"
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "core/curve.hpp"
+
+namespace conics::ui {
 
 class CurveRenderer : public Renderer {
 public:
-    explicit CurveRenderer(const Settings &settings);
+    explicit CurveRenderer(const conics::core::Settings &settings);
 
     ~CurveRenderer() override;
 
-    void updateBuffers(const Curve &curve);
+    void updateBuffers(const conics::core::Curve &curve);
 
     void draw();
 
@@ -34,3 +36,5 @@ private:
     QOpenGLTexture *texture_;
     int vboSize_ = 0;
 };
+
+} // namespace conics::ui

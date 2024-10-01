@@ -1,7 +1,8 @@
-#include "conicpresetfactory.hpp"
+#include "curvepresetfactory.hpp"
 
-#include "util/vector.hpp"
+#include "core/vector.hpp"
 
+namespace conics::core {
 
 Curve getBlank() {
     std::vector<Vector2DD> netCoords;
@@ -148,8 +149,7 @@ Curve getJiriTest() {
     return Curve(netCoords, netNormals, false);
 }
 
-
-conics::ConicPresetFactory::ConicPresetFactory() {
+CurvePresetFactory::CurvePresetFactory() {
     presets_["Blank"] = getBlank;
     presets_["Line"] = getLine;
     presets_["Step"] = getStair;
@@ -162,12 +162,13 @@ conics::ConicPresetFactory::ConicPresetFactory() {
     presets_["JiriTest"] = getJiriTest;
 }
 
+CurvePresetFactory::~CurvePresetFactory() = default;
 
-Curve conics::ConicPresetFactory::getPreset(const QString &name) const {
+Curve CurvePresetFactory::getPreset(const QString &name) const {
     return presets_.at(name)();
 }
 
-std::vector<QString> conics::ConicPresetFactory::getPresetNames() const {
+std::vector<QString> CurvePresetFactory::getPresetNames() const {
     std::vector<QString> keys;
     keys.reserve(presets_.size());
     for (const auto &[key, value]: presets_) {
@@ -176,4 +177,4 @@ std::vector<QString> conics::ConicPresetFactory::getPresetNames() const {
     return keys;
 }
 
-conics::ConicPresetFactory::~ConicPresetFactory() = default;
+} // namespace conics::core

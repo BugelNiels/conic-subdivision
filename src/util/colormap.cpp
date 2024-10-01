@@ -1,5 +1,7 @@
 #include "colormap.hpp"
 
+namespace conics::util {
+
 /**
  * @brief ColorMap::ColorMap Creates a new color map object containing various
  * different color maps.
@@ -1252,3 +1254,5 @@ std::vector<QVector3D> ColorMap::getCMPHaxbyColorMap() {
             {1, 0.956862745098039, 0.925490196078431},
             {1, 1, 1}};
 }
+
+} // namespace conics::util

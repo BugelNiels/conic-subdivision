@@ -1,7 +1,10 @@
 #include "conicfitter.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/Eigen>
 #include <Eigen/SVD>
+
+namespace conics::core {
 
 ConicFitter::ConicFitter() {}
 
@@ -92,4 +95,6 @@ real_t ConicFitter::stability() const {
     const real_t logValue = std::log10(stability_);
     const real_t mappedValue = (logValue - logMin) / (logMax - logMin);
     return std::clamp(mappedValue, real_t(0), real_t(1));
+}
+
 }
