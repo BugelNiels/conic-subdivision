@@ -5,7 +5,7 @@
 
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/curve.hpp"
+#include "core/curve.hpp"
 
 class CurveRenderer : public Renderer {
 public:
@@ -13,7 +13,7 @@ public:
 
     ~CurveRenderer() override;
 
-    void updateBuffers(Curve &curve);
+    void updateBuffers(const Curve &curve);
 
     void draw();
 

@@ -5,7 +5,6 @@
 
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/subdivisioncurve.hpp"
 
 class ConicRenderer : public Renderer {
 public:

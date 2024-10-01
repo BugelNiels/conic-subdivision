@@ -46,8 +46,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
 void MainWindow::resetView(bool recalculate) {
     presetName = "Blank";
-    // TODO: was fixing all the errors; next step is extract this into something that creates a subdivision curve
-    mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presetFactory_.getPreset(presetName)));
+    mainView_->setControlCurve(presetFactory_.getPreset(presetName));
     presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
     if (recalculate) {
         mainView_->recalculateCurve();
@@ -65,11 +64,10 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(presetLabel);
     auto *resetPresetButton = new QPushButton("Reset Preset");
     connect(resetPresetButton, &QPushButton::pressed, this, [this] {
-        // TODO: extract this
-        mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presetFactory_.getPreset(presetName)));
+        mainView_->setControlCurve(presetFactory_.getPreset(presetName));
         presetLabel->setText(QString("<b>Preset:</b> %1").arg(presetName));
         subdivStepsSpinBox->setVal(0);
-        closedCurveAction->setChecked(mainView_->getSubCurve()->controlCurve().isClosed());
+        closedCurveAction->setChecked(mainView_->getControlCurve().isClosed());
         mainView_->recalculateCurve();
     });
     vertLayout->addWidget(resetPresetButton);
@@ -396,20 +394,16 @@ QMenu *MainWindow::getFileMenu() {
     openAction->setShortcutContext(Qt::ApplicationShortcut);
     openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
     connect(openAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getOpenFileName(
-                nullptr,
-                "Load Curve",
-                "../curves/",
-                tr("Txt Files (*.txt)"));
+        QString filePath = QFileDialog::getOpenFileName(nullptr,
+                                                        "Load Curve",
+                                                        "../curves/",
+                                                        tr("Txt Files (*.txt)"));
         if (filePath == "") {
             return;
         }
         ObjCurveReader reader;
         Curve curve = reader.loadCurveFromObj(filePath);
-        mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(
-                settings_,
-                curve,
-                std::make_shared<Subdivider>(ConicSubdivider(settings_))));
+        mainView_->setControlCurve(presetFactory_.getPreset(presetName));
         subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(curve.isClosed());
         mainView_->recalculateCurve();
@@ -457,7 +451,7 @@ QMenu *MainWindow::getFileMenu() {
             char *file_name;
             file_name = bytes.data();
 
-            bool success = mainView_->saveCurve(file_name, mainView_->getSubCurve()->subdividedCurve());
+            bool success = mainView_->saveCurve(file_name, mainView_->getSubdivCurve());
 
             if (success) {
                 QMessageBox::information(this, "Curve Saved", filePath);
@@ -488,7 +482,7 @@ QMenu *MainWindow::getFileMenu() {
             char *file_name;
             file_name = bytes.data();
 
-            bool success = mainView_->saveCurveWithNormals(file_name, mainView_->getSubCurve()->subdividedCurve());
+            bool success = mainView_->saveCurveWithNormals(file_name, mainView_->getSubdivCurve());
 
             if (success) {
                 QMessageBox::information(this, "Curve Saved", filePath);
@@ -525,10 +519,10 @@ QMenu *MainWindow::getPresetMenu() {
         newAction->setShortcut(QKeySequence::fromString(QString("Ctrl+%1").arg(i)));
         connect(newAction, &QAction::triggered, [this, name]() {
             presetName = name;
-            mainView_->setSubCurve(std::make_shared<SubdivisionCurve>(presetFactory_.getPreset(name)));
+            mainView_->setControlCurve(presetFactory_.getPreset(presetName));
             presetLabel->setText(QString("<b>Preset:</b> %1").arg(name));
             subdivStepsSpinBox->setVal(0);
-            closedCurveAction->setChecked(mainView_->getSubCurve()->controlCurve().isClosed());
+            closedCurveAction->setChecked(mainView_->getControlCurve().isClosed());
             mainView_->recalculateCurve();
         });
         presetMenu->addAction(newAction);
@@ -565,12 +559,11 @@ QMenu *MainWindow::getRenderMenu() {
 
     closedCurveAction = new QAction(QStringLiteral("Closed Curve"), renderMenu);
     closedCurveAction->setCheckable(true);
+    closedCurveAction->setChecked(true);
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {
-        if (mainView_->getSubCurve() != nullptr) {
-            mainView_->getSubCurve()->controlCurve().setClosed(toggled);
-            mainView_->updateBuffers();
-        }
+        mainView_->getControlCurve().setClosed(toggled);
+        mainView_->updateBuffers();
     });
     renderMenu->addAction(closedCurveAction);
 

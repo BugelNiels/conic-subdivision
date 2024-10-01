@@ -1,12 +1,14 @@
 #pragma once
 
-#include "core/settings/settings.hpp"
-#include "external/qt-value-slider/include/doubleslider.hpp"
-#include "external/qt-value-slider/include/intslider.hpp"
-#include "src/core/conics/conicpresetfactory.hpp"
 #include <QLabel>
 #include <QMainWindow>
 #include <QSpinBox>
+
+#include "external/qt-value-slider/include/doubleslider.hpp"
+#include "external/qt-value-slider/include/intslider.hpp"
+
+#include "core/conics/conicpresetfactory.hpp"
+#include "core/settings/settings.hpp"
 
 class MainView;
 
@@ -44,4 +46,5 @@ private:
     QMenu *getWindowMenu();
 
     void resetView(bool recalculate = true);
+
 };

@@ -4,7 +4,9 @@
 
 #include "core/conics/conic.hpp"
 
-Curve::Curve() : closed_(true) {}
+Curve::Curve() : Curve({}, {}, false) {}
+
+Curve::Curve(bool closed) : Curve({}, {}, closed) {}
 
 Curve::Curve(std::vector<Vector2DD> coords, bool closed)
     : Curve(std::move(coords), calcNormals(coords), closed) {}
@@ -13,8 +15,7 @@ Curve::Curve(std::vector<Vector2DD> coords, std::vector<Vector2DD> normals, bool
     : closed_(closed),
       coords_(std::move(coords)),
       normals_(std::move(normals)) {
-    int size = coords_.size();
-    customNormals_.resize(size);
+    customNormals_.resize(coords_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
@@ -69,7 +70,7 @@ Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
     Vector2DD a = coords[prevIdx];
     Vector2DD b = coords[i];
     Vector2DD c = coords[nextIdx];
-    if (settings_.circleNormals) {
+    if (circleNormals_) {
         if (a == b) {
             Vector2DD normal = c - b;
             normal.x() *= -1;
@@ -92,14 +93,14 @@ Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
             Vector2DD oscCircleCenter = Vector2DD(ux, uy);
             Vector2DD norm = (oscCircleCenter - b).normalized();
 
-            Vector2DD check = calcNormal(a, b, c, settings_.areaWeightedNormals);
+            Vector2DD check = calcNormal(a, b, c, areaWeightedNormals_);
             if (check.dot(normals[i]) < 0) {
                 norm *= -1;
             }
             return norm;
         }
     } else {
-        return calcNormal(a, b, c, settings_.areaWeightedNormals);
+        return calcNormal(a, b, c, areaWeightedNormals_);
     }
 }
 
@@ -129,7 +130,8 @@ void Curve::setVertexPosition(int idx, const Vector2DD &p) {
     }
 }
 
-void Curve::setNormalPosition(int idx, const Vector2DD &p) {
+// Sets the normal to of the vertex at the provided index to point towards the provided point
+void Curve::redirectNormalToPoint(int idx, const Vector2DD &p) {
     normals_[idx] = p - coords_[idx];
     normals_[idx].normalize();
     customNormals_[idx] = true;
@@ -207,12 +209,13 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
 }
 
 // Returns index of the point normal handle
-int Curve::findClosestNormal(const Vector2DD &p, const double maxDist) const {
+// TODO: move this outside of this class?
+int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
     int ptIndex = -1;
     double currentDist, minDist = 4;
 
     for (int k = 0; k < coords_.size(); k++) {
-        Vector2DD normPos = coords_[k] + settings_.normalLength * normals_[k];
+        Vector2DD normPos = coords_[k] + normalLength * normals_[k];
         currentDist = (normPos - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
@@ -226,7 +229,9 @@ int Curve::findClosestNormal(const Vector2DD &p, const double maxDist) const {
     return ptIndex;
 }
 
-void Curve::recalculateNormals() {
+void Curve::recalculateNormals(bool areaWeightedNormals, bool circleNormals) {
+    areaWeightedNormals_ = areaWeightedNormals;
+    circleNormals_ = circleNormals;
     normals_ = calcNormals(coords_);
     for (int i = 0; i < normals_.size(); i++) {
         customNormals_[i] = false;

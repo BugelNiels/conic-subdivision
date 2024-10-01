@@ -26,7 +26,7 @@ public:
 
     void refineSelectedNormal();
 
-    void setSubCurve(std::shared_ptr<SubdivisionCurve> subCurve);
+    void setControlCurve(Curve curve);
 
     void updateBuffers();
 
@@ -34,10 +34,11 @@ public:
 
     void paintGL() override;
 
-    const std::shared_ptr<SubdivisionCurve> &getSubCurve() const;
+    bool saveCurve(const char *fileName, const Curve &curve);
+    bool saveCurveWithNormals(const char *fileName, const Curve &curve);
 
-    bool saveCurve(const char *fileName, const Curve& curve);
-    bool saveCurveWithNormals(const char *fileName, const Curve& curve);
+    Curve& getControlCurve() { return controlCurve_; }
+    const Curve& getSubdivCurve() const { return subdivCurve_; }
 
 protected:
     void initializeGL() override;
@@ -62,15 +63,15 @@ protected:
 
 private:
     Settings &settings_;
-    Curve controlCurve; // TODO see if this can be simplified
+    Curve controlCurve_;
+    Curve subdivCurve_;
+    int lastSubdivLevel_ = 0;
 
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
-    // CurveNetRenderer cnr_;
+    CurveNetRenderer cnr_;
     CurveRenderer cr_;
     ConicRenderer conicR_;
-
-    std::shared_ptr<SubdivisionCurve> subCurve_;
 
     bool dragging_ = false;
 

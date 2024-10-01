@@ -1,24 +1,27 @@
 #include "conicsubdivider.hpp"
 #include "core/conics/conic.hpp"
-#include "core/subdivisioncurve.hpp"
 
 ConicSubdivider::ConicSubdivider(const Settings &settings) : settings_(settings) {}
 
 void ConicSubdivider::subdivide(Curve &curve, int level) {
     const auto &coords = curve.getCoords();
     const auto &norms = curve.getNormals();
-    if (int(coords.size()) == 0) {
+    if (coords.size() == 0  || level == 0) {
         return;
     }
     if (settings_.convexitySplit) {
         std::vector<Vector2DD> coords;
         std::vector<Vector2DD> norms;
         std::vector<bool> customNorms;
+        // TODO: this is horribly inefficient and ugly
         Curve inflCurve = getInflPointCurve(curve);
-        subdivide(inflCurve, level);
+        subdivideRecursive(inflCurve, level);
+        curve.setCoords(inflCurve.getCoords());
+        curve.setNormals(inflCurve.getNormals());
+        curve.setCustomNormals(inflCurve.getCustomNormals());
     } else {
         inflPointIndices_.clear();
-        subdivide(curve, level);
+        subdivideRecursive(curve, level);
     }
 }
 
@@ -51,9 +54,9 @@ void ConicSubdivider::subdivideRecursive(Curve &curve, int level) {
     for (int &inflIdx: inflPointIndices_) {
         inflIdx *= 2;
     }
-    // TODO: check if this works
-    points = newPoints;
-    normals = newNormals;
+    // TODO: efficiency
+    curve.setCoords(newPoints);
+    curve.setNormals(newNormals);
     subdivideRecursive(curve, level - 1);
 }
 
@@ -231,10 +234,10 @@ Curve ConicSubdivider::getInflPointCurve(Curve& curve) {
     // Setup
     const int n = int(curve.numPoints());
     inflPointIndices_.reserve(n);
-    Curve inflCurve;
+    Curve inflCurve(curve.isClosed());
     auto& coords = inflCurve.getCoords();
     coords.reserve(n);
-    auto& norms = inflCurve.getCoords();
+    auto& norms = inflCurve.getNormals();
     norms.reserve(n);
     auto& customNorms = inflCurve.getCustomNormals();
     customNorms.reserve(n);

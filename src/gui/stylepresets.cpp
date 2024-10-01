@@ -1,6 +1,6 @@
 #include "stylepresets.hpp"
 
-#include "src/core/settings/settings.hpp"
+#include "core/settings/settings.hpp"
 #include <QApplication>
 
 void conics::ui::applyStylePreset(Settings &settings, const StylePreset &preset) {

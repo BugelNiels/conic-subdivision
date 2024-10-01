@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/renderers/util/colormap.hpp"
+#include "util/colormap.hpp"
 #include <QColor>
 #include <QPalette>
 

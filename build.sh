@@ -2,24 +2,16 @@
 
 # Help message
 usage() {
-  echo "Performs the build of CTA through a dedicated Kubernetes pod."
-  echo "The pod persists between runs of this script (unless the --reset flag is specified), which ensures that the build does not need to happen from scratch."
-  echo "It is also able to deploy the built rpms via minikube for a basic testing setup."
-  echo ""
-  echo "Important prerequisite: this script expects a CTA/ directory in /home/cirunner/shared/ on a VM"
+  echo "Builds the conicsubdiv binary."
   echo ""
   echo "Usage: $0 [options]"
   echo ""
   echo "options:"
   echo "  -h, --help:                               Shows help output."
-  echo "  -r, --reset:                              Shut down the build pod and start a new one to ensure a fresh build."
-  echo "  -o, --operating-system <os>:              Specifies for which operating system to build the rpms. Supported operating systems: [cc7, alma9]. Defaults to alma9 if not provided."
-  echo "      --skip-build:                         Skips the build step."
-  echo "      --skip-deploy:                        Skips the redeploy step."
+  echo "  -c, --clean:                              Cleans the build directory."
   echo "      --skip-cmake:                         Skips the cmake step of the build_rpm stage during the build process."
-  echo "      --skip-unit-tests:                    Skips the unit tests. Speeds up the build time by not running the unit tests."
-  echo "      --cmake-build-type <build-type>:      Specifies the build type for cmake. Must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
-  echo "      --force-install:                      Adds the --install flag to the build_rpm step, regardless of whether the pod was reset or not."
+  echo "  -b, --cmake-build-type <build-type>:      Specifies the build type for cmake. Must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
+  echo "  -r, --run:                                Runs the built binary."
   exit 1
 }
 
@@ -51,9 +43,9 @@ build() {
           usage
         fi
         ;;
-      --clean) clean=true ;;
+      -c|--clean) clean=true ;;
       --skip-cmake) skip_cmake=true ;;
-      --run) run=true ;;
+      -r|--run) run=true ;;
       *)
         usage
         ;;
@@ -84,6 +76,9 @@ build() {
     echo -e "\tExecute using:"
     echo -e "\t\t./${build_dir}/conicsubdiv"
     echo ""
+  else
+    echo "Build failed."
+    exit 1
   fi
 
   if [ ${run} = true ]; then

@@ -150,7 +150,6 @@ Curve getJiriTest() {
 
 
 conics::ConicPresetFactory::ConicPresetFactory() {
-    // TODO: these should probably return functions instead of objects
     presets_["Blank"] = getBlank;
     presets_["Line"] = getLine;
     presets_["Step"] = getStair;

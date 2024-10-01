@@ -3,7 +3,7 @@
 #include <map>
 #include <QString>
 
-#include "src/core/curve.hpp"
+#include "core/curve.hpp"
 
 namespace conics {
 

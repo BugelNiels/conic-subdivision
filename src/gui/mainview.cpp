@@ -1,31 +1,24 @@
 #include "mainview.hpp"
 
-#include "core/settings/settings.hpp"
-#include "qmessagebox.h"
-#include "src/core/subdivision/conicsubdivider.hpp"
-#include "src/core/subdivisioncurve.hpp"
+#include <Eigen/Core>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QOpenGLVersionFunctionsFactory>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <utility>
 
+#include "core/settings/settings.hpp"
+#include "core/subdivision/conicsubdivider.hpp"
 #include "util/vector.hpp"
-#include <Eigen/Core>
-#include <fstream>
-#include <iostream>
-
-#include <iomanip>
 
 MainView::MainView(Settings &settings, QWidget *parent)
     : QOpenGLWidget(parent),
       settings_(settings),
-      //   cnr_(settings),
+      cnr_(settings),
       cr_(settings),
       conicR_(settings) {
-
-    subCurve_ = std::make_shared<SubdivisionCurve>(
-            SubdivisionCurve(settings_,
-                             controlCurve,
-                             std::make_shared<ConicSubdivider>(ConicSubdivider(settings))));
     setMinimumWidth(200);
     QSurfaceFormat format;
     format.setSamples(4); // Set the number of samples used for multisampling
@@ -60,12 +53,13 @@ void MainView::initializeGL() {
     // grab the opengl context
     auto *functions = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_1_Core>(
             this->context());
-    // cnr_.init(functions);
+    cnr_.init(functions);
     cr_.init(functions);
     conicR_.init(functions);
     updateBuffers();
 }
 
+// TODO: handle all the controller stuff elsewhere
 void MainView::resetViewMatrix() {
     settings_.viewMatrix.setToIdentity();
     settings_.viewMatrix.scale(settings_.initialScale);
@@ -83,25 +77,21 @@ void MainView::resizeGL(int width, int height) {
 }
 
 void MainView::subdivideCurve(int numSteps) {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    subCurve_->subdivide(numSteps);
+    // TODO: make more efficient
+    lastSubdivLevel_ = numSteps;
+    ConicSubdivider subdivider(settings_);
+    subdivCurve_ = controlCurve_;
+    subdivider.subdivide(subdivCurve_, numSteps);
     updateBuffers();
 }
 
 void MainView::recalculateCurve() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-
     // TODO
     // if (selectedConicIdx_ >= 0 && selectedConicIdx_ < subCurve_->numPoints()) {
     //     Matrix3DD selectedConic = subCurve_->getConicAtIndex(selectedConicIdx_).getMatrix();
     //     conicR_.updateBuffers(selectedConic);
     // }
-    subCurve_->reSubdivide();
-    updateBuffers();
+    subdivideCurve(lastSubdivLevel_);
 }
 
 /**
@@ -109,11 +99,8 @@ void MainView::recalculateCurve() {
  * subdivision curve renderers.
  */
 void MainView::updateBuffers() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    // cnr_.updateBuffers(*subCurve_);
-    cr_.updateBuffers(subCurve_->controlCurve());
+    cr_.updateBuffers(subdivCurve_);
+    cnr_.updateBuffers(controlCurve_);
 
     update();
 }
@@ -126,12 +113,10 @@ void MainView::paintGL() {
     glClearColor(bCol.redF(), bCol.greenF(), bCol.blueF(), 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (subCurve_ != nullptr) {
-        cr_.draw();
-        // cnr_.draw();
-        if (settings_.testToggle) {
-            conicR_.draw();
-        }
+    cr_.draw();
+    cnr_.draw();
+    if (settings_.testToggle) {
+        conicR_.draw();
     }
 }
 
@@ -160,7 +145,7 @@ bool MainView::attemptVertexHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedVertex = subCurve_->controlCurve().findClosestVertex(scenePos, maxDist);
+    settings_.highlightedVertex = controlCurve_.findClosestVertex(scenePos, maxDist);
     if (settings_.highlightedVertex > -1) {
         return true;
     }
@@ -174,7 +159,9 @@ bool MainView::attemptNormalHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedNormal = subCurve_->controlCurve().findClosestNormal(scenePos, maxDist);
+    settings_.highlightedNormal = controlCurve_.findClosestNormal(scenePos,
+                                                                  maxDist,
+                                                                  settings_.normalLength);
     if (settings_.highlightedNormal > -1) {
         settings_.highlightedVertex = -1;
         return true;
@@ -198,15 +185,12 @@ void MainView::translationUpdate(const Vector2DD &scenePos, const QPointF &mouse
 void MainView::mousePressEvent(QMouseEvent *event) {
     // In order to allow keyPressEvents:
     setFocus();
-    if (subCurve_ == nullptr) {
-        return;
-    }
     Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(),
                                                        event->position().y());
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
-                int idx = subCurve_->controlCurve().addPoint(scenePos);
+                int idx = controlCurve_.addPoint(scenePos);
                 settings_.highlightedNormal = -1;
                 settings_.highlightedVertex = idx;
                 recalculateCurve();
@@ -229,7 +213,7 @@ void MainView::mousePressEvent(QMouseEvent *event) {
         }
         case Qt::RightButton: {
             // Add new control point
-            int idx = subCurve_->controlCurve().addPoint(scenePos);
+            int idx = controlCurve_.addPoint(scenePos);
             settings_.highlightedNormal = -1;
             settings_.highlightedVertex = idx;
             recalculateCurve();
@@ -261,7 +245,7 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             if (settings_.highlightedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                subCurve_->controlCurve().setVertexPosition(settings_.highlightedVertex, scenePos);
+                controlCurve_.setVertexPosition(settings_.highlightedVertex, scenePos);
                 // TODO
                 // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedVertex)
                 //                                   .getMatrix();
@@ -271,7 +255,7 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                subCurve_->controlCurve().setNormalPosition(settings_.highlightedNormal, scenePos);
+                controlCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
                 // TODO
                 // Matrix3DD selectedConic = subCurve_->getConicAtIndex(settings_.highlightedNormal)
                 //                                   .getMatrix();
@@ -302,26 +286,23 @@ void MainView::mouseMoveEvent(QMouseEvent *event) {
  */
 void MainView::keyPressEvent(QKeyEvent *event) {
     QWidget::keyPressEvent(event);
-    if (subCurve_ == nullptr) {
-        return;
-    }
     const float movementSpeed = 0.02;
     // Only works when the widget has focus!
     switch (event->key()) {
         case Qt::Key_Up:
-            subCurve_->controlCurve().translate({0, movementSpeed});
+            controlCurve_.translate({0, movementSpeed});
             recalculateCurve();
             break;
         case Qt::Key_Down:
-            subCurve_->controlCurve().translate({0, -movementSpeed});
+            controlCurve_.translate({0, -movementSpeed});
             recalculateCurve();
             break;
         case Qt::Key_Left:
-            subCurve_->controlCurve().translate({-movementSpeed, 0});
+            controlCurve_.translate({-movementSpeed, 0});
             recalculateCurve();
             break;
         case Qt::Key_Right:
-            subCurve_->controlCurve().translate({movementSpeed, 0});
+            controlCurve_.translate({movementSpeed, 0});
             recalculateCurve();
             break;
         case Qt::Key_Shift:
@@ -336,7 +317,7 @@ void MainView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_X:
             if (settings_.highlightedVertex > -1) {
                 // Remove selected control point
-                subCurve_->controlCurve().removePoint(settings_.highlightedVertex);
+                controlCurve_.removePoint(settings_.highlightedVertex);
                 settings_.highlightedVertex = -1;
                 recalculateCurve();
             }
@@ -359,10 +340,10 @@ void MainView::keyReleaseEvent(QKeyEvent *event) {
 
 void MainView::mouseDoubleClickEvent(QMouseEvent *event) {
     QWidget::mouseDoubleClickEvent(event);
-    if (subCurve_ == nullptr || settings_.highlightedNormal < 0) {
+    if (settings_.highlightedNormal < 0) {
         return;
     }
-    subCurve_->controlCurve().recalculateNormal(settings_.highlightedNormal);
+    controlCurve_.recalculateNormal(settings_.highlightedNormal);
     recalculateCurve();
 }
 
@@ -441,38 +422,25 @@ void MainView::onMessageLogged(QOpenGLDebugMessage message) {
         qDebug() << "  → Log:" << message;
 }
 
-void MainView::setSubCurve(std::shared_ptr<SubdivisionCurve> newSubCurve) {
-    subCurve_ = std::move(newSubCurve);
+void MainView::setControlCurve(Curve controlCurve) {
+    controlCurve_ = controlCurve;
     selectedConicIdx_ = -1;
 }
 
 void MainView::recalculateNormals() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    subCurve_->controlCurve().recalculateNormals();
+    controlCurve_.recalculateNormals();
     recalculateCurve();
 }
 
 void MainView::refineNormals() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
-    // subCurve_->controlCurve().refineNormals(settings_.maxRefinementIterations);
+    // controlCurve_.refineNormals(settings_.maxRefinementIterations);
     recalculateCurve();
 }
 
 void MainView::refineSelectedNormal() {
-    if (subCurve_ == nullptr) {
-        return;
-    }
     // TODO
     // subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
     recalculateCurve();
-}
-
-const std::shared_ptr<SubdivisionCurve> &MainView::getSubCurve() const {
-    return subCurve_;
 }
 
 bool MainView::saveCurve(const char *fileName, const Curve &curve) {

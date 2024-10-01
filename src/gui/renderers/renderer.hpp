@@ -6,7 +6,7 @@
 #include "shadertypes.hpp"
 #include "util/vector.hpp"
 
-#define SHADER_DOUBLE_PRECISION
+// #define SHADER_DOUBLE_PRECISION
 
 class Settings;
 

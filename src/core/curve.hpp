@@ -11,24 +11,31 @@ class Settings;
 class Curve {
 public:
     Curve();
+    Curve(bool closed);
 
     Curve(std::vector<Vector2DD> coords, bool closed = true);
 
     Curve(std::vector<Vector2DD> coords, std::vector<Vector2DD> normals, bool closed = true);
 
-    [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
+    Curve(const Curve &other) = default;
 
+    Curve &operator=(const Curve &other) = default;
+
+    [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
     [[nodiscard]] inline const std::vector<Vector2DD> &getNormals() const { return normals_; }
+    [[nodiscard]] inline const std::vector<bool> &getCustomNormals() const { return customNormals_; }
 
     [[nodiscard]] inline std::vector<Vector2DD> &getCoords() { return coords_; }
-
     [[nodiscard]] inline std::vector<Vector2DD> &getNormals() { return normals_; }
-
     [[nodiscard]] inline std::vector<bool> &getCustomNormals() { return customNormals_; }
+
+    inline void setCoords(std::vector<Vector2DD> coords) { coords_ = coords; }
+    inline void setNormals(std::vector<Vector2DD> normals) { normals_ = normals; }
+    inline void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = customNormals; }
 
     [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
 
-    [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist) const;
+    [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist, const double normalLength) const;
 
     [[nodiscard]] bool isClosed() const;
 
@@ -36,11 +43,11 @@ public:
 
     void setVertexPosition(int idx, const Vector2DD &p);
 
-    void setNormalPosition(int idx, const Vector2DD &p);
+    void redirectNormalToPoint(int idx, const Vector2DD &p);
 
     void removePoint(int idx);
 
-    void recalculateNormals();
+    void recalculateNormals(bool areaWeightedNormals = false, bool circleNormals = false);
 
     void recalculateNormal(int idx);
 
@@ -55,7 +62,9 @@ public:
     [[nodiscard]] int getPrevIdx(int idx) const;
 
 private:
-    bool closed_ = false;
+    bool closed_ = true;
+    bool areaWeightedNormals_ = false;
+    bool circleNormals_ = false;
 
     std::vector<Vector2DD> coords_;
     std::vector<Vector2DD> normals_;
