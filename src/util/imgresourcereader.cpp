@@ -17,7 +17,6 @@ QPixmap ImgResourceReader::getPixMap(const QString &path, const QSize &size, con
     }
     QImage myImage(path);
 
-    // TODO: check if this can be done faster.
     QSize size2 = myImage.size();
 
     for (int x = 0; x < size2.width(); x++) {

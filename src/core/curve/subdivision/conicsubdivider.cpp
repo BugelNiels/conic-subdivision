@@ -68,7 +68,6 @@ void ConicSubdivider::subdivide(Curve &curve, int level) {
     }
 }
 
-// TODO: replace set
 void ConicSubdivider::subdivideRecursive(std::vector<Vector2DD> &points,
                                          std::vector<Vector2DD> &normals,
                                          std::vector<Vector2DD> &newPoints,

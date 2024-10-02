@@ -13,7 +13,7 @@ public:
     explicit ConicSubdivider(const Settings &settings);
 
     /**
-     * Subdivides the curve to the given subdivision level using the Conic subdivision scheme.
+     * Subdivides the curve to the given subdivision level using the Conic subdivision scheme. Subdivision happens in-place.
      * @param curve The curve to subdivide.
      * @param level The level to subdivide to.
      */
@@ -24,12 +24,12 @@ public:
      * @param curve The curve that stores the information on the inflection point indices.
      * @param coords Collection where the coordinates of the curve + inflection point coordinates will be put into.
      * @param norms Collection where the normals of the curve + inflection point normals will be put into.
-     * @param customNorms Collection that stores for each normal whether it should be recalculated or not.
-     * The inflection points have a special normal, so there will have the value true there.
+     * @return Collection that stores for each normal whether it should be recalculated or not.
+     * The inflection points have a special normal, so these will have the value true at their indices.
      */
     std::vector<bool> getInflPointCurve(const Curve &curve,
                                         std::vector<Vector2DD> &coords,
-                                        std::vector<Vector2DD> &normals); // TODO: update docs
+                                        std::vector<Vector2DD> &normals);
 
     /**
      * Extracts a patch of a given neighbourhood from a curve. Maintains convexity provided that inflection points were inserted.
@@ -39,6 +39,7 @@ public:
      * @param maxPatchSize The maximum number of points allowed in the patch on either side of the edge.
      * The total maximum size of the patch will be 2 * maxPatchSize.
      * For example, maxPatchSize = 1 means only the edge points are included, while maxPatchSize = 2 means a total maximum size of 4.
+     * @param closed Whether the curve is closed or not.
      * @return A collection of patch points.
      */
     std::vector<PatchPoint> extractPatch(const std::vector<Vector2DD> &points,
@@ -50,6 +51,7 @@ public:
 private:
     const Settings &settings_;
     std::vector<int> inflPointIndices_;
+    // These buffers persist between between subdivisions to prevent re-allocation
     std::vector<Vector2DD> pointsBuffer;
     std::vector<Vector2DD> normalsBuffer;
 
@@ -78,16 +80,17 @@ private:
      * Inserts an edge point/normal in the newPoints/newNormals collection.
      * @param points The coordinates at subdivision level d.
      * @param normals The normals at subdivision level d.
-     * @param i The index of the first vertex of the edge to find the patch for. That is, for the edge A-B, i denotes the index of A. This is the index with respect to the newPoints/nerNormals collection.
      * @param newPoints The coordinates at subdivision level d+1.
      * @param newNormals The normals at subdivision level d+1.
+     * @param i The index of the first vertex of the edge to find the patch for. That is, for the edge A-B, i denotes the index of A. This is the index with respect to the newPoints/nerNormals collection.
+     * @param closed Whether the curve is closed or not.
      */
     void edgePoint(const std::vector<Vector2DD> &points,
                    const std::vector<Vector2DD> &normals,
                    std::vector<Vector2DD> &newPoints,
                    std::vector<Vector2DD> &newNormals,
                    int i,
-                   bool closed) const; // TODO: update docs
+                   bool closed) const;
 
     /**
      * For 3 vertices A-B-C, this calculates the normal of the inflection point on the edge B-C based only on the A, B and C.

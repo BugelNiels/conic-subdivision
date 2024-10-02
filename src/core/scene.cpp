@@ -44,6 +44,7 @@ void Scene::resubdivide() {
 
 void Scene::setControlCurve(Curve controlCurve) {
     controlCurve_ = controlCurve;
+    lastSubdivLevel_ = 0;
     resubdivide();
 }
 

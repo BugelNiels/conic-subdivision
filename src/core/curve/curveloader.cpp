@@ -58,6 +58,7 @@ Curve CurveLoader::loadCurveFromFile(const QString &filePath) {
     bool closed = true;
 
     file.close();
+    qDebug() << "Loaded curve with " << coords.size() << " vertices";
     if (normals.empty()) {
         return Curve(coords, closed);
     }

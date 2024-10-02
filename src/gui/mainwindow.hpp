@@ -13,7 +13,7 @@
 
 namespace conics::ui {
 
-class MainView;
+class SceneView;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -34,7 +34,7 @@ private:
 
     conics::core::CurvePresetFactory presetFactory_;
     conics::core::Settings& settings_;
-    MainView *mainView_;
+    SceneView *sceneView_;
 
     QMenuBar *initMenuBar();
 
