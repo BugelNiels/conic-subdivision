@@ -15,6 +15,8 @@ jobs:
       # Checkout
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: true
 
       # Install packages
       - name: Install dependencies
@@ -72,6 +74,8 @@ jobs:
       # Checkout
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: true
 
       # Install packages
       - name: Install dependencies
@@ -98,6 +102,8 @@ jobs:
       # Checkout
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: true
 
       # Install packages
       - name: Install dependencies
