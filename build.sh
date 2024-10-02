@@ -11,6 +11,7 @@ usage() {
   echo "  -c, --clean:                              Cleans the build directory."
   echo "      --skip-cmake:                         Skips the cmake step of the build_rpm stage during the build process."
   echo "  -b, --cmake-build-type <build-type>:      Specifies the build type for cmake. Must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
+  echo "  -t  --test:                               Builds and runs the unit tests."
   echo "  -r, --run:                                Runs the built binary."
   exit 1
 }
@@ -21,6 +22,7 @@ build() {
 
   # input args
   local build_type="Release"
+  local do_tests=false
   local clean=false
   local skip_cmake=false
   local run=false
@@ -45,6 +47,7 @@ build() {
         ;;
       -c|--clean) clean=true ;;
       --skip-cmake) skip_cmake=true ;;
+      -t|--test) do_tests=true ;;
       -r|--run) run=true ;;
       *)
         usage
@@ -66,7 +69,11 @@ build() {
   mkdir -p ${build_dir}
   cd ${build_dir}/ || exit
   if [ ${skip_cmake} = false ]; then
-    cmake .. -DCMAKE_BUILD_TYPE=${build_type}
+    local cmake_flags=""
+    if [ ${do_tests} = true ]; then
+      cmake_flags+=" -DBUILD_UNIT_TESTS=ON" 
+    fi
+    cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags}
   fi
   make -j$(nproc)
   if [[ $? -eq 0 ]]; then
@@ -75,10 +82,18 @@ build() {
     echo -e "\tYou can find the generated binary in the \"${build_dir}/\" directory."
     echo -e "\tExecute using:"
     echo -e "\t\t./${build_dir}/conicsubdiv"
+    if [ ${do_tests} = true ]; then
+      echo -e "\tExecute tests using:"
+      echo -e "\t\t./${build_dir}/conicsubdivTests"
+    fi
     echo ""
   else
     echo "Build failed."
     exit 1
+  fi
+
+  if [ ${do_tests} = true ]; then
+    ./conicsubdivTests
   fi
 
   if [ ${run} = true ]; then

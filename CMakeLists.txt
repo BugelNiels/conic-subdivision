@@ -7,6 +7,8 @@ set(CONIC_VERSION_PATCH 1)
 set(CONIC_VERSION "${CONIC_VERSION_MAJOR}.${CONIC_VERSION_MINOR}.${CONIC_VERSION_PATCH}")
 set(CONIC_NAME "conicsubdiv")
 
+option(BUILD_UNIT_TESTS "Build the test executable" OFF)
+
 project(conicsubdiv VERSION ${CONIC_VERSION} LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -61,6 +63,34 @@ target_link_libraries(${PROJECT_NAME}
         PRIVATE
         ${CONIC_LIBS}
         )
+
+# Testing
+if(BUILD_UNIT_TESTS)
+        find_package(GTest REQUIRED)
+        enable_testing()
+
+        file(GLOB_RECURSE CPP_TESTS test/*.cpp)
+
+        add_executable(conicsubdivTests
+                ${CPP_TESTS}
+        )
+
+        target_link_libraries(conicsubdivTests 
+                PUBLIC
+                ${EXTERNAL_LIBS}
+                PRIVATE
+                gtest
+                gtest_main
+                ${CONIC_LIBS}
+        )
+
+        target_include_directories(conicsubdivTests 
+                PRIVATE
+                ${CONIC_INCLUDE_DIRS}
+        )
+
+        add_test(NAME conicsubdivTests COMMAND conicsubdivTests)
+endif()
 
 install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
