@@ -35,11 +35,12 @@ list(APPEND CONIC_LIBS Qt6::Widgets)
 list(APPEND CONIC_LIBS Qt6::OpenGL)
 list(APPEND CONIC_LIBS Qt6::OpenGLWidgets)
 list(APPEND CONIC_LIBS Eigen3::Eigen)
-if (OpenMP_FOUND)
-    list(APPEND CONIC_LIBS OpenMP::OpenMP_CXX)
-else ()
-    message("OpenMP was not found.")
-endif ()
+
+if(OpenMP_FOUND)
+        list(APPEND CONIC_LIBS OpenMP::OpenMP_CXX)
+else()
+        message("OpenMP was not found.")
+endif()
 
 include_directories(
         src
@@ -50,19 +51,20 @@ file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
         ${CPP_SOURCES} ${H_HEADERS}
-        resources/resources.qrc )
+        resources/resources.qrc
+)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${CONIC_INCLUDE_DIRS}
-        )
+)
 
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
         ${EXTERNAL_LIBS}
         PRIVATE
         ${CONIC_LIBS}
-        )
+)
 
 # Testing
 if(BUILD_UNIT_TESTS)
@@ -75,7 +77,7 @@ if(BUILD_UNIT_TESTS)
                 ${CPP_TESTS}
         )
 
-        target_link_libraries(conicsubdivTests 
+        target_link_libraries(conicsubdivTests
                 PUBLIC
                 ${EXTERNAL_LIBS}
                 PRIVATE
@@ -84,7 +86,7 @@ if(BUILD_UNIT_TESTS)
                 ${CONIC_LIBS}
         )
 
-        target_include_directories(conicsubdivTests 
+        target_include_directories(conicsubdivTests
                 PRIVATE
                 ${CONIC_INCLUDE_DIRS}
         )
@@ -95,4 +97,4 @@ endif()
 install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        )
+)

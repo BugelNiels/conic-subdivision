@@ -211,7 +211,6 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
 }
 
 // Returns index of the point normal handle
-// TODO: move this outside of this class?
 int Curve::findClosestNormal(const Vector2DD &p,
                              const double maxDist,
                              const double normalLength) const {
