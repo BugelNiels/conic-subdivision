@@ -53,7 +53,7 @@ jobs:
 
       - name: Lint CMake files
         run: |
-          cmakelint CMakeLists.txt --linelength=120
+          cmakelint --linelength=120 CMakeLists.txt 
 
       # Build
       - name: Build and test
