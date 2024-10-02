@@ -1,6 +1,6 @@
 # Conic Subdivision
 
-Repository containing the implementation of a conic subdivision scheme for curves.
+Repository containing the implementation of a conic subdivision scheme for curves. This framework was the basis for the paper: [A point-normal interpolatory subdivision scheme preserving conics](https://doi.org/10.1016/j.cagd.2024.102347).
 
 The program supports the loading of object files (provided that the `.obj` file contains a single 2D curve).
 
@@ -15,14 +15,15 @@ You need the following to be able to compile and run the project:
     sudo apt-get install libeigen3-dev
     ```
 
-
 ## Compilation
 
 Compilation can be done easily via the provided build script:
 
 ```shell
-bash build.sh
+./build.sh
 ```
+
+See `./build.sh --help` for more information on how to use the build script.
 
 Alternatively, you can compile it manually (note that this does not create a _release_ build):
 ```shell
