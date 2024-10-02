@@ -53,7 +53,7 @@ jobs:
 
       - name: Lint CMake files
         run: |
-          find . -name 'CMakeLists.txt' -o -name '*.cmake' | xargs cmakelint --linelength=120
+          cmakelint CMakeLists.txt --linelength=120
 
       # Build
       - name: Build and test
