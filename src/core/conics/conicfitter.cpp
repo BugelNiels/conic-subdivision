@@ -8,8 +8,8 @@ namespace conics::core {
 
 ConicFitter::ConicFitter() {}
 
-static Eigen::RowVectorX<real_t> pointEqEigen(const Vector2DD &coord, int numUnknowns) {
-    Eigen::RowVectorX<real_t> row = Eigen::RowVectorX<real_t>::Zero(numUnknowns);
+static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &coord, int numUnknowns) {
+    row.setZero();
     const real_t x = coord.x();
     const real_t y = coord.y();
     row(0) = x * x;
@@ -18,55 +18,60 @@ static Eigen::RowVectorX<real_t> pointEqEigen(const Vector2DD &coord, int numUnk
     row(3) = 2 * x;
     row(4) = 2 * y;
     row(5) = 1;
-    return row;
 }
 
-static Eigen::RowVectorX<real_t> normEqXEigen(const Vector2DD &coord,
-                                              const Vector2DD &normal,
-                                              int numUnknowns,
-                                              int normIdx) {
-    Eigen::RowVectorX<real_t> row = Eigen::RowVectorX<real_t>::Zero(numUnknowns);
+static void normEqXEigen(Eigen::RowVectorX<real_t> &row,
+                         const Vector2DD &coord,
+                         const Vector2DD &normal,
+                         int numUnknowns,
+                         int normIdx) {
+    row.setZero();
     const real_t x = coord.x();
     const real_t y = coord.y();
     row(0) = 2 * x; // A
-    row(1) = 0;     // B
+    // row(1) = 0;     // B
     row(2) = 2 * y; // C
     row(3) = 2;     // D
-    row(4) = 0;     // E
-    row(5) = 0;     // F
+    // row(4) = 0;     // E
+    // row(5) = 0;     // F
     row(6 + normIdx) = -normal.x();
-    return row;
 }
 
-static Eigen::RowVectorX<real_t> normEqYEigen(const Vector2DD &coord,
-                                              const Vector2DD &normal,
-                                              int numUnknowns,
-                                              int normIdx) {
-    Eigen::RowVectorX<real_t> row = Eigen::RowVectorX<real_t>::Zero(numUnknowns);
+static void normEqYEigen(Eigen::RowVectorX<real_t> &row,
+                         const Vector2DD &coord,
+                         const Vector2DD &normal,
+                         int numUnknowns,
+                         int normIdx) {
+    row.setZero();
     const real_t x = coord.x();
     const real_t y = coord.y();
-    row(0) = 0;     // A
+    // row(0) = 0;     // A
     row(1) = 2 * y; // B
     row(2) = 2 * x; // C
-    row(3) = 0;     // E
-    row(4) = 2;     // F
-    row(5) = 0;     // G
+    // row(3) = 0;     // E
+    row(4) = 2; // F
+    // row(5) = 0;     // G
     row(6 + normIdx) = -normal.y();
-    return row;
 }
 
 Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
         const std::vector<PatchPoint> &patchPoints) const {
     Eigen::MatrixX<real_t> A(numEq_, numUnknowns_);
 
+    // Reuse this row buffer
+    Eigen::RowVectorX<real_t> row = Eigen::RowVectorX<real_t>::Zero(numUnknowns_);
+
     int rowIdx = 0;
     for (int i = 0; i < patchPoints.size(); i++) {
         auto &p = patchPoints[i];
         const Vector2DD &coord = p.coords;
         const Vector2DD &normal = p.normal;
-        A.row(rowIdx++) = pointEqEigen(coord, numUnknowns_) * p.pointWeight;
-        A.row(rowIdx++) = normEqXEigen(coord, normal, numUnknowns_, i) * p.normWeight;
-        A.row(rowIdx++) = normEqYEigen(coord, normal, numUnknowns_, i) * p.normWeight;
+        pointEqEigen(row, coord, numUnknowns_);
+        A.row(rowIdx++) = row * p.pointWeight;
+        normEqXEigen(row, coord, normal, numUnknowns_, i);
+        A.row(rowIdx++) = row * p.normWeight;
+        normEqYEigen(row, coord, normal, numUnknowns_, i);
+        A.row(rowIdx++) = row * p.normWeight;
     }
     return A;
 }
@@ -97,4 +102,4 @@ real_t ConicFitter::stability() const {
     return std::clamp(mappedValue, real_t(0), real_t(1));
 }
 
-}
+} // namespace conics::core

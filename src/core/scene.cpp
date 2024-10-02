@@ -18,7 +18,7 @@ void Scene::subdivideCurve(int numSteps) {
     subdivCurve_.setClosed(controlCurve_.isClosed());
     int n = coords.size();
     // Prevent re-allocating the buffer, so copy it into existing buffer
-    subdivCoords.resize(n);
+    subdivCoords.resize(n); // Note that resize does not reduce capacity
     subdivNormals.resize(n);
     subdivCurve_.getCustomNormals().resize(n);
     std::copy(coords.begin(), coords.end(), subdivCoords.begin());

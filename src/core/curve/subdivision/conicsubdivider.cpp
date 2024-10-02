@@ -100,7 +100,6 @@ void ConicSubdivider::subdivideRecursive(std::vector<Vector2DD> &points,
     for (int &inflIdx: inflPointIndices_) {
         inflIdx *= 2;
     }
-    qDebug() << "capacoty: (old, new)" << points.capacity() << newPoints.capacity(); 
     subdivideRecursive(newPoints, newNormals, points, normals, n, level - 1, closed);
 }
 
