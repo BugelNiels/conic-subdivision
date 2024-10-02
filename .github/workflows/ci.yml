@@ -1,0 +1,124 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Install packages
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake cppcheck clang-format libgtest-dev libeigen3-dev
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.*'
+          cache: 'true'
+          cache-key-prefix: 'install-qt6-action'
+
+      # Analysis: cppcheck
+      - name: Static analysis (cppcheck)
+        run: |
+          cppcheck --enable=all --inconclusive --std=c++17 --force . 2> cppcheck-report.txt || true
+
+      # Upload cppcheck
+      - name: Upload cppcheck report
+        uses: actions/upload-artifact@v3
+        with:
+          name: cppcheck-report
+          path: cppcheck-report.txt
+
+      # Lint: clang-format
+      - name: Lint C++ files (clang-format)
+        run: |
+          find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
+
+      # Lint: cmakelint
+      - name: Install pip and cmakelint
+        run: |
+          sudo apt-get install -y python3-pip
+          pip install cmakelint
+
+      - name: Lint CMake files
+        run: |
+          find . -name 'CMakeLists.txt' -o -name '*.cmake' | xargs cmakelint --linelength=120
+
+      # Build
+      - name: Build and test
+        run: mkdir build
+
+      - name: Configure with CMake
+        run: cmake -S . -B build -DBUILD_UNIT_TESTS=ON
+
+      - name: Build with CMake
+        run: cmake --build build
+
+      # Test
+      - name: Run tests
+        run: cd build && QT_QPA_PLATFORM="offscreen" ctest --output-on-failure --verbose
+  build-without-tests:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Install packages
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libeigen3-dev
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.*'
+          cache: 'true'
+          cache-key-prefix: 'install-qt6-action'
+
+      # Build
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Configure with CMake
+        run: cmake -S . -B build -DBUILD_TESTS=OFF
+
+      - name: Build with CMake
+        run: cmake --build build
+  build-qt5:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Install packages
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libgtest-dev libeigen3-dev
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.*'
+          cache: 'false'
+          cache-key-prefix: 'install-qt5-action'
+
+      # Build
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Configure with CMake
+        run: cmake -S . -B build -DBUILD_TESTS=ON
+
+      - name: Build with CMake
+        run: cmake --build build
+
+      # Test
+      - name: Run tests
+        run: cd build && QT_QPA_PLATFORM="offscreen" ctest --output-on-failure --verbose
