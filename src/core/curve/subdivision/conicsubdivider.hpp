@@ -27,7 +27,9 @@ public:
      * @param customNorms Collection that stores for each normal whether it should be recalculated or not.
      * The inflection points have a special normal, so there will have the value true there.
      */
-    Curve getInflPointCurve(Curve &curve); // TODO: update docs
+    std::vector<bool> getInflPointCurve(const Curve &curve,
+                                        std::vector<Vector2DD> &coords,
+                                        std::vector<Vector2DD> &normals); // TODO: update docs
 
     /**
      * Extracts a patch of a given neighbourhood from a curve. Maintains convexity provided that inflection points were inserted.
@@ -39,15 +41,25 @@ public:
      * For example, maxPatchSize = 1 means only the edge points are included, while maxPatchSize = 2 means a total maximum size of 4.
      * @return A collection of patch points.
      */
-    std::vector<PatchPoint> extractPatch(const Curve &curve, // TODO: update docs
-                                         int i,
-                                         int maxPatchSize) const;
+    std::vector<PatchPoint> extractPatch(const std::vector<Vector2DD> &points,
+                                         const std::vector<Vector2DD> &normals,
+                                         int pIdx,
+                                         int maxPatchSize,
+                                         bool closed) const;
 
 private:
     const Settings &settings_;
     std::vector<int> inflPointIndices_;
+    std::vector<Vector2DD> pointsBuffer;
+    std::vector<Vector2DD> normalsBuffer;
 
-    void subdivideRecursive(Curve &curve, int level);
+    void subdivideRecursive(std::vector<Vector2DD> &points,
+                            std::vector<Vector2DD> &normals,
+                            std::vector<Vector2DD> &newPoints,
+                            std::vector<Vector2DD> &newNormals,
+                            int numPoints,
+                            int level,
+                            bool closed);
 
     /**
      * Checks whether v0 and v3 reside in the same half plane with respect to the edge v1-v2.
@@ -70,10 +82,12 @@ private:
      * @param newPoints The coordinates at subdivision level d+1.
      * @param newNormals The normals at subdivision level d+1.
      */
-    void edgePoint(Curve &curve,
-                   int i,
+    void edgePoint(const std::vector<Vector2DD> &points,
+                   const std::vector<Vector2DD> &normals,
                    std::vector<Vector2DD> &newPoints,
-                   std::vector<Vector2DD> &newNormals) const; // TODO: update docs
+                   std::vector<Vector2DD> &newNormals,
+                   int i,
+                   bool closed) const; // TODO: update docs
 
     /**
      * For 3 vertices A-B-C, this calculates the normal of the inflection point on the edge B-C based only on the A, B and C.

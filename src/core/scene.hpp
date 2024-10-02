@@ -2,6 +2,7 @@
 
 #include "core/conics/conic.hpp"
 #include "core/curve/curve.hpp"
+#include "core/curve/subdivision/subdivider.hpp"
 #include "core/scenelistener.hpp"
 #include "core/settings/settings.hpp"
 #include "core/vector.hpp"
@@ -43,6 +44,7 @@ public:
 
 private:
     std::vector<SceneListener *> listeners;
+    std::unique_ptr<Subdivider> subdivider_;
     Settings &settings_;
     Curve controlCurve_;
     Curve subdivCurve_;

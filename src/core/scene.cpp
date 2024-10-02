@@ -7,22 +7,34 @@
 
 namespace conics::core {
 
-Scene::Scene(Settings &settings) : settings_(settings) {}
+Scene::Scene(Settings &settings) : settings_(settings), subdivider_(std::make_unique<ConicSubdivider>(settings)) {}
 
 void Scene::subdivideCurve(int numSteps) {
-    // TODO: make more efficient
     lastSubdivLevel_ = numSteps;
-    ConicSubdivider subdivider(settings_);
-    subdivCurve_ = controlCurve_;
-    subdivider.subdivide(subdivCurve_, numSteps);
+    const auto &coords = controlCurve_.getCoords();
+    const auto &normals = controlCurve_.getNormals();
+    auto &subdivCoords = subdivCurve_.getCoords();
+    auto &subdivNormals = subdivCurve_.getNormals();
+    subdivCurve_.setClosed(controlCurve_.isClosed());
+    int n = coords.size();
+    // Prevent re-allocating the buffer, so copy it into existing buffer
+    subdivCoords.resize(n);
+    subdivNormals.resize(n);
+    subdivCurve_.getCustomNormals().resize(n);
+    std::copy(coords.begin(), coords.end(), subdivCoords.begin());
+    std::copy(normals.begin(), normals.end(), subdivNormals.begin());
+
+    subdivider_->subdivide(subdivCurve_, numSteps);
     notifyListeners();
 }
 
 Conic Scene::getConicAtIndex(int idx) const {
     ConicSubdivider subdivider(settings_);
-    std::vector<PatchPoint> patch = subdivider.extractPatch(controlCurve_,
+    std::vector<PatchPoint> patch = subdivider.extractPatch(controlCurve_.getCoords(),
+                                                            controlCurve_.getNormals(),
                                                             idx,
-                                                            settings_.patchSize);
+                                                            settings_.patchSize,
+                                                            controlCurve_.isClosed());
     return Conic(patch, settings_);
 }
 
@@ -80,7 +92,7 @@ void Scene::redirectNormalToPoint(int idx, const Vector2DD &p) {
     controlCurve_.redirectNormalToPoint(idx, p);
     resubdivide();
 }
-void Scene::translate(const Vector2DD& d) {
+void Scene::translate(const Vector2DD &d) {
     controlCurve_.translate(d);
     resubdivide();
 }
