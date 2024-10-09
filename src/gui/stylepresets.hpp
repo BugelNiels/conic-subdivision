@@ -17,7 +17,7 @@ using StylePreset = struct StylePreset {
     QColor selectedVertCol;
     QColor selectedNormCol;
     QColor normCol;
-    conics::util::ColorMapName colorMapName;
+    ColorMapName colorMapName;
 
     QPalette palette;
 };

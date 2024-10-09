@@ -3,7 +3,7 @@
 #include <QIcon>
 #include <QMap>
 
-namespace conics::util {
+namespace conics::gui {
 
 class ImgResourceReader {
 
@@ -16,4 +16,4 @@ private:
     static QMap<QString, QPixmap> loadedIcons_;
 };
 
-} // namespace conics::util
+} // namespace conics::gui

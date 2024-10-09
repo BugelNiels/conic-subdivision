@@ -1,6 +1,6 @@
 #include "conicrenderer.hpp"
 
-#include "util/colormap.hpp"
+#include "gui/util/colormap.hpp"
 
 namespace conics::gui {
 

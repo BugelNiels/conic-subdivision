@@ -367,7 +367,7 @@ QMenuBar *MainWindow::initMenuBar() {
 
     auto *lightModeToggle = new QAction(menuBar);
     lightModeToggle->setIcon(
-            QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png", {42, 42}, QColor(128, 128, 128))));
+            QIcon(ImgResourceReader::getPixMap(":/icons/theme.png", {42, 42}, QColor(128, 128, 128))));
     lightModeToggle->setCheckable(true);
     lightModeToggle->setChecked(true); // default is light mode
     connect(lightModeToggle, &QAction::toggled, this, [this](bool toggled) {
