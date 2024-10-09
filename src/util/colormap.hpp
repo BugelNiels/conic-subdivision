@@ -3,6 +3,8 @@
 #include <QMap>
 #include <QVector3D>
 
+namespace conics::util {
+
 /**
  * @brief The ColorMapName enum contains the different available color maps.
  */
@@ -50,3 +52,5 @@ private:
 
     std::vector<QVector3D> getCMPHaxbyColorMap();
 };
+
+} // namespace conics::util

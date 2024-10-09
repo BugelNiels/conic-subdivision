@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+namespace conics::core {
+
 // Using regular doubles seems to work fine as well, but this is to achieve optimal accuracy.
 using real_t = long double;
 
@@ -23,3 +25,5 @@ template<typename T>
 T mix(const T &a, const T &b, real_t w) {
     return (1.0 - w) * a + w * b;
 }
+
+} // namespace conics::core

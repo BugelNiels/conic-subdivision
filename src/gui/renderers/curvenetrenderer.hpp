@@ -2,20 +2,22 @@
 
 #include <QOpenGLShaderProgram>
 
+#include "core/curve/curve.hpp"
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/subdivisioncurve.hpp"
+
+namespace conics::gui {
 
 /**
  * @brief Renderer responsible for rendering the control net.
  */
 class CurveNetRenderer : public Renderer {
 public:
-    explicit CurveNetRenderer(const Settings &settings);
+    explicit CurveNetRenderer(const ViewSettings &settings);
 
     ~CurveNetRenderer() override;
 
-    void updateBuffers(SubdivisionCurve &sc);
+    void updateBuffers(const conics::core::Curve &curve);
 
     void draw();
 
@@ -30,3 +32,5 @@ private:
     std::vector<QVector2D> coords_;
     std::vector<QVector2D> normals_;
 };
+
+} // namespace conics::gui

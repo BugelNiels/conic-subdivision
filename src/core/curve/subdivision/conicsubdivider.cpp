@@ -1,42 +1,90 @@
 #include "conicsubdivider.hpp"
+
+#include <cmath>
+
 #include "core/conics/conic.hpp"
-#include "core/subdivisioncurve.hpp"
 
-ConicSubdivider::ConicSubdivider(const Settings &settings) : settings_(settings) {}
+namespace conics::core {
 
-void ConicSubdivider::subdivide(SubdivisionCurve *newCurve, int level) {
-    curve_ = newCurve;
-    const auto &netCoords = curve_->getNetCoords();
-    const auto &netNorms = curve_->getNetNormals();
-    if (int(netCoords.size()) == 0) {
+ConicSubdivider::ConicSubdivider(const SubdivisionSettings &settings) : settings_(settings) {}
+
+void ConicSubdivider::subdivide(Curve &curve, int level) {
+    auto &coords = curve.getCoords();
+    auto &normals = curve.getNormals();
+    int n = coords.size();
+    if (n == 0 || level == 0) {
         return;
     }
     if (settings_.convexitySplit) {
-        std::vector<Vector2DD> coords;
-        std::vector<Vector2DD> norms;
-        std::vector<bool> customNorms;
-        insertInflPoints(curve_, coords, norms, customNorms);
-        subdivide(coords, norms, level);
+        getInflPointCurve(curve, pointsBuffer, normalsBuffer);
+        n = pointsBuffer.size();
+        // In this case the curve to subdivide is in the buffer, not in the curve
+        if (level % 2 == 1) {
+            subdivideRecursive(pointsBuffer,
+                               normalsBuffer,
+                               coords,
+                               normals,
+                               n,
+                               level,
+                               curve.isClosed());
+        } else {
+            coords.resize(n);
+            normals.resize(n);
+            // Ensure the final result always ends up in the curve itself again
+            std::copy(pointsBuffer.begin(), pointsBuffer.end(), coords.begin());
+            std::copy(normalsBuffer.begin(), normalsBuffer.end(), normals.begin());
+            subdivideRecursive(coords,
+                               normals,
+                               pointsBuffer,
+                               normalsBuffer,
+                               n,
+                               level,
+                               curve.isClosed());
+        }
     } else {
-        subdivide(netCoords, netNorms, level);
+        inflPointIndices_.clear();
+        if (level % 2 == 1) {
+            pointsBuffer.resize(n);
+            normalsBuffer.resize(n);
+            // Ensure the final result always ends up in the curve itself again
+            std::copy(coords.begin(), coords.begin() + n, pointsBuffer.begin());
+            std::copy(normals.begin(), normals.begin() + n, normalsBuffer.begin());
+            subdivideRecursive(pointsBuffer,
+                               normalsBuffer,
+                               coords,
+                               normals,
+                               n,
+                               level,
+                               curve.isClosed());
+        } else {
+            subdivideRecursive(coords,
+                               normals,
+                               pointsBuffer,
+                               normalsBuffer,
+                               n,
+                               level,
+                               curve.isClosed());
+        }
     }
 }
 
-void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
-                                const std::vector<Vector2DD> &normals,
-                                int level) {
+void ConicSubdivider::subdivideRecursive(std::vector<Vector2DD> &points,
+                                         std::vector<Vector2DD> &normals,
+                                         std::vector<Vector2DD> &newPoints,
+                                         std::vector<Vector2DD> &newNormals,
+                                         int numPoints,
+                                         int level,
+                                         bool closed) {
     // base case
     if (level == 0) {
-        curve_->curveCoords_ = points;
-        curve_->curveNormals_ = normals;
         return;
     }
-    int n = int(points.size()) * 2 - 1;
-    if (curve_->isClosed()) {
+    int n = numPoints * 2 - 1;
+    if (closed) {
         n += 1;
     }
-    std::vector<Vector2DD> newPoints(n);
-    std::vector<Vector2DD> newNormals(n);
+    newPoints.resize(n);
+    newNormals.resize(n);
 
     // set old vertex points
     for (int i = 0; i < n; i += 2) {
@@ -45,24 +93,23 @@ void ConicSubdivider::subdivide(const std::vector<Vector2DD> &points,
     }
     // set new edge points
     for (int i = 1; i < n; i += 2) {
-        edgePoint(points, normals, i, newPoints, newNormals);
+        edgePoint(points, normals, newPoints, newNormals, i, closed);
     }
     // Update the indices of the inflection points
-    std::set<int> newInflPointIndices;
-    for (const auto &inflIdx: curve_->inflPointsIndices_) {
-        newInflPointIndices.insert(inflIdx * 2);
+    for (int &inflIdx: inflPointIndices_) {
+        inflIdx *= 2;
     }
-    curve_->inflPointsIndices_ = newInflPointIndices;
-    subdivide(newPoints, newNormals, level - 1);
+    subdivideRecursive(newPoints, newNormals, points, normals, n, level - 1, closed);
 }
 
 void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
                                 const std::vector<Vector2DD> &normals,
-                                int i,
                                 std::vector<Vector2DD> &newPoints,
-                                std::vector<Vector2DD> &newNormals) const {
+                                std::vector<Vector2DD> &newNormals,
+                                int i,
+                                bool closed) const {
     const int n = newPoints.size();
-    std::vector<PatchPoint> patchPoints = extractPatch(points, normals, i / 2, settings_.patchSize);
+    std::vector<PatchPoint> patchPoints = extractPatch(points, normals, i / 2, settings_.patchSize, closed);
 
     const int prevIdx = (i - 1 + n) % n;
     const int nextIdx = (i + 1) % n;
@@ -71,7 +118,7 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
     Vector2DD dir = newPoints[prevIdx] - newPoints[nextIdx];
     dir = {-dir.y(), dir.x()};
     // Note that dir is not normalized!
-    Conic conic(patchPoints, settings_);
+    Conic conic(patchPoints, settings_.epsilon);
     Vector2DD sampledPoint;
     Vector2DD sampledNormal;
     bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
@@ -82,14 +129,14 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
             int patchSize = settings_.patchSize + 1;
             int oldPatchSize = patchPoints.size();
             while (!valid) {
-                patchPoints = extractPatch(points, normals, i / 2, patchSize);
+                patchPoints = extractPatch(points, normals, i / 2, patchSize, closed);
                 if (patchSize > 10 || patchPoints.size() == oldPatchSize) {
                     sampledPoint = origin;
                     sampledNormal = dir;
                     break;
                 }
                 oldPatchSize = patchPoints.size();
-                Conic conic2(patchPoints, settings_);
+                Conic conic2(patchPoints, settings_.epsilon);
                 valid = conic2.sample(origin, dir, sampledPoint, sampledNormal);
                 patchSize++;
             }
@@ -106,28 +153,29 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
 std::vector<PatchPoint> ConicSubdivider::extractPatch(const std::vector<Vector2DD> &points,
                                                       const std::vector<Vector2DD> &normals,
                                                       int pIdx,
-                                                      int maxPatchSize) const {
+                                                      int maxPatchSize,
+                                                      bool closed) const {
 
     std::vector<PatchPoint> patchPoints;
     patchPoints.reserve(4);
     const int size = int(points.size());
     // Left middle
     const int leftMiddleIdx = pIdx;
-    const bool leftInflPoint = curve_->inflPointsIndices_.count(leftMiddleIdx) > 0;
-    patchPoints.push_back({points[leftMiddleIdx],
-                           normals[leftMiddleIdx],
-                           settings_.middlePointWeight,
-                           settings_.middleNormalWeight});
+    const bool leftInflPoint = std::find(inflPointIndices_.begin(), inflPointIndices_.end(), leftMiddleIdx) !=
+                               inflPointIndices_.end();
+    patchPoints.push_back(
+            {points[leftMiddleIdx], normals[leftMiddleIdx], settings_.middlePointWeight, settings_.middleNormalWeight});
 
     // Right middle
     const int rightMiddleIdx = (pIdx + 1) % size;
-    const bool rightInflPoint = curve_->inflPointsIndices_.count(rightMiddleIdx) > 0;
+    const bool rightInflPoint = std::find(inflPointIndices_.begin(), inflPointIndices_.end(), rightMiddleIdx) !=
+                                inflPointIndices_.end();
     patchPoints.push_back({points[rightMiddleIdx],
                            normals[rightMiddleIdx],
                            settings_.middlePointWeight,
                            settings_.middleNormalWeight});
 
-    if (curve_->isClosed()) {
+    if (closed) {
         if (!leftInflPoint) {
             const int leftOuterIdx = (leftMiddleIdx - 1 + size) % size;
             for (int i = 1; i < maxPatchSize; ++i) {
@@ -138,10 +186,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const std::vector<Vector2D
                                         points[idx])) {
                     break;
                 }
-                patchPoints.push_back({points[idx],
-                                       normals[idx],
-                                       settings_.outerPointWeight,
-                                       settings_.outerNormalWeight});
+                patchPoints.push_back(
+                        {points[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
             }
         }
         if (!rightInflPoint) {
@@ -154,10 +200,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const std::vector<Vector2D
                                         points[idx])) {
                     break;
                 }
-                patchPoints.push_back({points[idx],
-                                       normals[idx],
-                                       settings_.outerPointWeight,
-                                       settings_.outerNormalWeight});
+                patchPoints.push_back(
+                        {points[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
             }
         }
     } else {
@@ -174,10 +218,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const std::vector<Vector2D
                                         points[idx])) {
                     break;
                 }
-                patchPoints.push_back({points[idx],
-                                       normals[idx],
-                                       settings_.outerPointWeight,
-                                       settings_.outerNormalWeight});
+                patchPoints.push_back(
+                        {points[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
             }
         }
         if (!rightInflPoint) {
@@ -193,10 +235,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const std::vector<Vector2D
                                         points[idx])) {
                     break;
                 }
-                patchPoints.push_back({points[idx],
-                                       normals[idx],
-                                       settings_.outerPointWeight,
-                                       settings_.outerNormalWeight});
+                patchPoints.push_back(
+                        {points[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
             }
         }
     }
@@ -222,29 +262,30 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
     return dotProduct2 * sign >= 0;
 }
 
-void ConicSubdivider::insertInflPoints(SubdivisionCurve *curve,
-                                       std::vector<Vector2DD> &coords,
-                                       std::vector<Vector2DD> &norms,
-                                       std::vector<bool> &customNorms) {
+std::vector<bool> ConicSubdivider::getInflPointCurve(const Curve &curve,
+                                                     std::vector<Vector2DD> &coords,
+                                                     std::vector<Vector2DD> &normals) {
     // Setup
-    const int n = int(curve->netCoords_.size());
-    curve->inflPointsIndices_.clear();
-    coords.reserve(n);
-    norms.reserve(n);
+    const int n = int(curve.numPoints());
+    coords.resize(0);
+    normals.resize(0);
+    inflPointIndices_.clear();
+    inflPointIndices_.reserve(n);
+    std::vector<bool> customNorms;
     customNorms.reserve(n);
     int idx = 0;
     // For all points
     for (int i = 0; i < n; i++) {
-        int nextIdx = curve->getNextIdx(i);
-        const Vector2DD &v0 = curve->netCoords_[curve->getPrevIdx(i)];
-        const Vector2DD &v1 = curve->netCoords_[i];
-        const Vector2DD &v2 = curve->netCoords_[nextIdx];
-        const Vector2DD &v3 = curve->netCoords_[curve->getNextIdx(nextIdx)];
+        int nextIdx = curve.getNextIdx(i);
+        const Vector2DD &v0 = curve.getCoords()[curve.getPrevIdx(i)];
+        const Vector2DD &v1 = curve.getCoords()[i];
+        const Vector2DD &v2 = curve.getCoords()[nextIdx];
+        const Vector2DD &v3 = curve.getCoords()[curve.getNextIdx(nextIdx)];
 
-        // Insert original points and normals
+        // Insert original point and normal
         coords.emplace_back(v1);
-        norms.emplace_back(curve->netNormals_[i]);
-        customNorms.emplace_back(curve->customNormals_[i]);
+        normals.emplace_back(curve.getNormals()[i]);
+        customNorms.emplace_back(curve.getCustomNormals()[i]);
         idx++;
         // For non-closed curves or when there are not enough points (<= 2)
         if (v0 == v1 || v2 == v3 || v1 == v2) {
@@ -279,12 +320,13 @@ void ConicSubdivider::insertInflPoints(SubdivisionCurve *curve,
             const Vector2DD inflNormal = leftAngle < rightAngle ? inflNormalLeft : inflNormalRight;
             // save
             coords.emplace_back(midPoint);
-            norms.emplace_back(inflNormal);
+            normals.emplace_back(inflNormal);
             customNorms.emplace_back(true);
-            curve->inflPointsIndices_.insert(idx);
+            inflPointIndices_.push_back(idx);
             idx++;
         }
     }
+    return customNorms;
 }
 
 std::pair<Vector2DD, real_t> ConicSubdivider::inflNormal(const Vector2DD &edgeAB,
@@ -314,3 +356,5 @@ std::pair<Vector2DD, real_t> ConicSubdivider::inflNormal(const Vector2DD &edgeAB
     const real_t angleOrtho = std::abs(std::acos(normal.dot(correctedOrtho)));
     return {normal, angleOrtho};
 }
+
+} // namespace conics::core

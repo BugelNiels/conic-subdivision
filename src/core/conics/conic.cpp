@@ -1,11 +1,12 @@
 #include "conic.hpp"
 
 #include <cmath>
-
-#include "conicfitter.hpp"
-
-#include "src/core/settings.hpp"
 #include <iostream>
+#include <QDebug>
+
+#include "core/conics/conicfitter.hpp"
+
+namespace conics::core {
 
 static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {
     real_t a = coefs[0]; // A - x*x
@@ -19,8 +20,8 @@ static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {
     return matrix;
 }
 
-Conic::Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings)
-    : epsilon_(settings.epsilon) {
+Conic::Conic(const std::vector<PatchPoint> &patchPoints, real_t epsilon)
+    : epsilon_(epsilon) {
     Q_ = fitConic(patchPoints);
 }
 
@@ -28,7 +29,6 @@ Conic::Conic(const std::vector<PatchPoint> &patchPoints, const Settings &setting
  * @brief Quadric::fitQuadric Attempts to fit a quadric to the provided patch
  * based on the provided solve settings.
  * @param patch The patch to fit the quadric to.
- * @param settings The solve settings used to fit the patch.
  * @return True if a quadric was constructed successfully. False otherwise.
  */
 Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
@@ -159,4 +159,6 @@ void Conic::printConic() const {
 
 real_t Conic::getStability() const {
     return stability_;
+}
+
 }

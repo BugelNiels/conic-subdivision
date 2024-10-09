@@ -1,13 +1,14 @@
 #include "curverenderer.hpp"
 
-#include "core/settings.hpp"
 #include "util/colormap.hpp"
 
-#define COORDS_IDX 0
-#define NORM_IDX 1
-#define DOUBLE_IDX 2
+namespace conics::gui {
 
-CurveRenderer::CurveRenderer(const Settings &settings) : Renderer(settings) {}
+static const int COORDS_IDX = 0;
+static const int NORM_IDX = 1;
+static const int DOUBLE_IDX = 2;
+
+CurveRenderer::CurveRenderer(const ViewSettings &settings) : Renderer(settings) {}
 
 CurveRenderer::~CurveRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -48,7 +49,7 @@ void CurveRenderer::initBuffers() {
     gl_->glGenBuffers(1, &ibo_);
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
-    ColorMap colMap;
+    conics::util::ColorMap colMap;
     auto colMapVals = colMap.getColorMap(settings_.style.colorMapName);
 
     texture_ = new QOpenGLTexture(QOpenGLTexture::Target1D);
@@ -64,28 +65,22 @@ void CurveRenderer::initBuffers() {
     gl_->glBindVertexArray(0);
 }
 
-void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
-    std::vector<QVector2D> coords;
-    std::vector<QVector2D> normals;
-    if (sc.getSubdivLevel() == 0) {
-        coords = qVecToVec(sc.getNetCoords());
-        normals = qVecToVec(sc.getNetNormals());
-    } else {
-        coords = qVecToVec(sc.getCurveCoords());
-        normals = qVecToVec(sc.getCurveNormals());
-    }
+void CurveRenderer::updateBuffers(const conics::core::Curve &curve) {
+    std::vector<QVector2D> coords = qVecToVec(curve.getCoords());
+    std::vector<QVector2D> normals = qVecToVec(curve.getNormals());
     for (auto &norm: normals) {
         norm *= settings_.curvatureSign;
         norm.normalize();
     }
-    if (coords.size() == 0) {
+    int numVerts = coords.size();
+    if (numVerts == 0) {
         vboSize_ = 0;
         return;
     }
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[COORDS_IDX]);
     gl_->glBufferData(GL_ARRAY_BUFFER,
-                      sizeof(QVector2D) * coords.size(),
+                      sizeof(QVector2D) * numVerts,
                       coords.data(),
                       GL_DYNAMIC_DRAW);
 
@@ -96,7 +91,7 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
                       GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
-    const auto &coords_d = sc.getSubdivLevel() == 0 ? sc.getNetCoords() : sc.getCurveCoords();
+    const auto &coords_d = curve.getCoords();
 
     std::vector<double> doubleData;
     doubleData.reserve(coords_d.size() * 2);
@@ -112,20 +107,18 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
                       GL_DYNAMIC_DRAW);
 #endif
 
-    int coordSize = coords.size();
     std::vector<int> indices;
-    indices.reserve(coordSize + 2);
-    indices.emplace_back(sc.isClosed() ? coordSize - 1 : 0);
-    for (int i = 0; i < coordSize; i++) {
+    indices.reserve(numVerts + 2);
+    indices.emplace_back(curve.isClosed() ? numVerts - 1 : 0);
+    for (int i = 0; i < numVerts; i++) {
         indices.emplace_back(i);
     }
-    if (sc.isClosed()) {
+    if (curve.isClosed()) {
         indices.emplace_back(0);
         indices.emplace_back(1);
     } else {
-        indices.emplace_back(coordSize - 1);
+        indices.emplace_back(numVerts - 1);
     }
-
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
     gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                       sizeof(int) * indices.size(),
@@ -136,28 +129,27 @@ void CurveRenderer::updateBuffers(SubdivisionCurve &sc) {
 }
 
 void CurveRenderer::draw() {
-    // Always renders the control net using the flat shader.
+    if (vboSize_ == 0) {
+        return;
+    }
     auto shader = shaders_[ShaderType::POLYLINE];
     shader->bind();
-    shader->setUniformValue(shader->uniformLocation("visualize_normals"),
-                            settings_.visualizeNormals);
-    shader->setUniformValue(shader->uniformLocation("visualize_curvature"),
-                            settings_.visualizeCurvature);
-    shader->setUniformValue(shader->uniformLocation("viewMatrix"), settings_.viewMatrix);
-    shader->setUniformValue(shader->uniformLocation("curvatureScale"), settings_.curvatureScale);
+    shader->setUniformValue("visualize_normals", settings_.visualizeNormals);
+    shader->setUniformValue("visualize_curvature", settings_.visualizeCurvature);
+    shader->setUniformValue("viewMatrix", settings_.viewMatrix);
+    shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
+    shader->setUniformValue("curvatureScale", settings_.curvatureScale);
 
-    shader->setUniformValue(shader->uniformLocation("colorMap"), 0);
+    shader->setUniformValue("colorMap", 0);
 
     gl_->glLineWidth(settings_.curveLineWidth);
     QColor qCol = settings_.style.smoothCurveCol;
     QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
-    shader->setUniformValue(shader->uniformLocation("lineColor"), col);
+    shader->setUniformValue("lineColor", col);
 
     QColor normQCol = settings_.style.normCol;
     QVector3D normCol(normQCol.redF(), normQCol.greenF(), normQCol.blueF());
-    shader->setUniformValue(shader->uniformLocation("normalColor"), normCol);
-
-    shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
+    shader->setUniformValue("normalColor", normCol);
 
     gl_->glBindVertexArray(vao_);
 
@@ -165,3 +157,5 @@ void CurveRenderer::draw() {
 
     shader->release();
 }
+
+} // namespace conics::gui

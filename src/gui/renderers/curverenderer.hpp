@@ -3,17 +3,19 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 
+#include "core/curve/curve.hpp"
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/subdivisioncurve.hpp"
+
+namespace conics::gui {
 
 class CurveRenderer : public Renderer {
 public:
-    explicit CurveRenderer(const Settings &settings);
+    explicit CurveRenderer(const ViewSettings &settings);
 
     ~CurveRenderer() override;
 
-    void updateBuffers(SubdivisionCurve &sc);
+    void updateBuffers(const conics::core::Curve &curve);
 
     void draw();
 
@@ -34,3 +36,5 @@ private:
     QOpenGLTexture *texture_;
     int vboSize_ = 0;
 };
+
+} // namespace conics::gui

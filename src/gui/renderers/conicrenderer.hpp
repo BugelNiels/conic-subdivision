@@ -5,15 +5,16 @@
 
 #include "renderer.hpp"
 #include "shadertypes.hpp"
-#include "src/core/subdivisioncurve.hpp"
+
+namespace conics::gui {
 
 class ConicRenderer : public Renderer {
 public:
-    explicit ConicRenderer(const Settings &settings);
+    explicit ConicRenderer(const ViewSettings &settings);
 
     ~ConicRenderer() override;
 
-    void updateBuffers(Matrix3DD &q);
+    void updateBuffers(conics::core::Matrix3DD &q);
 
     void draw();
 
@@ -35,3 +36,5 @@ private:
     int vboSize_ = 0;
     bool shouldDraw_ = true;
 };
+
+} // namespace conics::gui

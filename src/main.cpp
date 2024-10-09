@@ -3,7 +3,11 @@
 
 #include <QDockWidget>
 
-#include "src/gui/mainwindow.hpp"
+#include "gui/mainwindow.hpp"
+#include "core/scene.hpp"
+#include "core/curve/refinement/normalrefinementsettings.hpp"
+#include "core/curve/subdivision/subdivisionsettings.hpp"
+#include "gui/viewsettings.hpp"
 
 /**
  * @brief main Starts up the QT application and UI.
@@ -13,7 +17,7 @@
  */
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    qDebug() << "Using " << sizeof(real_t) << "byte calculations";
+    qDebug() << "Using " << sizeof(conics::core::real_t) << "byte calculations";
 
     QSurfaceFormat glFormat;
     glFormat.setProfile(QSurfaceFormat::CoreProfile);
@@ -25,7 +29,12 @@ int main(int argc, char *argv[]) {
     font.setPixelSize(14);
     QApplication::setFont(font);
 
-    MainWindow w;
+    conics::core::SubdivisionSettings subdivSettings;
+    conics::core::NormalRefinementSettings normRefSettings;
+    conics::gui::ViewSettings viewSettings;
+    conics::core::Scene scene(subdivSettings, normRefSettings);
+
+    conics::gui::MainWindow w(scene, subdivSettings, normRefSettings, viewSettings);
     w.showMaximized();
     return QApplication::exec();
 }
