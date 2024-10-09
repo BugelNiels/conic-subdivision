@@ -1,4 +1,4 @@
-# Conic Subdivision
+# Conis: A library for Conic Curve Subdivision
 
 Repository containing the implementation of a conic subdivision scheme for curves. This framework was the basis for the paper: [A point-normal interpolatory subdivision scheme preserving conics](https://doi.org/10.1016/j.cagd.2024.102347).
 
@@ -9,11 +9,12 @@ The program supports the loading of object files (provided that the `.obj` file 
 You need the following to be able to compile and run the project:
 
 * [CMake](https://cmake.org/)
-* [Qt 6.2+](https://www.qt.io/)
 * [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) 
   * ```shell
     sudo apt-get install libeigen3-dev
     ```
+* [Qt 6.2+](https://www.qt.io/)
+  * Only necessary to run the program with gui. Optional for building the library
 
 ## Compilation
 
