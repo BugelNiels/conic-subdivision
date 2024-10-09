@@ -2,9 +2,11 @@
 
 #include "core/conics/conic.hpp"
 #include "core/curve/curve.hpp"
-#include "core/curve/subdivision/subdivider.hpp"
+#include "core/curve/refinement/normalrefiner.hpp"
+#include "core/curve/refinement/normalrefinementsettings.hpp"
+#include "core/curve/subdivision/conicsubdivider.hpp"
+#include "core/curve/subdivision/subdivisionsettings.hpp"
 #include "core/scenelistener.hpp"
-#include "core/settings/settings.hpp"
 #include "core/vector.hpp"
 
 namespace conics::core {
@@ -14,7 +16,7 @@ namespace conics::core {
  */
 class Scene {
 public:
-    Scene(Settings &settings);
+    Scene(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings);
 
     [[nodiscard]] inline const Curve &getControlCurve() const { return controlCurve_; }
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
@@ -25,7 +27,7 @@ public:
     void recalculateNormals();
     void recalculateNormal(int idx);
     void refineNormals();
-    void refineSelectedNormal();
+    void refineNormal(int idx);
 
     void setControlCurve(Curve curve);
     void subdivideCurve(int numSteps);
@@ -43,9 +45,11 @@ public:
     void notifyListeners();
 
 private:
+    const SubdivisionSettings &subdivSettings_;
+    const NormalRefinementSettings &normRefSettings_;
     std::vector<SceneListener *> listeners;
-    std::unique_ptr<Subdivider> subdivider_;
-    Settings &settings_;
+    ConicSubdivider subdivider_;
+    NormalRefiner normalRefiner_;
     Curve controlCurve_;
     Curve subdivCurve_;
     int lastSubdivLevel_ = 0;

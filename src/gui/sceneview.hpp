@@ -5,21 +5,20 @@
 
 #include "core/conics/conic.hpp"
 #include "core/scene.hpp"
-#include "core/vector.hpp"
 #include "core/scenelistener.hpp"
+#include "core/vector.hpp"
 #include "gui/renderers/conicrenderer.hpp"
 #include "gui/renderers/curvenetrenderer.hpp"
 #include "gui/renderers/curverenderer.hpp"
+#include "gui/viewsettings.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
-class SceneView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core, public conics::core::SceneListener  {
+class SceneView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core, public conics::core::SceneListener {
     Q_OBJECT
 
 public:
-    SceneView(conics::core::Settings &settings,
-             conics::core::Scene &scene,
-             QWidget *parent = nullptr);
+    SceneView(ViewSettings &settings, conics::core::Scene &scene, QWidget *parent = nullptr);
 
     ~SceneView() override;
 
@@ -49,8 +48,8 @@ protected:
     void resizeGL(int width, int height) override;
 
 private:
-    conics::core::Settings &settings_;
     conics::core::Scene &scene_;
+    ViewSettings &settings_;
 
     QOpenGLDebugLogger *debugLogger_ = nullptr;
 
@@ -79,4 +78,4 @@ private slots:
     void onMessageLogged(QOpenGLDebugMessage message);
 };
 
-} // namespace conics::ui
+} // namespace conics::gui

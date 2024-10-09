@@ -5,7 +5,9 @@
 
 #include "gui/mainwindow.hpp"
 #include "core/scene.hpp"
-#include "core/settings/settings.hpp"
+#include "core/curve/refinement/normalrefinementsettings.hpp"
+#include "core/curve/subdivision/subdivisionsettings.hpp"
+#include "gui/viewsettings.hpp"
 
 /**
  * @brief main Starts up the QT application and UI.
@@ -27,10 +29,12 @@ int main(int argc, char *argv[]) {
     font.setPixelSize(14);
     QApplication::setFont(font);
 
-    conics::core::Settings settings;
-    conics::core::Scene scene(settings);
+    conics::core::SubdivisionSettings subdivSettings;
+    conics::core::NormalRefinementSettings normRefSettings;
+    conics::gui::ViewSettings viewSettings;
+    conics::core::Scene scene(subdivSettings, normRefSettings);
 
-    conics::ui::MainWindow w(settings, scene);
+    conics::gui::MainWindow w(scene, subdivSettings, normRefSettings, viewSettings);
     w.showMaximized();
     return QApplication::exec();
 }

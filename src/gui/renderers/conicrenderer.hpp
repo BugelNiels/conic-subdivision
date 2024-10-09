@@ -6,11 +6,11 @@
 #include "renderer.hpp"
 #include "shadertypes.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 class ConicRenderer : public Renderer {
 public:
-    explicit ConicRenderer(const conics::core::Settings &settings);
+    explicit ConicRenderer(const ViewSettings &settings);
 
     ~ConicRenderer() override;
 
@@ -37,4 +37,4 @@ private:
     bool shouldDraw_ = true;
 };
 
-} // namespace conics::ui
+} // namespace conics::gui

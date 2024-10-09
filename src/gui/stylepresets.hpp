@@ -5,11 +5,9 @@
 
 #include "util/colormap.hpp"
 
-namespace conics::core {
-class Settings;
-} // namespace conics::core
+namespace conics::gui {
 
-namespace conics::ui {
+class ViewSettings;
 
 using StylePreset = struct StylePreset {
     QColor backgroundCol;
@@ -24,10 +22,10 @@ using StylePreset = struct StylePreset {
     QPalette palette;
 };
 
-void applyStylePreset(conics::core::Settings &settings, const StylePreset &preset);
+void applyStylePreset(ViewSettings &settings, const StylePreset &preset);
 
 StylePreset getDarkModePalette();
 
 StylePreset getLightModePalette();
 
-} // namespace conics::ui
+} // namespace conics::gui

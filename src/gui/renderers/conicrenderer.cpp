@@ -1,11 +1,10 @@
 #include "conicrenderer.hpp"
 
-#include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
-ConicRenderer::ConicRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
+ConicRenderer::ConicRenderer(const ViewSettings &settings) : Renderer(settings) {}
 
 ConicRenderer::~ConicRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -81,4 +80,4 @@ void ConicRenderer::draw() {
     gl_->glBindVertexArray(0);
 }
 
-} // namespace conics::ui
+} // namespace conics::gui

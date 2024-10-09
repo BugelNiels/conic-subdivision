@@ -7,11 +7,11 @@
 #include "renderer.hpp"
 #include "shadertypes.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 class CurveRenderer : public Renderer {
 public:
-    explicit CurveRenderer(const conics::core::Settings &settings);
+    explicit CurveRenderer(const ViewSettings &settings);
 
     ~CurveRenderer() override;
 
@@ -37,4 +37,4 @@ private:
     int vboSize_ = 0;
 };
 
-} // namespace conics::ui
+} // namespace conics::gui

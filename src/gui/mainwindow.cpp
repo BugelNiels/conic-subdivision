@@ -30,18 +30,26 @@ using DoubleSlider = ValueSliders::DoubleSlider;
 using IntSlider = ValueSliders::IntSlider;
 using BoundMode = ValueSliders::BoundMode;
 
-namespace conics::ui {
+namespace conics::gui {
 
-MainWindow::MainWindow(conics::core::Settings& settings, conics::core::Scene &scene, QWidget *parent) : QMainWindow(parent), settings_(settings) {
+MainWindow::MainWindow(conics::core::Scene &scene,
+                       conics::core::SubdivisionSettings &subdivSettings,
+                       conics::core::NormalRefinementSettings &normRefSettings,
+                       ViewSettings &viewSettings,
+                       QWidget *parent)
+    : QMainWindow(parent),
+      subdivSettings_(subdivSettings),
+      normRefSettings_(normRefSettings),
+      viewSettings_(viewSettings) {
     setWindowTitle("Conic Subdivision Test Tool");
-    sceneView_ = new SceneView(settings_, scene, this);
+    sceneView_ = new SceneView(viewSettings, scene, this);
 
     dock_ = initSideMenu();
     addDockWidget(Qt::LeftDockWidgetArea, dock_);
     setMenuBar(initMenuBar());
     setCentralWidget(sceneView_);
 
-    conics::ui::applyStylePreset(settings_, conics::ui::getLightModePalette());
+    applyStylePreset(viewSettings, getLightModePalette());
     resetView(false);
     sceneView_->setFocus();
 }
@@ -80,8 +88,7 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(subdivStepsSpinBox);
     auto *applySubdivButton = new QPushButton("Apply Subdivision");
-    applySubdivButton->setToolTip(
-            "<html><head/><body><p>If pressed, applies the subdivision.</body></html>");
+    applySubdivButton->setToolTip("<html><head/><body><p>If pressed, applies the subdivision.</body></html>");
     connect(applySubdivButton, &QPushButton::pressed, [this] {
         auto &scene = sceneView_->getScene();
         auto curv = scene.getSubdivCurve();
@@ -97,10 +104,10 @@ QDockWidget *MainWindow::initSideMenu() {
             "towards the vertex having the smallest angle (i.e. the sharpest spike). If disabled, "
             "lets the weighted inflection points gravitate towards the vertex having the largest "
             "angle.</body></html>");
-    gravitateAnglesCheckBox->setChecked(settings_.gravitateSmallerAngles);
-    gravitateAnglesCheckBox->setEnabled(settings_.weightedInflPointLocation);
+    gravitateAnglesCheckBox->setChecked(subdivSettings_.gravitateSmallerAngles);
+    gravitateAnglesCheckBox->setEnabled(subdivSettings_.weightedInflPointLocation);
     connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.gravitateSmallerAngles = toggled;
+        subdivSettings_.gravitateSmallerAngles = toggled;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
@@ -110,27 +117,25 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>If enabled, does not insert the inflection points in the "
             "midpoint of each edge, but instead lets the position depend on the ratio between the "
             "the two outgoing edges.</body></html>");
-    weightedInflPointLoc->setChecked(settings_.weightedInflPointLocation);
-    connect(weightedInflPointLoc,
-            &QCheckBox::toggled,
-            [this, gravitateAnglesCheckBox](bool toggled) {
-                settings_.weightedInflPointLocation = toggled;
-                gravitateAnglesCheckBox->setEnabled(settings_.weightedInflPointLocation);
-                auto &scene = sceneView_->getScene();
-                scene.resubdivide();
-            });
+    weightedInflPointLoc->setChecked(subdivSettings_.weightedInflPointLocation);
+    connect(weightedInflPointLoc, &QCheckBox::toggled, [this, gravitateAnglesCheckBox](bool toggled) {
+        subdivSettings_.weightedInflPointLocation = toggled;
+        gravitateAnglesCheckBox->setEnabled(subdivSettings_.weightedInflPointLocation);
+        auto &scene = sceneView_->getScene();
+        scene.resubdivide();
+    });
 
     vertLayout->addStretch();
     auto *splitConvexityCheckBox = new QCheckBox("Split Convexity");
     splitConvexityCheckBox->setToolTip("<html><head/><body><p>If enabled, automatically inserts "
                                        "inflection points before subdividing.</body></html>");
-    splitConvexityCheckBox->setChecked(settings_.convexitySplit);
+    splitConvexityCheckBox->setChecked(subdivSettings_.convexitySplit);
     connect(splitConvexityCheckBox,
             &QCheckBox::toggled,
             [this, weightedInflPointLoc, gravitateAnglesCheckBox](bool toggled) {
-                settings_.convexitySplit = toggled;
+                subdivSettings_.convexitySplit = toggled;
                 weightedInflPointLoc->setEnabled(toggled);
-                gravitateAnglesCheckBox->setEnabled(toggled && settings_.weightedInflPointLocation);
+                gravitateAnglesCheckBox->setEnabled(toggled && subdivSettings_.weightedInflPointLocation);
                 auto &scene = sceneView_->getScene();
                 scene.resubdivide();
             });
@@ -144,7 +149,7 @@ QDockWidget *MainWindow::initSideMenu() {
                                 "either direction of the edge. The total size of the patch will be "
                                 "at most 2 times this number.</p></body></html>");
     connect(patchSizeSlider, &IntSlider::valueUpdated, [this](int value) {
-        settings_.patchSize = value;
+        subdivSettings_.patchSize = value;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
@@ -154,9 +159,9 @@ QDockWidget *MainWindow::initSideMenu() {
             "<html><head/><body><p>If enabled, starting at a patch size of 2, it continuously "
             "increases the patch size until a solution is found where all points lie on the same "
             "branch of the conic.</body></html>");
-    dynamicPatchSizeCheckBox->setChecked(settings_.dynamicPatchSize);
+    dynamicPatchSizeCheckBox->setChecked(subdivSettings_.dynamicPatchSize);
     connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.dynamicPatchSize = toggled;
+        subdivSettings_.dynamicPatchSize = toggled;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
@@ -169,10 +174,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Vertex weights"));
-    auto *edgeVertWeightSpinBox = new DoubleSlider("Inner",
-                                                   settings_.middlePointWeight,
-                                                   0,
-                                                   maxWeight);
+    auto *edgeVertWeightSpinBox = new DoubleSlider("Inner", subdivSettings_.middlePointWeight, 0, maxWeight);
     //    edgeVertWeightSpinBox->setStepSize(1.0);
     edgeVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
@@ -180,16 +182,13 @@ QDockWidget *MainWindow::initSideMenu() {
             "points at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; "
             "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
-        settings_.middlePointWeight = newVal;
+        subdivSettings_.middlePointWeight = newVal;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
     vertLayout->addWidget(edgeVertWeightSpinBox);
 
-    auto *midVertWeightSpinBox = new DoubleSlider("Outer",
-                                                  settings_.outerPointWeight,
-                                                  0,
-                                                  maxWeight);
+    auto *midVertWeightSpinBox = new DoubleSlider("Outer", subdivSettings_.outerPointWeight, 0, maxWeight);
     midVertWeightSpinBox->setStepSize(1.0);
     midVertWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
@@ -199,7 +198,7 @@ QDockWidget *MainWindow::initSideMenu() {
             "at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; "
             "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
-        settings_.outerPointWeight = newVal;
+        subdivSettings_.outerPointWeight = newVal;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
@@ -207,10 +206,7 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Normal weights"));
-    auto *edgeNormWeightSpinBox = new DoubleSlider("Inner",
-                                                   settings_.middleNormalWeight,
-                                                   0,
-                                                   maxWeight);
+    auto *edgeNormWeightSpinBox = new DoubleSlider("Inner", subdivSettings_.middleNormalWeight, 0, maxWeight);
     edgeNormWeightSpinBox->setStepSize(1.0);
     edgeNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-b-<span style=&quot; "
@@ -218,16 +214,13 @@ QDockWidget *MainWindow::initSideMenu() {
             "normals at <span style=&quot; font-weight:600;&quot;>c</span> and <span style=&quot; "
             "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
-        settings_.middleNormalWeight = newVal;
+        subdivSettings_.middleNormalWeight = newVal;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
     vertLayout->addWidget(edgeNormWeightSpinBox);
 
-    auto *midNormWeightSpinBox = new DoubleSlider("Outer",
-                                                  settings_.outerNormalWeight,
-                                                  0,
-                                                  maxWeight);
+    auto *midNormWeightSpinBox = new DoubleSlider("Outer", subdivSettings_.outerNormalWeight, 0, maxWeight);
     midNormWeightSpinBox->setStepSize(1.0);
     midNormWeightSpinBox->setToolTip(
             "<html><head/><body><p>In the line segment </p><p>a-<span style=&quot; "
@@ -237,7 +230,7 @@ QDockWidget *MainWindow::initSideMenu() {
             "at <span style=&quot; font-weight:600;&quot;>b</span> and <span style=&quot; "
             "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
-        settings_.outerNormalWeight = newVal;
+        subdivSettings_.outerNormalWeight = newVal;
         auto &scene = sceneView_->getScene();
         scene.resubdivide();
     });
@@ -246,9 +239,9 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addStretch();
 #ifndef NDEBUG
     auto *testToggleCheckBox = new QCheckBox("Test Toggle");
-    testToggleCheckBox->setChecked(settings_.testToggle);
+    testToggleCheckBox->setChecked(subdivSettings_.testToggle);
     connect(testToggleCheckBox, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.testToggle = toggled;
+        subdivSettings_.testToggle = toggled;
         sceneView_->getScene().resubdivide();
     });
     vertLayout->addWidget(testToggleCheckBox);
@@ -266,22 +259,21 @@ QDockWidget *MainWindow::initSideMenu() {
     regularNormalsRadioButton->setToolTip(
             "<html><head/><body><p>If enabled, approximates the normals using half the angle "
             "between the two adjacent edges.</body></html>");
-    regularNormalsRadioButton->setChecked(!settings_.areaWeightedNormals);
+    regularNormalsRadioButton->setChecked(!subdivSettings_.areaWeightedNormals);
     connect(regularNormalsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.areaWeightedNormals = false;
-        settings_.circleNormals = false;
+        subdivSettings_.areaWeightedNormals = false;
+        subdivSettings_.circleNormals = false;
         auto &scene = sceneView_->getScene();
         scene.recalculateNormals();
     });
     vertLayout->addWidget(regularNormalsRadioButton);
 
     auto *lengthWeightedRadioButton = new QRadioButton("Length Weighted Normals");
-    lengthWeightedRadioButton->setToolTip(
-            "<html><head/><body><p>If enabled, approximates the normals by taking into "
-            "consideration the edge lengths.</body></html>");
-    lengthWeightedRadioButton->setChecked(settings_.areaWeightedNormals);
+    lengthWeightedRadioButton->setToolTip("<html><head/><body><p>If enabled, approximates the normals by taking into "
+                                          "consideration the edge lengths.</body></html>");
+    lengthWeightedRadioButton->setChecked(subdivSettings_.areaWeightedNormals);
     connect(lengthWeightedRadioButton, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.areaWeightedNormals = toggled;
+        subdivSettings_.areaWeightedNormals = toggled;
         auto &scene = sceneView_->getScene();
         scene.recalculateNormals();
     });
@@ -290,9 +282,9 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *circleNormsRadioButton = new QRadioButton("Circle Normals");
     circleNormsRadioButton->setToolTip("<html><head/><body><p>Estimate the normals using "
                                        "oscilating circles.</p></body></html>");
-    circleNormsRadioButton->setChecked(settings_.circleNormals);
+    circleNormsRadioButton->setChecked(subdivSettings_.circleNormals);
     connect(circleNormsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
-        settings_.circleNormals = toggled;
+        subdivSettings_.circleNormals = toggled;
         auto &scene = sceneView_->getScene();
         scene.recalculateNormals();
     });
@@ -310,53 +302,50 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
         auto &scene = sceneView_->getScene();
-        scene.refineSelectedNormal();
+        scene.refineNormal(viewSettings_.selectedVertex);
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
     vertLayout->addWidget(new QLabel("Test Subdiv Level"));
     IntSlider *testSubdivLevelSpinBox = new IntSlider("Test Subdiv Level",
-                                                      settings_.testSubdivLevel,
+                                                      normRefSettings_.testSubdivLevel,
                                                       1,
                                                       7,
                                                       BoundMode::LOWER_ONLY);
     connect(testSubdivLevelSpinBox, &IntSlider::valueUpdated, [this](int subdivLvl) {
-        settings_.testSubdivLevel = subdivLvl;
+        normRefSettings_.testSubdivLevel = subdivLvl;
     });
     vertLayout->addWidget(testSubdivLevelSpinBox);
 
     vertLayout->addWidget(new QLabel("Max iterations"));
     IntSlider *refinementIterationsSpinBox = new IntSlider("Iterations",
-                                                           settings_.maxRefinementIterations,
+                                                           normRefSettings_.maxRefinementIterations,
                                                            1,
                                                            100,
                                                            BoundMode::LOWER_ONLY);
     connect(refinementIterationsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
-        settings_.maxRefinementIterations = numSteps;
+        normRefSettings_.maxRefinementIterations = numSteps;
     });
     vertLayout->addWidget(refinementIterationsSpinBox);
 
     vertLayout->addWidget(new QLabel("Angle limit (* 1e-8)"));
     DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
-                                                       settings_.angleLimit * 1e8,
+                                                       normRefSettings_.angleLimit * 1e8,
                                                        1.0e-12,
                                                        1,
                                                        BoundMode::UPPER_LOWER);
     connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
-        settings_.angleLimit = angleLimit / 1e8;
+        normRefSettings_.angleLimit = angleLimit / 1e8;
     });
     vertLayout->addWidget(angleLimitSpinBox);
 
     vertLayout->addStretch();
 
-    auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale",
-                                                  settings_.curvatureScale,
-                                                  0.01,
-                                                  10);
+    auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale", viewSettings_.curvatureScale, 0.01, 10);
     curvatureScaleSlider->setToolTip(
             "<html><head/><body><p>Changes how long the curvature combs are.</p></body></html>");
     connect(curvatureScaleSlider, &DoubleSlider::valueUpdated, [this](double value) {
-        settings_.curvatureScale = value;
+        viewSettings_.curvatureScale = value;
         sceneView_->updateBuffers();
     });
     vertLayout->addWidget(curvatureScaleSlider);
@@ -377,16 +366,15 @@ QMenuBar *MainWindow::initMenuBar() {
     menuBar->addMenu(getWindowMenu());
 
     auto *lightModeToggle = new QAction(menuBar);
-    lightModeToggle->setIcon(QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png",
-                                                                      {42, 42},
-                                                                      QColor(128, 128, 128))));
+    lightModeToggle->setIcon(
+            QIcon(util::ImgResourceReader::getPixMap(":/icons/theme.png", {42, 42}, QColor(128, 128, 128))));
     lightModeToggle->setCheckable(true);
     lightModeToggle->setChecked(true); // default is light mode
     connect(lightModeToggle, &QAction::toggled, this, [this](bool toggled) {
         if (toggled) {
-            conics::ui::applyStylePreset(settings_, conics::ui::getLightModePalette());
+            applyStylePreset(viewSettings_, getLightModePalette());
         } else {
-            conics::ui::applyStylePreset(settings_, conics::ui::getDarkModePalette());
+            applyStylePreset(viewSettings_, getDarkModePalette());
         }
     });
     auto *rightBar = new QMenuBar(menuBar);
@@ -409,10 +397,7 @@ QMenu *MainWindow::getFileMenu() {
     openAction->setShortcutContext(Qt::ApplicationShortcut);
     openAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
     connect(openAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getOpenFileName(nullptr,
-                                                        "Load Curve",
-                                                        "../curves/",
-                                                        tr("Txt Files (*.txt)"));
+        QString filePath = QFileDialog::getOpenFileName(nullptr, "Load Curve", "../curves/", tr("Txt Files (*.txt)"));
         if (filePath == "") {
             return;
         }
@@ -429,11 +414,10 @@ QMenu *MainWindow::getFileMenu() {
     auto *saveAction = new QAction(QStringLiteral("Save"), fileMenu);
     saveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(saveAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getSaveFileName(
-                nullptr,
-                "Save Image",
-                "../images/",
-                tr("Img Files (*.png *.jpg *.jpeg *.tiff *.tif *pgm *ppm)"));
+        QString filePath = QFileDialog::getSaveFileName(nullptr,
+                                                        "Save Image",
+                                                        "../images/",
+                                                        tr("Img Files (*.png *.jpg *.jpeg *.tiff *.tif *pgm *ppm)"));
         if (filePath != "") {
             QPixmap pixmap(sceneView_->size());
             sceneView_->render(&pixmap);
@@ -448,9 +432,7 @@ QMenu *MainWindow::getFileMenu() {
                 return;
             }
         }
-        QMessageBox::warning(this,
-                             "Failed to save image",
-                             "Ensure you provided a valid path:\n: " + filePath);
+        QMessageBox::warning(this, "Failed to save image", "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveAction);
 
@@ -458,10 +440,7 @@ QMenu *MainWindow::getFileMenu() {
     auto *saveCurveAction = new QAction(QStringLiteral("SaveCurve"), fileMenu);
     saveCurveAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     connect(saveCurveAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getSaveFileName(nullptr,
-                                                        "Save Curve",
-                                                        "../curves/",
-                                                        tr("TXT File (*.txt)"));
+        QString filePath = QFileDialog::getSaveFileName(nullptr, "Save Curve", "../curves/", tr("TXT File (*.txt)"));
         if (filePath != "") {
             QByteArray bytes = filePath.toStdString().c_str();
             char *file_name;
@@ -480,9 +459,7 @@ QMenu *MainWindow::getFileMenu() {
                 return;
             }
         }
-        QMessageBox::warning(this,
-                             "Failed to save curve",
-                             "Ensure you provided a valid path:\n: " + filePath);
+        QMessageBox::warning(this, "Failed to save curve", "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveCurveAction);
 
@@ -490,10 +467,7 @@ QMenu *MainWindow::getFileMenu() {
     auto *saveCurveNAction = new QAction(QStringLiteral("SaveCurveN"), fileMenu);
     //    saveCurveNAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     connect(saveCurveNAction, &QAction::triggered, [this]() {
-        QString filePath = QFileDialog::getSaveFileName(nullptr,
-                                                        "Save Curve",
-                                                        "../curves/",
-                                                        tr("Obj File (*.obj)"));
+        QString filePath = QFileDialog::getSaveFileName(nullptr, "Save Curve", "../curves/", tr("Obj File (*.obj)"));
         if (filePath != "") {
             QByteArray bytes = filePath.toStdString().c_str();
             char *file_name;
@@ -513,9 +487,7 @@ QMenu *MainWindow::getFileMenu() {
                 return;
             }
         }
-        QMessageBox::warning(this,
-                             "Failed to save curve",
-                             "Ensure you provided a valid path:\n: " + filePath);
+        QMessageBox::warning(this, "Failed to save curve", "Ensure you provided a valid path:\n: " + filePath);
     });
     fileMenu->addAction(saveCurveNAction);
 
@@ -556,20 +528,20 @@ QMenu *MainWindow::getRenderMenu() {
 
     auto *controlPointsAction = new QAction(QStringLiteral("Control Points"), renderMenu);
     controlPointsAction->setCheckable(true);
-    controlPointsAction->setChecked(settings_.showControlPoints);
+    controlPointsAction->setChecked(viewSettings_.showControlPoints);
     controlPointsAction->setShortcut(QKeySequence(Qt::Key_P));
     connect(controlPointsAction, &QAction::triggered, [this](bool toggled) {
-        settings_.showControlPoints = toggled;
+        viewSettings_.showControlPoints = toggled;
         sceneView_->updateBuffers();
     });
     renderMenu->addAction(controlPointsAction);
 
     auto *controlCurveAction = new QAction(QStringLiteral("Control Curve"), renderMenu);
     controlCurveAction->setCheckable(true);
-    controlCurveAction->setChecked(settings_.showControlCurve);
+    controlCurveAction->setChecked(viewSettings_.showControlCurve);
     controlCurveAction->setShortcut(QKeySequence(Qt::Key_O));
     connect(controlCurveAction, &QAction::triggered, [this](bool toggled) {
-        settings_.showControlCurve = toggled;
+        viewSettings_.showControlCurve = toggled;
     });
     renderMenu->addAction(controlCurveAction);
 
@@ -589,30 +561,30 @@ QMenu *MainWindow::getRenderMenu() {
 
     auto *visualizeCurvatureAction = new QAction(QStringLiteral("Visualize Curvature"), renderMenu);
     visualizeCurvatureAction->setCheckable(true);
-    visualizeCurvatureAction->setChecked(settings_.visualizeCurvature);
+    visualizeCurvatureAction->setChecked(viewSettings_.visualizeCurvature);
     visualizeCurvatureAction->setShortcut(QKeySequence(Qt::Key_B));
     connect(visualizeCurvatureAction, &QAction::triggered, [this](bool toggled) {
-        settings_.visualizeCurvature = toggled;
+        viewSettings_.visualizeCurvature = toggled;
         sceneView_->updateBuffers();
     });
     renderMenu->addAction(visualizeCurvatureAction);
 
     auto *visualizeNormalsAction = new QAction(QStringLiteral("Visualize Normals"), renderMenu);
     visualizeNormalsAction->setCheckable(true);
-    visualizeNormalsAction->setChecked(settings_.visualizeNormals);
+    visualizeNormalsAction->setChecked(viewSettings_.visualizeNormals);
     visualizeNormalsAction->setShortcut(QKeySequence(Qt::Key_N));
     connect(visualizeNormalsAction, &QAction::triggered, [this](bool toggled) {
-        settings_.visualizeNormals = toggled;
+        viewSettings_.visualizeNormals = toggled;
         sceneView_->updateBuffers();
     });
     renderMenu->addAction(visualizeNormalsAction);
 
     auto *normalHandlesAction = new QAction(QStringLiteral("Normal Handles"), renderMenu);
     normalHandlesAction->setCheckable(true);
-    normalHandlesAction->setChecked(settings_.normalHandles);
+    normalHandlesAction->setChecked(viewSettings_.normalHandles);
     normalHandlesAction->setShortcut(QKeySequence(Qt::Key_M));
     connect(normalHandlesAction, &QAction::triggered, [this](bool toggled) {
-        settings_.normalHandles = toggled;
+        viewSettings_.normalHandles = toggled;
         sceneView_->updateBuffers();
     });
     renderMenu->addAction(normalHandlesAction);
@@ -631,4 +603,4 @@ QMenu *MainWindow::getWindowMenu() {
     return windowMenu;
 }
 
-} // namespace conics::ui
+} // namespace conics::gui

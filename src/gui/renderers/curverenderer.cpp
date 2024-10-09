@@ -1,15 +1,14 @@
 #include "curverenderer.hpp"
 
-#include "core/settings/settings.hpp"
 #include "util/colormap.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 static const int COORDS_IDX = 0;
 static const int NORM_IDX = 1;
 static const int DOUBLE_IDX = 2;
 
-CurveRenderer::CurveRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
+CurveRenderer::CurveRenderer(const ViewSettings &settings) : Renderer(settings) {}
 
 CurveRenderer::~CurveRenderer() {
     gl_->glDeleteVertexArrays(1, &vao_);
@@ -159,4 +158,4 @@ void CurveRenderer::draw() {
     shader->release();
 }
 
-} // namespace conics::ui
+} // namespace conics::gui

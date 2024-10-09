@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 
 #include "core/vector.hpp"
-#include "core/settings/settings.hpp"
 
 namespace conics::core {
 

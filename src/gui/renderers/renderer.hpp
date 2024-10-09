@@ -4,10 +4,10 @@
 #include <QOpenGLShaderProgram>
 
 #include "core/vector.hpp"
-#include "core/settings/settings.hpp"
+#include "gui/viewsettings.hpp"
 #include "shadertypes.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 #define SHADER_DOUBLE_PRECISION
 
@@ -18,14 +18,14 @@ namespace conics::ui {
  */
 class Renderer {
 public:
-    explicit Renderer(const conics::core::Settings &settings);
+    explicit Renderer(const ViewSettings &settings);
 
     virtual ~Renderer();
 
     void init(QOpenGLFunctions_4_1_Core *f);
 
 protected:
-    const conics::core::Settings &settings_;
+    const ViewSettings &settings_;
 
     QMap<ShaderType, QOpenGLShaderProgram *> shaders_;
     QOpenGLFunctions_4_1_Core *gl_ = nullptr;
@@ -52,4 +52,4 @@ protected:
     }
 };
 
-} // namespace conics::ui
+} // namespace conics::gui

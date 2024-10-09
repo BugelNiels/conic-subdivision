@@ -1,23 +1,21 @@
 #pragma once
 
-#include "core/curve/subdivision/subdivider.hpp"
-#include "core/settings/settings.hpp"
+#include "core/curve/subdivision/subdivisionsettings.hpp"
 #include "core/vector.hpp"
+#include "core/curve/curve.hpp"
 
 namespace conics::core {
 
-class SubdivisionCurve;
-
-class ConicSubdivider : public Subdivider {
+class ConicSubdivider {
 public:
-    explicit ConicSubdivider(const Settings &settings);
+    explicit ConicSubdivider(const SubdivisionSettings &settings);
 
     /**
      * Subdivides the curve to the given subdivision level using the Conic subdivision scheme. Subdivision happens in-place.
      * @param curve The curve to subdivide.
      * @param level The level to subdivide to.
      */
-    void subdivide(Curve &curve, int level) override;
+    void subdivide(Curve &curve, int level);
 
     /**
      * Inserts inflection points such that the curve can be split into globally convex segments.
@@ -49,7 +47,7 @@ public:
                                          bool closed) const;
 
 private:
-    const Settings &settings_;
+    const SubdivisionSettings &settings_;
     std::vector<int> inflPointIndices_;
     // These buffers persist between between subdivisions to prevent re-allocation
     std::vector<Vector2DD> pointsBuffer;

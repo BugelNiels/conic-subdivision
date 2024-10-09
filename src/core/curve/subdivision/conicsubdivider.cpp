@@ -6,7 +6,7 @@
 
 namespace conics::core {
 
-ConicSubdivider::ConicSubdivider(const Settings &settings) : settings_(settings) {}
+ConicSubdivider::ConicSubdivider(const SubdivisionSettings &settings) : settings_(settings) {}
 
 void ConicSubdivider::subdivide(Curve &curve, int level) {
     auto &coords = curve.getCoords();
@@ -118,7 +118,7 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
     Vector2DD dir = newPoints[prevIdx] - newPoints[nextIdx];
     dir = {-dir.y(), dir.x()};
     // Note that dir is not normalized!
-    Conic conic(patchPoints, settings_);
+    Conic conic(patchPoints, settings_.epsilon);
     Vector2DD sampledPoint;
     Vector2DD sampledNormal;
     bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
@@ -136,7 +136,7 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
                     break;
                 }
                 oldPatchSize = patchPoints.size();
-                Conic conic2(patchPoints, settings_);
+                Conic conic2(patchPoints, settings_.epsilon);
                 valid = conic2.sample(origin, dir, sampledPoint, sampledNormal);
                 patchSize++;
             }

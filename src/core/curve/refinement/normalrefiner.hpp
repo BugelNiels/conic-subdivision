@@ -1,24 +1,31 @@
-// #pragma once
+#pragma once
 
-// #include "src/core/settings/settings.hpp"
-// #include "src/core/subdivisioncurve.hpp"
-// #include "util/vector.hpp"
+#include "core/curve/curve.hpp"
+#include "core/curve/refinement/normalrefinementsettings.hpp"
+#include "core/curve/subdivision/subdivisionsettings.hpp"
+#include "core/curve/subdivision/conicsubdivider.hpp"
+#include "core/vector.hpp"
 
-// class NormalRefiner {
-// public:
-//     explicit NormalRefiner(const Settings &settings);
+namespace conics::core {
 
-//     void refine(SubdivisionCurve &curve) const;
-//     void refineSelected(SubdivisionCurve &curve, int idx) const;
+class NormalRefiner {
+public:
+    explicit NormalRefiner(const NormalRefinementSettings &normRefSettings, const SubdivisionSettings& subdivSettings);
 
-// private:
-//     const Settings &settings;
+    void refine(Curve &curve);
+    void refineSelected(Curve &curve, int idx);
 
-//     real_t calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c) const;
+private:
+    const NormalRefinementSettings &normRefSettings_;
+    ConicSubdivider subdivider_;
 
-//     real_t curvatureAtControlIdx(SubdivisionCurve &curve, int idx) const;
+    real_t calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c) const;
 
-//     real_t smoothnessPenalty(SubdivisionCurve &curve, int idx) const;
+    real_t curvatureAtControlIdx(Curve &curve, int idx) const;
 
-//     void binarySearchBestNormal(SubdivisionCurve &curve, Vector2DD &normal, int idx) const;
-// };
+    real_t smoothnessPenalty(Curve &curve, int idx) const;
+
+    void binarySearchBestNormal(Curve &curve, Vector2DD &normal, int idx);
+};
+
+} // namespace conics::core

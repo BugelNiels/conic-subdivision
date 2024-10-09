@@ -1,10 +1,8 @@
 #include "curvenetrenderer.hpp"
 
-#include "core/settings/settings.hpp"
+namespace conics::gui {
 
-namespace conics::ui {
-
-CurveNetRenderer::CurveNetRenderer(const conics::core::Settings &settings) : Renderer(settings) {}
+CurveNetRenderer::CurveNetRenderer(const ViewSettings &settings) : Renderer(settings) {}
 
 /**
  * @brief CurveNetRenderer::~CurveNetRenderer Destructor of the control curve
@@ -78,10 +76,7 @@ void CurveNetRenderer::updateBuffers(const conics::core::Curve &curve) {
         indices.emplace_back(numVerts - 1);
     }
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                      sizeof(int) * indices.size(),
-                      indices.data(),
-                      GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 
     vboSize_ = indices.size();
 }
@@ -101,10 +96,7 @@ void CurveNetRenderer::draw() {
     gl_->glLineWidth(settings_.controlLineWidth);
     gl_->glBindVertexArray(vao_);
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-    gl_->glBufferData(GL_ARRAY_BUFFER,
-                      sizeof(QVector2D) * coords_.size(),
-                      coords_.data(),
-                      GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords_.size(), coords_.data(), GL_DYNAMIC_DRAW);
 
     shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue("viewMatrix", settings_.viewMatrix);
@@ -137,10 +129,7 @@ void CurveNetRenderer::draw() {
 
     if (settings_.normalHandles) {
         gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-        gl_->glBufferData(GL_ARRAY_BUFFER,
-                          sizeof(QVector2D) * normals_.size(),
-                          normals_.data(),
-                          GL_DYNAMIC_DRAW);
+        gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals_.size(), normals_.data(), GL_DYNAMIC_DRAW);
         QColor qCol = settings_.style.normCol;
         QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
         shader->setUniformValue("lineColor", col);
@@ -158,4 +147,4 @@ void CurveNetRenderer::draw() {
     shader->release();
 }
 
-} // namespace conics::ui
+} // namespace conics::gui

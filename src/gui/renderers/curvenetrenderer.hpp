@@ -6,14 +6,14 @@
 #include "renderer.hpp"
 #include "shadertypes.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 /**
  * @brief Renderer responsible for rendering the control net.
  */
 class CurveNetRenderer : public Renderer {
 public:
-    explicit CurveNetRenderer(const conics::core::Settings &settings);
+    explicit CurveNetRenderer(const ViewSettings &settings);
 
     ~CurveNetRenderer() override;
 
@@ -33,4 +33,4 @@ private:
     std::vector<QVector2D> normals_;
 };
 
-} // namespace conics::ui
+} // namespace conics::gui

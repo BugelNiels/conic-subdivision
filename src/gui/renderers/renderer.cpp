@@ -1,11 +1,11 @@
 #include "renderer.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 /**
  * @brief Renderer::Renderer Creates a new renderer.
  */
-Renderer::Renderer(const conics::core::Settings &settings) : gl_(nullptr), settings_(settings) {}
+Renderer::Renderer(const ViewSettings &settings) : gl_(nullptr), settings_(settings) {}
 
 /**
  * @brief Renderer::~Renderer Deconstructs the renderer by deleting all shaders.

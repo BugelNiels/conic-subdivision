@@ -2,12 +2,15 @@
 
 #include "core/conics/conic.hpp"
 #include "core/curve/subdivision/conicsubdivider.hpp"
-#include "core/settings/settings.hpp"
 #include "core/vector.hpp"
 
 namespace conics::core {
 
-Scene::Scene(Settings &settings) : settings_(settings), subdivider_(std::make_unique<ConicSubdivider>(settings)) {}
+Scene::Scene(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings)
+    : subdivSettings_(subdivSettings),
+      normRefSettings_(normRefSettings),
+      subdivider_(subdivSettings_),
+      normalRefiner_(normRefSettings, subdivSettings) {}
 
 void Scene::subdivideCurve(int numSteps) {
     lastSubdivLevel_ = numSteps;
@@ -24,18 +27,17 @@ void Scene::subdivideCurve(int numSteps) {
     std::copy(coords.begin(), coords.end(), subdivCoords.begin());
     std::copy(normals.begin(), normals.end(), subdivNormals.begin());
 
-    subdivider_->subdivide(subdivCurve_, numSteps);
+    subdivider_.subdivide(subdivCurve_, numSteps);
     notifyListeners();
 }
 
 Conic Scene::getConicAtIndex(int idx) const {
-    ConicSubdivider subdivider(settings_);
-    std::vector<PatchPoint> patch = subdivider.extractPatch(controlCurve_.getCoords(),
-                                                            controlCurve_.getNormals(),
-                                                            idx,
-                                                            settings_.patchSize,
-                                                            controlCurve_.isClosed());
-    return Conic(patch, settings_);
+    std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_.getCoords(),
+                                                             controlCurve_.getNormals(),
+                                                             idx,
+                                                             subdivSettings_.patchSize,
+                                                             controlCurve_.isClosed());
+    return Conic(patch, subdivSettings_.epsilon);
 }
 
 void Scene::resubdivide() {
@@ -49,18 +51,17 @@ void Scene::setControlCurve(Curve controlCurve) {
 }
 
 void Scene::recalculateNormals() {
-    controlCurve_.recalculateNormals(settings_.areaWeightedNormals, settings_.circleNormals);
+    controlCurve_.recalculateNormals(subdivSettings_.areaWeightedNormals, subdivSettings_.circleNormals);
     resubdivide();
 }
 
 void Scene::refineNormals() {
-    // controlCurve_.refineNormals(settings_.maxRefinementIterations);
+    normalRefiner_.refine(controlCurve_);
     resubdivide();
 }
 
-void Scene::refineSelectedNormal() {
-    // TODO
-    // subCurve_->refineSelectedNormal(settings_.maxRefinementIterations);
+void Scene::refineNormal(int idx) {
+    normalRefiner_.refineSelected(controlCurve_, idx);
     resubdivide();
 }
 

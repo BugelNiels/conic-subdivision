@@ -4,8 +4,6 @@
 
 namespace conics::core {
 
-class Settings;
-
 class Conic {
 public:
     Conic() {};
@@ -14,9 +12,9 @@ public:
      * @brief Construct a new Conic object that fits the given patch points.
      * 
      * @param patchPoints A collection of point-normal pairs that the conic should be constructed around.
-     * @param settings Calculation settings.
+     * @param epsilon Error margin.
      */
-    Conic(const std::vector<PatchPoint> &patchPoints, const Settings &settings);
+    Conic(const std::vector<PatchPoint> &patchPoints, real_t epsilon);
 
     /**
      * @brief Checks whether the ray with the given origin and direction intersects and samples the intersection point. 

@@ -1,10 +1,10 @@
 #pragma once
 
-namespace conics::ui {
+namespace conics::gui {
 
 /**
  * @brief Represents the different shaders that exist in this program.
  */
 enum ShaderType { FLAT, POLYLINE, CONIC };
 
-} // namespace conics::ui
+} // namespace conics::gui

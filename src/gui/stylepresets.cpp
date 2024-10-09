@@ -1,11 +1,12 @@
 #include "stylepresets.hpp"
 
-#include "core/settings/settings.hpp"
+#include "gui/viewsettings.hpp"
+
 #include <QApplication>
 
-namespace conics::ui {
+namespace conics::gui {
 
-void applyStylePreset(conics::core::Settings &settings, const StylePreset &preset) {
+void applyStylePreset(ViewSettings &settings, const StylePreset &preset) {
     QApplication::setPalette(preset.palette);
     settings.style = preset;
 }
@@ -68,7 +69,7 @@ StylePreset getLightModePalette() {
     palette.setColor(QPalette::Disabled, QPalette::AlternateBase, QColor(238, 238, 238));
     palette.setColor(QPalette::Disabled, QPalette::Window, QColor(218, 218, 218));
 
-    ui::StylePreset preset;
+    StylePreset preset;
     preset.palette = palette;
 
     preset.backgroundCol = QColor(255, 255, 255);

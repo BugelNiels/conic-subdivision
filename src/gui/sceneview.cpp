@@ -10,14 +10,13 @@
 #include <utility>
 
 #include "core/curve/subdivision/conicsubdivider.hpp"
-#include "core/settings/settings.hpp"
 #include "core/vector.hpp"
 
-namespace conics::ui {
+namespace conics::gui {
 
 using namespace conics::core;
 
-SceneView::SceneView(Settings &settings, Scene &scene, QWidget *parent)
+SceneView::SceneView(ViewSettings &settings, Scene &scene, QWidget *parent)
     : QOpenGLWidget(parent),
       settings_(settings),
       scene_(scene),
@@ -80,7 +79,7 @@ void SceneView::paintGL() {
 
     cr_.draw();
     cnr_.draw();
-    if (settings_.testToggle) {
+    if (settings_.drawSelectedConic) {
         conicR_.draw();
     }
 }
@@ -424,4 +423,4 @@ void SceneView::onMessageLogged(QOpenGLDebugMessage message) {
         qDebug() << "  → Log:" << message;
 }
 
-} // namespace conics::ui
+} // namespace conics::gui
