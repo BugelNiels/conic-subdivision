@@ -9,6 +9,11 @@ cmake_policy(SET CMP0079 NEW)
 
 add_subdirectory(conis/core)
 
+# Testing
+if(BUILD_UNIT_TESTS)
+    add_subdirectory(conis/test)
+endif()
+
 include(GNUInstallDirs)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
