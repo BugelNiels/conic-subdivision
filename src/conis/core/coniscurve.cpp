@@ -1,4 +1,4 @@
-#include "scene.hpp"
+#include "coniscurve.hpp"
 
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
@@ -6,13 +6,13 @@
 
 namespace conis::core {
 
-Scene::Scene(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings)
+ConisCurve::ConisCurve(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings)
     : subdivSettings_(subdivSettings),
       normRefSettings_(normRefSettings),
       subdivider_(subdivSettings_),
       normalRefiner_(normRefSettings, subdivSettings) {}
 
-void Scene::subdivideCurve(int numSteps) {
+void ConisCurve::subdivideCurve(int numSteps) {
     lastSubdivLevel_ = numSteps;
     const auto &coords = controlCurve_.getCoords();
     const auto &normals = controlCurve_.getNormals();
@@ -31,7 +31,7 @@ void Scene::subdivideCurve(int numSteps) {
     notifyListeners();
 }
 
-Conic Scene::getConicAtIndex(int idx) const {
+Conic ConisCurve::getConicAtIndex(int idx) const {
     std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_.getCoords(),
                                                              controlCurve_.getNormals(),
                                                              idx,
@@ -40,80 +40,80 @@ Conic Scene::getConicAtIndex(int idx) const {
     return Conic(patch, subdivSettings_.epsilon);
 }
 
-void Scene::resubdivide() {
+void ConisCurve::resubdivide() {
     subdivideCurve(lastSubdivLevel_);
 }
 
-void Scene::setControlCurve(Curve controlCurve) {
+void ConisCurve::setControlCurve(Curve controlCurve) {
     controlCurve_ = controlCurve;
     lastSubdivLevel_ = 0;
     resubdivide();
 }
 
-void Scene::recalculateNormals() {
+void ConisCurve::recalculateNormals() {
     controlCurve_.recalculateNormals(subdivSettings_.areaWeightedNormals, subdivSettings_.circleNormals);
     resubdivide();
 }
 
-void Scene::refineNormals() {
+void ConisCurve::refineNormals() {
     normalRefiner_.refine(controlCurve_);
     resubdivide();
 }
 
-void Scene::refineNormal(int idx) {
+void ConisCurve::refineNormal(int idx) {
     normalRefiner_.refineSelected(controlCurve_, idx);
     resubdivide();
 }
 
-int Scene::addPoint(const Vector2DD &p) {
+int ConisCurve::addPoint(const Vector2DD &p) {
     int idx = controlCurve_.addPoint(p);
     resubdivide();
     return idx;
 }
 
-void Scene::removePoint(int idx) {
+void ConisCurve::removePoint(int idx) {
     controlCurve_.removePoint(idx);
     resubdivide();
 }
 
-void Scene::setControlCurveClosed(bool closed) {
+void ConisCurve::setControlCurveClosed(bool closed) {
     controlCurve_.setClosed(closed);
     resubdivide();
 }
 
-void Scene::recalculateNormal(int idx) {
+void ConisCurve::recalculateNormal(int idx) {
     controlCurve_.recalculateNormal(idx);
     resubdivide();
 }
 
-void Scene::setVertexPosition(int idx, const Vector2DD &p) {
+void ConisCurve::setVertexPosition(int idx, const Vector2DD &p) {
     controlCurve_.setVertexPosition(idx, p);
     resubdivide();
 }
-void Scene::redirectNormalToPoint(int idx, const Vector2DD &p) {
+void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p) {
     controlCurve_.redirectNormalToPoint(idx, p);
     resubdivide();
 }
-void Scene::translate(const Vector2DD &d) {
+void ConisCurve::translate(const Vector2DD &d) {
     controlCurve_.translate(d);
     resubdivide();
 }
 
-void Scene::addListener(SceneListener *listener) {
+void ConisCurve::addListener(Listener *listener) {
     if (std::find(listeners.begin(), listeners.end(), listener) == listeners.end()) {
         listeners.emplace_back(listener);
     }
 }
-void Scene::removeListener(SceneListener *listener) {
+void ConisCurve::removeListener(Listener *listener) {
     auto it = std::remove(listeners.begin(), listeners.end(), listener);
     if (it != listeners.end()) {
         listeners.erase(it, listeners.end());
     }
 }
-void Scene::notifyListeners() {
+void ConisCurve::notifyListeners() {
     for (auto *listener: listeners) {
         if (listener) {
-            listener->sceneUpdated();
+            listener->onListenerUpdated();
         }
     }
 }

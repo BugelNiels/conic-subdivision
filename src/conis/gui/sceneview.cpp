@@ -16,10 +16,10 @@ namespace conis::gui {
 
 using namespace conis::core;
 
-SceneView::SceneView(ViewSettings &settings, Scene &scene, QWidget *parent)
+SceneView::SceneView(ViewSettings &settings, ConisCurve &conisCurve, QWidget *parent)
     : QOpenGLWidget(parent),
       settings_(settings),
-      scene_(scene),
+      conisCurve_(conisCurve),
       cnr_(settings),
       cr_(settings),
       conicR_(settings) {
@@ -29,7 +29,7 @@ SceneView::SceneView(ViewSettings &settings, Scene &scene, QWidget *parent)
     setFormat(format);
     resetViewMatrix();
     setMouseTracking(true);
-    scene.addListener(this);
+    conisCurve.addListener(this);
 }
 
 SceneView::~SceneView() {
@@ -85,7 +85,7 @@ void SceneView::paintGL() {
 }
 
 void SceneView::viewToFit() {
-    const auto& c = scene_.getControlCurve();
+    const auto& c = conisCurve_.getControlCurve();
     const std::vector<Vector2DD>& coords = c.getCoords();
     if (coords.empty()) {
         return; // Nothing to fit
@@ -129,12 +129,12 @@ void SceneView::resetViewMatrix() {
 }
 
 void SceneView::updateBuffers() {
-    cr_.updateBuffers(scene_.getSubdivCurve());
-    cnr_.updateBuffers(scene_.getControlCurve());
+    cr_.updateBuffers(conisCurve_.getSubdivCurve());
+    cnr_.updateBuffers(conisCurve_.getControlCurve());
     update();
 }
 
-void SceneView::sceneUpdated() {
+void SceneView::onListenerUpdated() {
     updateBuffers();
 }
 
@@ -167,7 +167,7 @@ bool SceneView::attemptVertexHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedVertex = scene_.getControlCurve().findClosestVertex(scenePos, maxDist);
+    settings_.highlightedVertex = conisCurve_.getControlCurve().findClosestVertex(scenePos, maxDist);
     if (settings_.highlightedVertex > -1) {
         return true;
     }
@@ -181,7 +181,7 @@ bool SceneView::attemptNormalHighlight(const Vector2DD &scenePos) {
         maxDist = settings_.deselectRadius;
     }
     // Select control point
-    settings_.highlightedNormal = scene_.getControlCurve().findClosestNormal(scenePos, maxDist, settings_.normalLength);
+    settings_.highlightedNormal = conisCurve_.getControlCurve().findClosestNormal(scenePos, maxDist, settings_.normalLength);
     if (settings_.highlightedNormal > -1) {
         settings_.highlightedVertex = -1;
         return true;
@@ -206,11 +206,11 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
     // In order to allow keyPressEvents:
     setFocus();
     Vector2DD scenePos = toNormalizedScreenCoordinates(event->position().x(), event->position().y());
-    auto &controlCurve = scene_.getControlCurve();
+    auto &controlCurve = conisCurve_.getControlCurve();
     switch (event->buttons()) {
         case Qt::LeftButton: {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
-                int idx = scene_.addPoint(scenePos);
+                int idx = conisCurve_.addPoint(scenePos);
                 settings_.highlightedNormal = -1;
                 settings_.highlightedVertex = idx;
             } else {
@@ -219,7 +219,7 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
                     attemptNormalHighlight(scenePos);
                 } else {
                     settings_.selectedVertex = settings_.highlightedVertex;
-                    Matrix3DD selectedConic = scene_.getConicAtIndex(settings_.highlightedVertex).getMatrix();
+                    Matrix3DD selectedConic = conisCurve_.getConicAtIndex(settings_.highlightedVertex).getMatrix();
                     conicR_.updateBuffers(selectedConic);
                     selectedConicIdx_ = settings_.highlightedVertex;
                 }
@@ -229,7 +229,7 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
         }
         case Qt::RightButton: {
             // Add new control point
-            int idx = scene_.addPoint(scenePos);
+            int idx = conisCurve_.addPoint(scenePos);
             settings_.highlightedNormal = -1;
             settings_.highlightedVertex = idx;
             break;
@@ -253,22 +253,22 @@ void SceneView::mouseMoveEvent(QMouseEvent *event) {
         return;
     }
 
-    auto &controlCurve = scene_.getControlCurve();
+    auto &controlCurve = conisCurve_.getControlCurve();
     switch (event->buttons()) {
         case Qt::RightButton:
         case Qt::LeftButton: {
             if (settings_.highlightedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                scene_.setVertexPosition(settings_.highlightedVertex, scenePos);
-                Matrix3DD selectedConic = scene_.getConicAtIndex(settings_.highlightedVertex).getMatrix();
+                conisCurve_.setVertexPosition(settings_.highlightedVertex, scenePos);
+                Matrix3DD selectedConic = conisCurve_.getConicAtIndex(settings_.highlightedVertex).getMatrix();
                 conicR_.updateBuffers(selectedConic);
             }
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                scene_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
-                Matrix3DD selectedConic = scene_.getConicAtIndex(settings_.highlightedNormal).getMatrix();
+                conisCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
+                Matrix3DD selectedConic = conisCurve_.getConicAtIndex(settings_.highlightedNormal).getMatrix();
                 conicR_.updateBuffers(selectedConic);
             }
             break;
@@ -297,19 +297,19 @@ void SceneView::keyPressEvent(QKeyEvent *event) {
     QWidget::keyPressEvent(event);
     const float movementSpeed = 0.02;
     // Only works when the widget has focus!
-    auto &controlCurve = scene_.getControlCurve();
+    auto &controlCurve = conisCurve_.getControlCurve();
     switch (event->key()) {
         case Qt::Key_Up:
-            scene_.translate({0, movementSpeed});
+            conisCurve_.translate({0, movementSpeed});
             break;
         case Qt::Key_Down:
-            scene_.translate({0, -movementSpeed});
+            conisCurve_.translate({0, -movementSpeed});
             break;
         case Qt::Key_Left:
-            scene_.translate({-movementSpeed, 0});
+            conisCurve_.translate({-movementSpeed, 0});
             break;
         case Qt::Key_Right:
-            scene_.translate({movementSpeed, 0});
+            conisCurve_.translate({movementSpeed, 0});
             break;
         case Qt::Key_Shift:
             break;
@@ -323,7 +323,7 @@ void SceneView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_X:
             if (settings_.highlightedVertex > -1) {
                 // Remove selected control point
-                scene_.removePoint(settings_.highlightedVertex);
+                conisCurve_.removePoint(settings_.highlightedVertex);
                 settings_.highlightedVertex = -1;
             }
             break;
@@ -348,7 +348,7 @@ void SceneView::mouseDoubleClickEvent(QMouseEvent *event) {
     if (settings_.highlightedNormal < 0) {
         return;
     }
-    scene_.recalculateNormal(settings_.highlightedNormal);
+    conisCurve_.recalculateNormal(settings_.highlightedNormal);
 }
 
 void SceneView::wheelEvent(QWheelEvent *event) {

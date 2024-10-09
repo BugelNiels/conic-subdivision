@@ -20,7 +20,6 @@ real_t NormalRefiner::calcCurvature(const Vector2DD &a, const Vector2DD &b, cons
 
 real_t NormalRefiner::curvatureAtControlIdx(Curve &curve, int idx) const {
     int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
-    // TODO: this should be the subdivided curve
     int n = curve.numPoints();
 
     const auto &points = curve.getCoords();

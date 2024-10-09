@@ -4,8 +4,8 @@
 #include <QOpenGLWidget>
 
 #include "conis/core/conics/conic.hpp"
-#include "conis/core/scene.hpp"
-#include "conis/core/scenelistener.hpp"
+#include "conis/core/coniscurve.hpp"
+#include "conis/core/listener.hpp"
 #include "conis/core/vector.hpp"
 #include "conis/gui/renderers/conicrenderer.hpp"
 #include "conis/gui/renderers/curvenetrenderer.hpp"
@@ -14,11 +14,11 @@
 
 namespace conis::gui {
 
-class SceneView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core, public conis::core::SceneListener {
+class SceneView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core, public conis::core::Listener {
     Q_OBJECT
 
 public:
-    SceneView(ViewSettings &settings, conis::core::Scene &scene, QWidget *parent = nullptr);
+    SceneView(ViewSettings &settings, conis::core::ConisCurve &conisCurve, QWidget *parent = nullptr);
 
     ~SceneView() override;
 
@@ -27,10 +27,10 @@ public:
     void paintGL() override;
     void viewToFit();
 
-    [[nodiscard]] inline const conis::core::Scene &getScene() const { return scene_; }
-    [[nodiscard]] inline conis::core::Scene &getScene() { return scene_; }
+    [[nodiscard]] inline const conis::core::ConisCurve &getConisCurve() const { return conisCurve_; }
+    [[nodiscard]] inline conis::core::ConisCurve &getConisCurve() { return conisCurve_; }
 
-    void sceneUpdated();
+    void onListenerUpdated();
 
 protected:
     void initializeGL() override;
@@ -48,7 +48,7 @@ protected:
     void resizeGL(int width, int height) override;
 
 private:
-    conis::core::Scene &scene_;
+    conis::core::ConisCurve &conisCurve_;
     ViewSettings &settings_;
 
     QOpenGLDebugLogger *debugLogger_ = nullptr;

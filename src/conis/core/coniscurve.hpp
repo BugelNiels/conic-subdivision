@@ -6,19 +6,18 @@
 #include "conis/core/curve/refinement/normalrefiner.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
-#include "conis/core/scenelistener.hpp"
+#include "conis/core/listener.hpp"
 #include "conis/core/vector.hpp"
 
 namespace conis::core {
 
-// TODO: rename to SubdivisionCurve
 
 /**
- * @brief The Scene class contains the scene description of the program: a control curve and a subdivision curve.
+ * @brief The ConisCurve class contains the basic subdivision curve description: a control curve and a subdivision curve.
  */
-class Scene {
+class ConisCurve {
 public:
-    Scene(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings);
+    ConisCurve(const SubdivisionSettings &subdivSettings, const NormalRefinementSettings &normRefSettings);
 
     [[nodiscard]] inline const Curve &getControlCurve() const { return controlCurve_; }
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
@@ -42,14 +41,14 @@ public:
     void redirectNormalToPoint(int idx, const Vector2DD &p);
     void translate(const Vector2DD &d);
 
-    void addListener(SceneListener *listener);
-    void removeListener(SceneListener *listener);
+    void addListener(Listener *listener);
+    void removeListener(Listener *listener);
     void notifyListeners();
 
 private:
     const SubdivisionSettings &subdivSettings_;
     const NormalRefinementSettings &normRefSettings_;
-    std::vector<SceneListener *> listeners;
+    std::vector<Listener *> listeners;
     ConicSubdivider subdivider_;
     NormalRefiner normalRefiner_;
     Curve controlCurve_;
