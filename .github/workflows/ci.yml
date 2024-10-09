@@ -49,19 +49,9 @@ jobs:
         run: |
           cmakelint --linelength=120 CMakeLists.txt 
 
-      # Build
+      # Build & Test
       - name: Build and test
-        run: mkdir build
-
-      - name: Configure with CMake
-        run: cmake -S . -B build -DBUILD_UNIT_TESTS=ON -DLIBRARY_ONLY=ON
-
-      - name: Build with CMake
-        run: cmake --build build
-
-      # Test
-      - name: Run tests
-        run: ctest --output-on-failure --verbose
+        run: ./build.sh --library-only --test
   build-launcher:
     runs-on: ubuntu-latest
     steps:
@@ -82,14 +72,8 @@ jobs:
           cache-key-prefix: 'install-qt6-action'
 
       # Build
-      - name: Build and test
-        run: mkdir build
-
-      - name: Configure with CMake
-        run: cmake -S . -B build -DBUILD_UNIT_TESTS=ON
-
-      - name: Build with CMake
-        run: cmake --build build
+      - name: Build
+        run: ./build.sh -t
   build-without-tests:
     runs-on: ubuntu-latest
     steps:
@@ -110,11 +94,5 @@ jobs:
           cache-key-prefix: 'install-qt6-action'
 
       # Build
-      - name: Create build directory
-        run: mkdir build
-
-      - name: Configure with CMake
-        run: cmake -S . -B build -DBUILD_TESTS=OFF
-
-      - name: Build with CMake
-        run: cmake --build build
+      - name: Build
+        run: ./build.sh
