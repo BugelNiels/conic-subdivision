@@ -2,16 +2,12 @@
 
 #include <QPainter>
 
-namespace conics::util {
+namespace conics::gui {
 
 QMap<QString, QPixmap> ImgResourceReader::loadedIcons_;
 
 QPixmap ImgResourceReader::getPixMap(const QString &path, const QSize &size, const QColor &color) {
-    QString key = QString("%1?color=%2&size=%3x%4")
-                          .arg(path)
-                          .arg(color.name())
-                          .arg(size.width())
-                          .arg(size.height());
+    QString key = QString("%1?color=%2&size=%3x%4").arg(path).arg(color.name()).arg(size.width()).arg(size.height());
     if (loadedIcons_.contains(key)) {
         return ImgResourceReader::loadedIcons_[key];
     }
@@ -31,4 +27,4 @@ QPixmap ImgResourceReader::getPixMap(const QString &path, const QSize &size, con
     return newIcon;
 }
 
-} // namespace conics::util
+} // namespace conics::gui

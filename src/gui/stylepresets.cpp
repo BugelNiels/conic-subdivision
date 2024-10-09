@@ -43,7 +43,7 @@ StylePreset getDarkModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName = conics::util::ColorMapName::KINDLMANN;
+    preset.colorMapName = ColorMapName::KINDLMANN;
     return preset;
 }
 
@@ -79,7 +79,7 @@ StylePreset getLightModePalette() {
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
     preset.normCol = QColor(150, 150, 255);
-    preset.colorMapName = conics::util::ColorMapName::SMOOTH_COOL_WARM;
+    preset.colorMapName = ColorMapName::SMOOTH_COOL_WARM;
     return preset;
 }
 

@@ -1,6 +1,6 @@
 #include "curverenderer.hpp"
 
-#include "util/colormap.hpp"
+#include "gui/util/colormap.hpp"
 
 namespace conics::gui {
 
@@ -49,7 +49,7 @@ void CurveRenderer::initBuffers() {
     gl_->glGenBuffers(1, &ibo_);
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
 
-    conics::util::ColorMap colMap;
+    ColorMap colMap;
     auto colMapVals = colMap.getColorMap(settings_.style.colorMapName);
 
     texture_ = new QOpenGLTexture(QOpenGLTexture::Target1D);
