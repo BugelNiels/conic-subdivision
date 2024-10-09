@@ -3,7 +3,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "core/conics/conicfitter.hpp"
+#include "conis/core/conics/conicfitter.hpp"
 
 namespace conis::core {
 
