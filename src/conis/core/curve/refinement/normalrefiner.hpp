@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/curve/curve.hpp"
-#include "core/curve/refinement/normalrefinementsettings.hpp"
-#include "core/curve/subdivision/conicsubdivider.hpp"
-#include "core/curve/subdivision/subdivisionsettings.hpp"
-#include "core/vector.hpp"
+#include "conis/core/curve/curve.hpp"
+#include "conis/core/curve/refinement/normalrefinementsettings.hpp"
+#include "conis/core/curve/subdivision/conicsubdivider.hpp"
+#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
+#include "conis/core/vector.hpp"
 
 namespace conis::core {
 

@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "core/conics/conic.hpp"
+#include "conis/core/conics/conic.hpp"
 
 namespace conis::core {
 
