@@ -10,7 +10,7 @@
 #include "conis/core/curve/curvepresetfactory.hpp"
 #include "conis/core/curve/refinement/normalrefinementsettings.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
-#include "conis/core/scene.hpp"
+#include "conis/core/coniscurve.hpp"
 #include "conis/gui/viewsettings.hpp"
 
 namespace conis::gui {
@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(conis::core::Scene &scene,
+    explicit MainWindow(conis::core::ConisCurve &scene,
                         conis::core::SubdivisionSettings &subdivSettings,
                         conis::core::NormalRefinementSettings &normRefSettings,
                         ViewSettings &viewSettings,

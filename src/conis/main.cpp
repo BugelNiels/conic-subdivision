@@ -4,7 +4,7 @@
 #include <QDockWidget>
 
 #include "conis/gui/mainwindow.hpp"
-#include "conis/core/scene.hpp"
+#include "conis/core/coniscurve.hpp"
 #include "conis/core/curve/refinement/normalrefinementsettings.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
 #include "conis/gui/viewsettings.hpp"
@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
     conis::core::SubdivisionSettings subdivSettings;
     conis::core::NormalRefinementSettings normRefSettings;
     conis::gui::ViewSettings viewSettings;
-    conis::core::Scene scene(subdivSettings, normRefSettings);
+    conis::core::ConisCurve conisCurve(subdivSettings, normRefSettings);
 
-    conis::gui::MainWindow w(scene, subdivSettings, normRefSettings, viewSettings);
+    conis::gui::MainWindow w(conisCurve, subdivSettings, normRefSettings, viewSettings);
     w.showMaximized();
     return QApplication::exec();
 }
