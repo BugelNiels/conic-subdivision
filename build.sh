@@ -13,6 +13,7 @@ usage() {
   echo "  -b, --cmake-build-type <build-type>:      Specifies the build type for cmake. Must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
   echo "  -t  --test:                               Builds and runs the unit tests."
   echo "  -r, --run:                                Runs the built binary."
+  echo "  -l, --library-only:                       Only builts the core library. No Qt needed to run this"
   exit 1
 }
 
@@ -26,6 +27,7 @@ build() {
   local clean=false
   local skip_cmake=false
   local run=false
+  local library_only=false
 
 
   # Parse command line arguments
@@ -49,6 +51,7 @@ build() {
       --skip-cmake) skip_cmake=true ;;
       -t|--test) do_tests=true ;;
       -r|--run) run=true ;;
+      -l|--library-only) library_only=true ;;
       *)
         usage
         ;;
@@ -72,6 +75,13 @@ build() {
     local cmake_flags=""
     if [ ${do_tests} = true ]; then
       cmake_flags+=" -DBUILD_UNIT_TESTS=ON" 
+    else
+      cmake_flags+=" -DBUILD_UNIT_TESTS=OFF" 
+    fi
+    if [ ${library_only} = true ]; then
+      cmake_flags+=" -DLIBRARY_ONLY=ON" 
+    else 
+      cmake_flags+=" -DLIBRARY_ONLY=OFF" 
     fi
     cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags}
   fi
@@ -81,10 +91,10 @@ build() {
     echo ""
     echo -e "\tYou can find the generated binary in the \"${build_dir}/\" directory."
     echo -e "\tExecute using:"
-    echo -e "\t\t./${build_dir}/conicsubdiv"
+    echo -e "\t\t./${build_dir}/conisLauncher"
     if [ ${do_tests} = true ]; then
       echo -e "\tExecute tests using:"
-      echo -e "\t\t./${build_dir}/conicsubdivTests"
+      echo -e "\t\t./${build_dir}/conisTests"
     fi
     echo ""
   else
@@ -93,11 +103,11 @@ build() {
   fi
 
   if [ ${do_tests} = true ]; then
-    ./conicsubdivTests
+    ./conisTests
   fi
 
-  if [ ${run} = true ]; then
-    ./conicsubdiv
+  if [ ${library_only} = false ] && [ ${run} = true ]; then
+    ./conisLauncher
   fi
 
   cd "$initial_loc"
