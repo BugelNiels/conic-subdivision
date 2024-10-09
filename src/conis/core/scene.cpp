@@ -1,8 +1,8 @@
 #include "scene.hpp"
 
-#include "core/conics/conic.hpp"
-#include "core/curve/subdivision/conicsubdivider.hpp"
-#include "core/vector.hpp"
+#include "conis/core/conics/conic.hpp"
+#include "conis/core/curve/subdivision/conicsubdivider.hpp"
+#include "conis/core/vector.hpp"
 
 namespace conis::core {
 

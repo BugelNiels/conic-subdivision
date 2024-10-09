@@ -34,3 +34,5 @@ appdir/usr/lib/
 appdir/usr/bin/
 appdir/usr/share/doc
 *.AppImage
+
+Testing

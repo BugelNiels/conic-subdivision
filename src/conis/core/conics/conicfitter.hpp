@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "core/vector.hpp"
+#include "conis/core/vector.hpp"
 
 namespace conis::core {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/curve/curve.hpp"
+#include "conis/core/curve/curve.hpp"
 
 namespace conis::core {
 
