@@ -23,7 +23,7 @@ private:
 
     real_t curvatureAtControlIdx(Curve &curve, int idx) const;
 
-    real_t smoothnessPenalty(Curve &curve, int idx) const;
+    real_t smoothnessPenalty(Curve &curve, int idx, int numControlPoints) const;
 
     void binarySearchBestNormal(Curve &curve, Vector2DD &normal, int idx);
 };

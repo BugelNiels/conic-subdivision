@@ -37,14 +37,15 @@ real_t NormalRefiner::curvatureAtControlIdx(Curve &curve, int idx) const {
 /**
  * @brief Calculates a number that judges the (local) smoothness of the curve. Lower numbers represent a smoother local segment.
  *
- * @param curve The curve to calculate the smoothness on
+ * @param curve The subdivided curve to calculate the smoothness on
  * @param idx The index of the point on the curve for which to calculate the smoothness
+ * @param numControlPoints The number of points in the original control curve.
  * @return int A number representing how smooth the curve is. Lower numbers are better (i.e. a smoother curve)
  */
-real_t NormalRefiner::smoothnessPenalty(Curve &curve, int idx) const {
-    real_t penalty_1 = curvatureAtControlIdx(curve, (idx - 1 + curve.numPoints()) % curve.numPoints());
+real_t NormalRefiner::smoothnessPenalty(Curve &curve, int idx, int numControlPoints) const {
+    real_t penalty_1 = curvatureAtControlIdx(curve, (idx - 1 + numControlPoints) % numControlPoints);
     real_t penalty0 = curvatureAtControlIdx(curve, idx);
-    real_t penalty1 = curvatureAtControlIdx(curve, (idx + 1) % curve.numPoints());
+    real_t penalty1 = curvatureAtControlIdx(curve, (idx + 1) % numControlPoints);
     // This puts more weight on the middle one. Perhaps we can improve something here
     return penalty_1 + 2 * penalty0 + penalty1;
     // return penalty0;
@@ -95,13 +96,13 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, Vector2DD &normal, int 
         normal = clockwiseNormal;
         subdivCurve = curve;
         subdivider_.subdivide(subdivCurve, normRefSettings_.testSubdivLevel);
-        real_t clockwisePenalty = smoothnessPenalty(curve, idx);
+        real_t clockwisePenalty = smoothnessPenalty(subdivCurve, idx, nc);
 
         // Calc curvature difference rotating counterclockwise
         normal = counterclockwiseNormal;
         subdivCurve = curve;
         subdivider_.subdivide(subdivCurve, normRefSettings_.testSubdivLevel);
-        real_t counterclockwisePenalty = smoothnessPenalty(curve, idx);
+        real_t counterclockwisePenalty = smoothnessPenalty(subdivCurve, idx, nc);
         // We pick whichever one results in the lower curvature penalty
         if (clockwisePenalty < counterclockwisePenalty) {
             normal = clockwiseNormal;
