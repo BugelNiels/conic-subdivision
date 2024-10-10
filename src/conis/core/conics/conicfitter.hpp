@@ -12,10 +12,7 @@ public:
 
     Eigen::VectorX<real_t> fitConic(const std::vector<PatchPoint> &patchPoints);
 
-    real_t stability() const;
-
 private:
-    real_t stability_ = 0;
     int numEq_ = 0;
 
     int numUnknowns_ = 0;

@@ -7,18 +7,6 @@
 
 namespace conis::core {
 
-static Matrix3DD coefsToMatrix(const Eigen::VectorX<real_t> &coefs) {
-    real_t a = coefs[0]; // A - x*x
-    real_t b = coefs[2]; // C - x*y
-    real_t c = coefs[1]; // B - y*y
-    real_t d = coefs[3]; // D - x
-    real_t e = coefs[4]; // E - y
-    real_t f = coefs[5]; // F - constant
-    Matrix3DD matrix;
-    matrix << a, b, d, b, c, e, d, e, f;
-    return matrix;
-}
-
 Conic::Conic(const std::vector<PatchPoint> &patchPoints, real_t epsilon) : epsilon_(epsilon) {
     Q_ = fitConic(patchPoints);
 }
@@ -31,9 +19,22 @@ Conic::Conic(const std::vector<PatchPoint> &patchPoints, real_t epsilon) : epsil
  */
 Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
     ConicFitter fitter;
-    Eigen::VectorX<real_t> foundCoefs = fitter.fitConic(patchPoints);
-    stability_ = fitter.stability();
-    return coefsToMatrix(foundCoefs);
+    Eigen::VectorX<real_t> coefs = fitter.fitConic(patchPoints);
+    real_t a = coefs[0]; // A - x*x
+    real_t b = coefs[2]; // C - x*y
+    real_t c = coefs[1]; // B - y*y
+    real_t d = coefs[3]; // D - x
+    real_t e = coefs[4]; // E - y
+    real_t f = coefs[5]; // F - constant
+
+    Matrix3DD matrix;
+    for (int i = 0; i < 6; i++) {
+        if (coefs[i] == 0 || std::isnan(coefs[i])) {
+            valid_ = false;
+        }
+    }
+    matrix << a, b, d, b, c, e, d, e, f;
+    return matrix;
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
@@ -45,14 +46,21 @@ Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p) const {
+#if 0
     Vector3DD p3(p.x(), p.y(), 1);
     real_t xn = Q_.row(0).dot(p3);
     real_t yn = Q_.row(1).dot(p3);
-    Vector2DD normal(xn, yn);
-    return normal;
+#else
+    real_t xn = fma(Q_(0, 0), p.x(), fma(Q_(0, 1), p.y(), Q_(0, 2)));
+    real_t yn = fma(Q_(1, 0), p.x(), fma(Q_(1, 1), p.y(), Q_(1, 2)));
+#endif
+    return {xn, yn};
 }
 
 bool Conic::sample(const Vector2DD &ro, const Vector2DD &rd, Vector2DD &p, Vector2DD &normal) const {
+    if (!valid_) {
+        return false;
+    }
     real_t t;
     if (intersects(ro, rd, t)) {
         p = ro + t * rd;
@@ -94,7 +102,7 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
     real_t b = u.dot(Q_ * p);
     real_t c = p.dot(Q_ * p);
 
-    if (std::fabs(a) < epsilon_) {
+    if (std::abs(a) <= epsilon_) {
         t = -c / b;
         if (std::isnan(t)) {
             return false;
@@ -106,27 +114,28 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         return false;
     }
     real_t root = std::sqrt(disc);
-
-    real_t t0 = (-b - root) / a;
-    real_t t1 = (-b + root) / a;
 #if 1
-    if (std::fabs(t0) < std::fabs(t1)) {
-        t = t0;
+    // If b is negative, then -b is positive, so `-b - root` will always be smaller than `-b + root`
+    if (b < 0) {
+        t = (-b - root) / a;
     } else {
-        t = t1;
+        t = (-b + root) / a;
     }
     return true;
 #else
+    real_t t0 = -b - root;
+    real_t t1 = -b + root;
+    // This returns the smallest positive number; disabled for now
     if (t0 > 0 && t1 > 0) {
-        t = std::min(t0, t1);
+        t = std::min(t0, t1) / a;
         return true;
     }
     if (t0 > 0) {
-        t = t0;
+        t = t0 / a;
         return true;
     }
     if (t1 > 0) {
-        t = t1;
+        t = t1 / a;
         return true;
     }
     return false;
@@ -146,10 +155,6 @@ void Conic::printConic() const {
     std::ostringstream oss;
     oss << A << "*x^2 + " << D << "*x*y + " << E << "*y^2 + " << G << "*x + " << B << "*y + " << F << " = 0";
     std::cout << oss.str() << std::endl;
-}
-
-real_t Conic::getStability() const {
-    return stability_;
 }
 
 } // namespace conis::core

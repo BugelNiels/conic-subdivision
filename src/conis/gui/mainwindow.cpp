@@ -67,11 +67,11 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(presetLabel);
     auto *resetPresetButton = new QPushButton("Reset Preset");
     connect(resetPresetButton, &QPushButton::pressed, this, [this] {
-        auto &scene = sceneView_->getConisCurve();
+        auto &conisCurve = sceneView_->getConisCurve();
         subdivStepsSpinBox->setVal(0);
         presetLabel->setText(QString("<b>Preset:</b> %1").arg(QString::fromStdString(presetName)));
-        scene.setControlCurve(presetFactory_.getPreset(presetName));
-        closedCurveAction->setChecked(scene.getControlCurve().isClosed());
+        conisCurve.setControlCurve(presetFactory_.getPreset(presetName));
+        closedCurveAction->setChecked(conisCurve.getControlCurve().isClosed());
     });
     vertLayout->addWidget(resetPresetButton);
     vertLayout->addStretch();
@@ -79,19 +79,28 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(new QLabel("Subdivision Steps"));
     subdivStepsSpinBox = new IntSlider("Steps", 0, 0, 8, BoundMode::LOWER_ONLY);
     connect(subdivStepsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
-        auto &scene = sceneView_->getConisCurve();
-        scene.subdivideCurve(numSteps);
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.subdivideCurve(numSteps);
     });
     vertLayout->addWidget(subdivStepsSpinBox);
     auto *applySubdivButton = new QPushButton("Apply Subdivision");
     applySubdivButton->setToolTip("<html><head/><body><p>If pressed, applies the subdivision.</body></html>");
     connect(applySubdivButton, &QPushButton::pressed, [this] {
-        auto &scene = sceneView_->getConisCurve();
-        auto curv = scene.getSubdivCurve();
-        scene.setControlCurve(curv);
+        auto &conisCurve = sceneView_->getConisCurve();
+        auto curv = conisCurve.getSubdivCurve();
+        conisCurve.setControlCurve(curv);
         subdivStepsSpinBox->setVal(0);
     });
     vertLayout->addWidget(applySubdivButton);
+
+
+    auto *insertInflPointsButton = new QPushButton("Insert Inflection Points");
+    insertInflPointsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points.</body></html>");
+    connect(insertInflPointsButton, &QPushButton::pressed, [this] {
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.insertInflectionPoints();
+    });
+    vertLayout->addWidget(insertInflPointsButton);
 
 #ifndef NDEBUG
     auto *gravitateAnglesCheckBox = new QCheckBox("Small Angle Bias");
@@ -104,8 +113,8 @@ QDockWidget *MainWindow::initSideMenu() {
     gravitateAnglesCheckBox->setEnabled(subdivSettings_.weightedInflPointLocation);
     connect(gravitateAnglesCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         subdivSettings_.gravitateSmallerAngles = toggled;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
 
     auto *weightedInflPointLoc = new QCheckBox("Weighted Inflection Points");
@@ -117,8 +126,8 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(weightedInflPointLoc, &QCheckBox::toggled, [this, gravitateAnglesCheckBox](bool toggled) {
         subdivSettings_.weightedInflPointLocation = toggled;
         gravitateAnglesCheckBox->setEnabled(subdivSettings_.weightedInflPointLocation);
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
 
     vertLayout->addStretch();
@@ -132,8 +141,8 @@ QDockWidget *MainWindow::initSideMenu() {
                 subdivSettings_.convexitySplit = toggled;
                 weightedInflPointLoc->setEnabled(toggled);
                 gravitateAnglesCheckBox->setEnabled(toggled && subdivSettings_.weightedInflPointLocation);
-                auto &scene = sceneView_->getConisCurve();
-                scene.resubdivide();
+                auto &conisCurve = sceneView_->getConisCurve();
+                conisCurve.resubdivide();
             });
     vertLayout->addWidget(splitConvexityCheckBox);
     vertLayout->addWidget(weightedInflPointLoc);
@@ -146,8 +155,8 @@ QDockWidget *MainWindow::initSideMenu() {
                                 "at most 2 times this number.</p></body></html>");
     connect(patchSizeSlider, &IntSlider::valueUpdated, [this](int value) {
         subdivSettings_.patchSize = value;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
 
     auto *dynamicPatchSizeCheckBox = new QCheckBox("Dynamic Patch Size");
@@ -158,8 +167,8 @@ QDockWidget *MainWindow::initSideMenu() {
     dynamicPatchSizeCheckBox->setChecked(subdivSettings_.dynamicPatchSize);
     connect(dynamicPatchSizeCheckBox, &QCheckBox::toggled, [this](bool toggled) {
         subdivSettings_.dynamicPatchSize = toggled;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
 
     vertLayout->addStretch();
@@ -179,8 +188,8 @@ QDockWidget *MainWindow::initSideMenu() {
             "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         subdivSettings_.middlePointWeight = newVal;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
     vertLayout->addWidget(edgeVertWeightSpinBox);
 
@@ -195,8 +204,8 @@ QDockWidget *MainWindow::initSideMenu() {
             "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midVertWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         subdivSettings_.outerPointWeight = newVal;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
     vertLayout->addWidget(midVertWeightSpinBox);
     vertLayout->addStretch();
@@ -211,8 +220,8 @@ QDockWidget *MainWindow::initSideMenu() {
             "font-weight:600;&quot;>d </span>(the edge points).</p></body></html>");
     connect(edgeNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         subdivSettings_.middleNormalWeight = newVal;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
     vertLayout->addWidget(edgeNormWeightSpinBox);
 
@@ -227,8 +236,8 @@ QDockWidget *MainWindow::initSideMenu() {
             "font-weight:600;&quot;>e</span>.</p></body></html>");
     connect(midNormWeightSpinBox, &DoubleSlider::valueUpdated, [this](double newVal) {
         subdivSettings_.outerNormalWeight = newVal;
-        auto &scene = sceneView_->getConisCurve();
-        scene.resubdivide();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.resubdivide();
     });
     vertLayout->addWidget(midNormWeightSpinBox);
 
@@ -246,8 +255,8 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *recalcButton = new QPushButton("Reset Normals");
     connect(recalcButton, &QPushButton::pressed, this, [this] {
-        auto &scene = sceneView_->getConisCurve();
-        scene.recalculateNormals();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.recalculateNormals();
     });
     vertLayout->addWidget(recalcButton);
 
@@ -259,8 +268,8 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(regularNormalsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         subdivSettings_.areaWeightedNormals = false;
         subdivSettings_.circleNormals = false;
-        auto &scene = sceneView_->getConisCurve();
-        scene.recalculateNormals();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.recalculateNormals();
     });
     vertLayout->addWidget(regularNormalsRadioButton);
 
@@ -270,8 +279,8 @@ QDockWidget *MainWindow::initSideMenu() {
     lengthWeightedRadioButton->setChecked(subdivSettings_.areaWeightedNormals);
     connect(lengthWeightedRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         subdivSettings_.areaWeightedNormals = toggled;
-        auto &scene = sceneView_->getConisCurve();
-        scene.recalculateNormals();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.recalculateNormals();
     });
     vertLayout->addWidget(lengthWeightedRadioButton);
 #ifndef NDEBUG
@@ -281,8 +290,8 @@ QDockWidget *MainWindow::initSideMenu() {
     circleNormsRadioButton->setChecked(subdivSettings_.circleNormals);
     connect(circleNormsRadioButton, &QCheckBox::toggled, [this](bool toggled) {
         subdivSettings_.circleNormals = toggled;
-        auto &scene = sceneView_->getConisCurve();
-        scene.recalculateNormals();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.recalculateNormals();
     });
     vertLayout->addWidget(circleNormsRadioButton);
 #endif
@@ -290,15 +299,15 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *refineNormalsButton = new QPushButton("Refine Normals");
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
-        auto &scene = sceneView_->getConisCurve();
-        scene.refineNormals();
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.refineNormals();
     });
     vertLayout->addWidget(refineNormalsButton);
 
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
-        auto &scene = sceneView_->getConisCurve();
-        scene.refineNormal(viewSettings_.selectedVertex);
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.refineNormal(viewSettings_.selectedVertex);
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
@@ -398,8 +407,8 @@ QMenu *MainWindow::getFileMenu() {
         }
         conis::core::CurveLoader loader;
         conis::core::Curve curve = loader.loadCurveFromFile(filePath.toStdString());
-        auto &scene = sceneView_->getConisCurve();
-        scene.setControlCurve(curve);
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.setControlCurve(curve);
         subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(curve.isClosed());
         sceneView_->viewToFit();
@@ -441,8 +450,8 @@ QMenu *MainWindow::getFileMenu() {
             char *file_name;
             file_name = bytes.data();
             conis::core::CurveSaver saver;
-            auto &scene = sceneView_->getConisCurve();
-            bool success = saver.saveCurve(file_name, scene.getSubdivCurve());
+            auto &conisCurve = sceneView_->getConisCurve();
+            bool success = saver.saveCurve(file_name, conisCurve.getSubdivCurve());
 
             if (success) {
                 QMessageBox::information(this, "Curve Saved", filePath);
@@ -469,8 +478,8 @@ QMenu *MainWindow::getFileMenu() {
             file_name = bytes.data();
 
             conis::core::CurveSaver saver;
-            auto &scene = sceneView_->getConisCurve();
-            bool success = saver.saveCurveWithNormals(file_name, scene.getSubdivCurve());
+            auto &conisCurve = sceneView_->getConisCurve();
+            bool success = saver.saveCurveWithNormals(file_name, conisCurve.getSubdivCurve());
 
             if (success) {
                 QMessageBox::information(this, "Curve Saved", filePath);
@@ -504,12 +513,12 @@ QMenu *MainWindow::getPresetMenu() {
         auto *newAction = new QAction(QString::fromStdString(name), presetMenu);
         newAction->setShortcut(QKeySequence::fromString(QString("Ctrl+%1").arg(i)));
         connect(newAction, &QAction::triggered, [this, name]() {
-            auto &scene = sceneView_->getConisCurve();
+            auto &conisCurve = sceneView_->getConisCurve();
             presetName = name;
-            scene.setControlCurve(presetFactory_.getPreset(presetName));
+            conisCurve.setControlCurve(presetFactory_.getPreset(presetName));
             presetLabel->setText(QString("<b>Preset:</b> %1").arg(QString::fromStdString(name)));
             subdivStepsSpinBox->setVal(0);
-            closedCurveAction->setChecked(scene.getControlCurve().isClosed());
+            closedCurveAction->setChecked(conisCurve.getControlCurve().isClosed());
         });
         presetMenu->addAction(newAction);
         i++;
@@ -547,8 +556,8 @@ QMenu *MainWindow::getRenderMenu() {
     closedCurveAction->setChecked(true);
     closedCurveAction->setShortcut(QKeySequence(Qt::Key_C));
     connect(closedCurveAction, &QAction::triggered, [this](bool toggled) {
-        auto &scene = sceneView_->getConisCurve();
-        scene.setControlCurveClosed(toggled);
+        auto &conisCurve = sceneView_->getConisCurve();
+        conisCurve.setControlCurveClosed(toggled);
     });
     renderMenu->addAction(closedCurveAction);
 

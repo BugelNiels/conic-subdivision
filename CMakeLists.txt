@@ -31,6 +31,12 @@ file(GLOB_RECURSE CORE_SOURCES src/conis/core/*.cpp src/conis/core/*.hpp)
 # Define the core library
 add_library(conis_core STATIC ${CORE_SOURCES})
 
+# Add compile options to the core library
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # GCC or Clang compiler: enable FMA and target the native architecture
+    target_compile_options(conis_core PRIVATE -mfma -march=native)
+endif()
+
 # Set output directories for the core library
 set_target_properties(conis_core PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"

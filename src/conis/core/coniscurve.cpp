@@ -14,19 +14,7 @@ ConisCurve::ConisCurve(const SubdivisionSettings &subdivSettings, const NormalRe
 
 void ConisCurve::subdivideCurve(int numSteps) {
     lastSubdivLevel_ = numSteps;
-    const auto &coords = controlCurve_.getCoords();
-    const auto &normals = controlCurve_.getNormals();
-    auto &subdivCoords = subdivCurve_.getCoords();
-    auto &subdivNormals = subdivCurve_.getNormals();
-    subdivCurve_.setClosed(controlCurve_.isClosed());
-    int n = coords.size();
-    // Prevent re-allocating the buffer, so copy it into existing buffer
-    subdivCoords.resize(n); // Note that resize does not reduce capacity
-    subdivNormals.resize(n);
-    subdivCurve_.getCustomNormals().resize(n);
-    std::copy(coords.begin(), coords.end(), subdivCoords.begin());
-    std::copy(normals.begin(), normals.end(), subdivNormals.begin());
-
+    controlCurve_.copyDataTo(subdivCurve_);
     subdivider_.subdivide(subdivCurve_, numSteps);
     notifyListeners();
 }
@@ -38,6 +26,15 @@ Conic ConisCurve::getConicAtIndex(int idx) const {
                                                              subdivSettings_.patchSize,
                                                              controlCurve_.isClosed());
     return Conic(patch, subdivSettings_.epsilon);
+}
+
+void ConisCurve::insertInflectionPoints() {
+    std::vector<Vector2DD> coords;
+    std::vector<Vector2DD> normals;
+    controlCurve_.setCustomNormals(subdivider_.getInflPointCurve(controlCurve_, coords, normals));
+    controlCurve_.setCoords(coords);
+    controlCurve_.setNormals(normals);
+    resubdivide();
 }
 
 void ConisCurve::resubdivide() {

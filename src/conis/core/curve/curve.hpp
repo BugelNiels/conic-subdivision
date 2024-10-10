@@ -24,6 +24,8 @@ public:
 
     Curve &operator=(const Curve &other) = default;
 
+    void copyDataTo(Curve& other) const;
+
     [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
     [[nodiscard]] inline const std::vector<Vector2DD> &getNormals() const { return normals_; }
     [[nodiscard]] inline const std::vector<bool> &getCustomNormals() const { return customNormals_; }

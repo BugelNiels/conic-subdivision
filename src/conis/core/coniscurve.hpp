@@ -11,7 +11,6 @@
 
 namespace conis::core {
 
-
 /**
  * @brief The ConisCurve class contains the basic subdivision curve description: a control curve and a subdivision curve.
  */
@@ -23,7 +22,7 @@ public:
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
 
     Conic getConicAtIndex(int idx) const;
-
+    void insertInflectionPoints();
     void resubdivide();
     void recalculateNormals();
     void recalculateNormal(int idx);

@@ -76,8 +76,6 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, Vector2DD &normal, int 
     int n = curve.numPoints();
     Eigen::Matrix<real_t, 2, 2> rotationMatrix;
 
-    Curve subdivCurve;
-
     // The idea is simple: we rotate both clockwise and counterclockwise by some angle
     // We pick whichever one results in a smoother curve
     // We half the angle and continue
@@ -94,15 +92,15 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, Vector2DD &normal, int 
 
         // Calc curvature difference rotating clockwise
         normal = clockwiseNormal;
-        subdivCurve = curve;
-        subdivider_.subdivide(subdivCurve, normRefSettings_.testSubdivLevel);
-        real_t clockwisePenalty = smoothnessPenalty(subdivCurve, idx, nc);
+        curve.copyDataTo(testCurve_);
+        subdivider_.subdivide(testCurve_, normRefSettings_.testSubdivLevel);
+        real_t clockwisePenalty = smoothnessPenalty(testCurve_, idx, nc);
 
         // Calc curvature difference rotating counterclockwise
         normal = counterclockwiseNormal;
-        subdivCurve = curve;
-        subdivider_.subdivide(subdivCurve, normRefSettings_.testSubdivLevel);
-        real_t counterclockwisePenalty = smoothnessPenalty(subdivCurve, idx, nc);
+        curve.copyDataTo(testCurve_);
+        subdivider_.subdivide(testCurve_, normRefSettings_.testSubdivLevel);
+        real_t counterclockwisePenalty = smoothnessPenalty(testCurve_, idx, nc);
         // We pick whichever one results in the lower curvature penalty
         if (clockwisePenalty < counterclockwisePenalty) {
             normal = clockwiseNormal;

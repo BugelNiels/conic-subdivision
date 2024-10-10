@@ -266,4 +266,20 @@ int Curve::numPoints() const {
     return coords_.size();
 }
 
+void Curve::copyDataTo(Curve &other) const {
+    auto &otherCoords = other.getCoords();
+    auto &otherNormals = other.getNormals();
+    auto &otherCustNormals = other.getCustomNormals();
+    other.setClosed(isClosed());
+    int n = numPoints();
+    // Prevent re-allocating the buffer, so copy it into existing buffer
+    // Note that resize does not reduce capacity
+    otherCoords.resize(n);
+    otherNormals.resize(n);
+    otherCustNormals.resize(n);
+    std::copy(coords_.begin(), coords_.end(), otherCoords.begin());
+    std::copy(normals_.begin(), normals_.end(), otherNormals.begin());
+    std::copy(customNormals_.begin(), customNormals_.end(), otherCustNormals.begin());
+}
+
 } // namespace conis::core

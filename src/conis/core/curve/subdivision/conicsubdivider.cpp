@@ -1,6 +1,7 @@
 #include "conicsubdivider.hpp"
 
 #include <cmath>
+#include <iostream>
 
 #include "conis/core/conics/conic.hpp"
 
@@ -92,7 +93,7 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
 
     const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0;
     Vector2DD dir = newPoints[prevIdx] - newPoints[nextIdx];
-    dir = {-dir.y(), dir.x()};
+    dir = {-dir.y(), dir.x()}; // rotate the line segment counterclockwise 90 degree to get the normal of it
     // Note that dir is not normalized!
     Conic conic(patchPoints, settings_.epsilon);
     Vector2DD sampledPoint;
@@ -106,7 +107,7 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
             int oldPatchSize = patchPoints.size();
             while (!valid) {
                 patchPoints = extractPatch(points, normals, i / 2, patchSize, closed);
-                if (patchSize > 10 || patchPoints.size() == oldPatchSize) {
+                if (patchSize > 4 || patchPoints.size() == oldPatchSize) {
                     sampledPoint = origin;
                     sampledNormal = dir;
                     break;
@@ -225,7 +226,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
                                          const Vector2DD &v3) const {
     const Vector2DD v1v3 = v3 - v1;
     const Vector2DD v1v0 = v0 - v1;
-    if (v1v0.squaredNorm() == 0.0 || v1v3.squaredNorm() == 0) {
+    if (v1v0.squaredNorm() < settings_.epsilon || v1v3.squaredNorm() < settings_.epsilon) {
         return true; // End point edge case
     }
     const Vector2DD normal = Vector2DD(v2.y() - v1.y(), v1.x() - v2.x());
@@ -234,7 +235,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
     if (std::abs(dotProduct1) < settings_.epsilon || std::abs(dotProduct2) < settings_.epsilon) {
         return true; // curve is flat
     }
-    const double sign = dotProduct1 > 0 ? 1.0 : -1.0;
+    const real_t sign = dotProduct1 > 0 ? 1.0 : -1.0;
     return dotProduct2 * sign >= 0;
 }
 

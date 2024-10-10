@@ -11,6 +11,7 @@ uniform vec3 lineColor;
 void main() {
     vec2  dir  = (vertPos -startPos);
     float dist = length(dir);
+    // Discard fragment based on sine function to get a dashed line
     if (sin(dist * 80) > 0) {
         discard;
     }

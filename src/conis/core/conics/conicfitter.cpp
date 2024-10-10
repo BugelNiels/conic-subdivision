@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigen>
 #include <Eigen/SVD>
+#include <iostream>
 
 namespace conis::core {
 
@@ -63,6 +64,7 @@ Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
 
     int rowIdx = 0;
     for (int i = 0; i < patchPoints.size(); i++) {
+        // Per point, add 3 equations: one for the point itself and two for the normal (x and y)
         auto &p = patchPoints[i];
         const Vector2DD &coord = p.coords;
         const Vector2DD &normal = p.normal;
@@ -78,9 +80,7 @@ Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
 
 Eigen::VectorX<real_t> ConicFitter::solveLinSystem(const Eigen::MatrixX<real_t> &A) {
     const Eigen::JacobiSVD<Eigen::MatrixX<real_t>> svd(A, Eigen::ComputeThinV);
-    const auto &V = svd.matrixV();
-    stability_ = svd.singularValues()(0) / svd.singularValues()(svd.singularValues().size() - 1);
-    return V.col(V.cols() - 1);
+    return svd.matrixV().rightCols<1>();
 }
 
 Eigen::VectorX<real_t> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
@@ -90,16 +90,6 @@ Eigen::VectorX<real_t> ConicFitter::fitConic(const std::vector<PatchPoint> &patc
     // 1 eq per coordinate + 2 per normal
     numEq_ = numPoints * 3;
     return solveLinSystem(initAEigen(patchPoints));
-}
-
-real_t ConicFitter::stability() const {
-    const real_t minVal = 10.0 * 100000;
-    const real_t maxVal = 1.0e9 * minVal;
-    const real_t logMin = std::log10(minVal);
-    const real_t logMax = std::log10(maxVal);
-    const real_t logValue = std::log10(stability_);
-    const real_t mappedValue = (logValue - logMin) / (logMax - logMin);
-    return std::clamp(mappedValue, real_t(0), real_t(1));
 }
 
 } // namespace conis::core

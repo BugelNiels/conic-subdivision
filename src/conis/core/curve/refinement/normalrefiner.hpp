@@ -18,6 +18,7 @@ public:
 private:
     const NormalRefinementSettings &normRefSettings_;
     ConicSubdivider subdivider_;
+    Curve testCurve_;
 
     real_t calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c) const;
 
