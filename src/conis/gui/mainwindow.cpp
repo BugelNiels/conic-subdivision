@@ -19,12 +19,10 @@
 #include <QVBoxLayout>
 
 #include "conis/core/curve/curveloader.hpp"
-#include "conis/core/curve/curvepresetfactory.hpp"
 #include "conis/core/curve/curvesaver.hpp"
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/gui/sceneview.hpp"
 #include "conis/gui/stylepresets.hpp"
-#include "util/imgresourcereader.hpp"
+#include "conis/gui/util/imgresourcereader.hpp"
 
 using DoubleSlider = ValueSliders::DoubleSlider;
 using IntSlider = ValueSliders::IntSlider;

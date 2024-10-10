@@ -36,7 +36,7 @@ protected:
 
     static QOpenGLShaderProgram *constructDefaultShader(const QString &name);
 
-    static QOpenGLShaderProgram *constructPolyLineShader();
+    static QOpenGLShaderProgram *constructGeomShader(const QString &name);
 
     static std::vector<QVector2D> qVecToVec(const std::vector<conis::core::Vector2DD> &items);
 

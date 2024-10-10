@@ -3,7 +3,6 @@
 #include <QOpenGLDebugLogger>
 #include <QOpenGLWidget>
 
-#include "conis/core/conics/conic.hpp"
 #include "conis/core/coniscurve.hpp"
 #include "conis/core/listener.hpp"
 #include "conis/core/vector.hpp"

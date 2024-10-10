@@ -8,8 +8,6 @@
 #include "external/qt-value-slider/include/intslider.hpp"
 
 #include "conis/core/curve/curvepresetfactory.hpp"
-#include "conis/core/curve/refinement/normalrefinementsettings.hpp"
-#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
 #include "conis/core/coniscurve.hpp"
 #include "conis/gui/viewsettings.hpp"
 

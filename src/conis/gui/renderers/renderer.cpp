@@ -35,16 +35,16 @@ void Renderer::init(QOpenGLFunctions_4_1_Core *f) {
  * @param name Name of the shader.
  * @return The constructed shader.
  */
-QOpenGLShaderProgram *Renderer::constructPolyLineShader() {
+QOpenGLShaderProgram *Renderer::constructGeomShader(const QString &name) {
 #ifdef SHADER_DOUBLE_PRECISION
-    QString pathVert = ":/shaders/double/polyline.vert";
-    QString pathGeom = ":/shaders/double/polyline_normals.geom";
-    QString pathFrag = ":/shaders/double/polyline.frag";
+    QString pathVert = ":/shaders/double/" + name + ".vert";
+    QString pathGeom = ":/shaders/double/" + name + ".geom";
+    QString pathFrag = ":/shaders/double/" + name + ".frag";
 
 #else
-    QString pathVert = ":/shaders/polyline.vert";
-    QString pathGeom = ":/shaders/polyline_normals.geom";
-    QString pathFrag = ":/shaders/polyline.frag";
+    QString pathVert = ":/shaders/" + name + ".vert";
+    QString pathGeom = ":/shaders/" + name + ".geom";
+    QString pathFrag = ":/shaders/" + name + ".frag";
 #endif
 
     // we use the qt wrapper functions for shader objects

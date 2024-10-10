@@ -9,7 +9,6 @@
 #include <iostream>
 #include <utility>
 
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/core/vector.hpp"
 
 namespace conis::gui {

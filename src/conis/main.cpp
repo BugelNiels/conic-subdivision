@@ -5,8 +5,6 @@
 
 #include "conis/gui/mainwindow.hpp"
 #include "conis/core/coniscurve.hpp"
-#include "conis/core/curve/refinement/normalrefinementsettings.hpp"
-#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
 #include "conis/gui/viewsettings.hpp"
 
 /**

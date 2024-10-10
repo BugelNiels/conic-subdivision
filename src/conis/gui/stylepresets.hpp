@@ -3,7 +3,7 @@
 #include <QColor>
 #include <QPalette>
 
-#include "util/colormap.hpp"
+#include "conis/gui/util/colormap.hpp"
 
 namespace conis::gui {
 

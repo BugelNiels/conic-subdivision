@@ -19,7 +19,7 @@ CurveRenderer::~CurveRenderer() {
 }
 
 void CurveRenderer::initShaders() {
-    shaders_.insert(ShaderType::POLYLINE, constructPolyLineShader());
+    shaders_.insert(ShaderType::CURVATURE, constructGeomShader("curvature"));
 }
 
 void CurveRenderer::initBuffers() {
@@ -132,7 +132,7 @@ void CurveRenderer::draw() {
     if (vboSize_ == 0) {
         return;
     }
-    auto shader = shaders_[ShaderType::POLYLINE];
+    auto shader = shaders_[ShaderType::CURVATURE];
     shader->bind();
     shader->setUniformValue("visualize_normals", settings_.visualizeNormals);
     shader->setUniformValue("visualize_curvature", settings_.visualizeCurvature);

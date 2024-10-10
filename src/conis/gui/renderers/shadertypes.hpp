@@ -5,6 +5,6 @@ namespace conis::gui {
 /**
  * @brief Represents the different shaders that exist in this program.
  */
-enum ShaderType { FLAT, POLYLINE, CONIC };
+enum ShaderType { DASHED, CURVATURE, CONIC };
 
 } // namespace conis::gui

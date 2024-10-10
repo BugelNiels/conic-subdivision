@@ -21,7 +21,7 @@ CurveNetRenderer::~CurveNetRenderer() {
  * the flat shader.
  */
 void CurveNetRenderer::initShaders() {
-    shaders_.insert(ShaderType::FLAT, constructDefaultShader("flat"));
+    shaders_.insert(ShaderType::DASHED, constructDefaultShader("dashed"));
 }
 
 /**
@@ -90,7 +90,7 @@ void CurveNetRenderer::draw() {
     if (vboSize_ == 0) {
         return;
     }
-    auto shader = shaders_[ShaderType::FLAT];
+    auto shader = shaders_[ShaderType::DASHED];
     shader->bind();
 
     gl_->glLineWidth(settings_.controlLineWidth);
