@@ -54,12 +54,17 @@ void ConicRenderer::initBuffers() {
     gl_->glBindVertexArray(0);
 }
 
-void ConicRenderer::updateBuffers(conis::core::Matrix3DD &q) {
+void ConicRenderer::updateBuffers(const conis::core::Matrix3DD &q) {
+    shouldDraw_ = true;
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             conicCoefs_(i, j) = qreal(q(i, j));
         }
     }
+}
+
+void ConicRenderer::stopDrawingUntilBufferUpdate() {
+    shouldDraw_ = false;
 }
 
 void ConicRenderer::draw() {

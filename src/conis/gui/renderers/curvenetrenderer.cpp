@@ -72,6 +72,11 @@ void CurveNetRenderer::updateBuffers(const conis::core::Curve &curve) {
     }
     if (curve.isClosed()) {
         indices.emplace_back(0);
+        // Technically this shouldn't be necessary with indexed rendering
+        // However, the line segment drawing is not based on the index buffer
+        // so we need this to be able to draw a line segment from the last vertex to the first
+        coords_.push_back(coords_[0]);
+        normals_.push_back(normals_[0]);
     } else {
         indices.emplace_back(numVerts - 1);
     }
@@ -79,6 +84,30 @@ void CurveNetRenderer::updateBuffers(const conis::core::Curve &curve) {
     gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 
     vboSize_ = indices.size();
+}
+
+void CurveNetRenderer::drawPoint(QOpenGLShaderProgram *shader, int idx, int radius, QColor qCol) {
+    if (idx < 0 || idx >= vboSize_) {
+        return;
+    }
+    QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
+    shader->setUniformValue("lineColor", col);
+    gl_->glPointSize(radius);
+    gl_->glDrawArrays(GL_POINTS, idx, 1);
+}
+
+void CurveNetRenderer::drawLine(QOpenGLShaderProgram *shader, int pIdx, QColor qCol, float lineWidth) {
+    if (pIdx < 0 || pIdx >= vboSize_) {
+        return; // Ensure indices are valid
+    }
+
+    // Set line color
+    QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
+    shader->setUniformValue("lineColor", col);
+
+    // Set line width
+    gl_->glLineWidth(lineWidth);
+    gl_->glDrawArrays(GL_LINES, pIdx, 2);
 }
 
 /**
@@ -100,6 +129,7 @@ void CurveNetRenderer::draw() {
 
     shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue("viewMatrix", settings_.viewMatrix);
+    shader->setUniformValue("dashEnabled", true);
 
     // Control Curve
     if (settings_.showControlCurve) {
@@ -108,6 +138,12 @@ void CurveNetRenderer::draw() {
         shader->setUniformValue("lineColor", col);
         gl_->glDrawElements(GL_LINE_STRIP, vboSize_, GL_UNSIGNED_INT, nullptr);
     }
+
+    shader->setUniformValue("dashEnabled", false);
+    // Selected curve segment (if any)
+    drawLine(shader, settings_.highlightedEdge, settings_.style.controlCurveCol, settings_.highlightedLineWidth);
+    drawLine(shader, settings_.selectedEdge, settings_.style.controlCurveCol, settings_.selectedLineWidth);
+
     // Control points
     if (settings_.showControlPoints) {
         QColor qCol = settings_.style.controlPointCol;
@@ -118,15 +154,14 @@ void CurveNetRenderer::draw() {
         gl_->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
     }
 
-    // Highlight selected control point
-    if (settings_.highlightedVertex > -1) {
-        QColor qCol = settings_.style.selectedVertCol;
-        QVector3D col(qCol.redF(), qCol.greenF(), qCol.blueF());
-        shader->setUniformValue("lineColor", col);
-        gl_->glPointSize(settings_.selectedPointRadius);
-        gl_->glDrawArrays(GL_POINTS, settings_.highlightedVertex, 1);
-    }
+    // Selected Control Point (if any)
+    drawPoint(shader,
+              settings_.highlightedVertex,
+              settings_.highlightedPointRadius,
+              settings_.style.highlightedVertCol);
+    drawPoint(shader, settings_.selectedVertex, settings_.selectedPointRadius, settings_.style.selectedVertCol);
 
+    // Normal handles
     if (settings_.normalHandles) {
         gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
         gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * normals_.size(), normals_.data(), GL_DYNAMIC_DRAW);
@@ -135,13 +170,11 @@ void CurveNetRenderer::draw() {
         shader->setUniformValue("lineColor", col);
         gl_->glPointSize(settings_.drawPointRadius);
         gl_->glDrawElements(GL_POINTS, vboSize_, GL_UNSIGNED_INT, nullptr);
-        if (settings_.highlightedNormal > -1) {
-            gl_->glPointSize(settings_.selectedPointRadius);
-            QColor secQCol = settings_.style.selectedNormCol;
-            QVector3D secCol(secQCol.redF(), secQCol.greenF(), secQCol.blueF());
-            shader->setUniformValue("lineColor", secCol);
-            gl_->glDrawArrays(GL_POINTS, settings_.highlightedNormal, 1);
-        }
+        // Highlighted normal handle
+        drawPoint(shader,
+                  settings_.highlightedNormal,
+                  settings_.highlightedPointRadius,
+                  settings_.style.selectedNormCol);
     }
 
     shader->release();

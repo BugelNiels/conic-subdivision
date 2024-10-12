@@ -26,6 +26,9 @@ protected:
 
     void initBuffers() override;
 
+    void drawPoint(QOpenGLShaderProgram *shader, int idx, int radius, QColor qCol);
+    void drawLine(QOpenGLShaderProgram *shader, int pIdx, QColor qCol, float lineWidth) ;
+
 private:
     GLuint vao_, vbo_coords_, vbo_norms_, ibo_;
     int vboSize_ = 0;

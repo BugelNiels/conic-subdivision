@@ -42,6 +42,7 @@ StylePreset getDarkModePalette() {
     preset.smoothCurveCol = QColor(50, 150, 255);
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
+    preset.highlightedVertCol = QColor(144, 238, 144);
     preset.normCol = QColor(150, 150, 255);
     preset.colorMapName = ColorMapName::KINDLMANN;
     return preset;
@@ -78,9 +79,10 @@ StylePreset getLightModePalette() {
     preset.smoothCurveCol = QColor(50, 50, 255);
     preset.selectedVertCol = QColor(255, 0, 0);
     preset.selectedNormCol = QColor(0, 0, 255);
+    preset.highlightedVertCol = QColor(255, 118, 0);
     preset.normCol = QColor(150, 150, 255);
     preset.colorMapName = ColorMapName::SMOOTH_COOL_WARM;
     return preset;
 }
 
-}
+} // namespace conis::gui

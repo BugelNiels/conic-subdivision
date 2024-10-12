@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+// #define DEBUG_OUTPUT
+
 namespace conis::core {
 
 NormalRefiner::NormalRefiner(const NormalRefinementSettings &normRefSettings, const SubdivisionSettings &subdivSettings)
@@ -123,14 +125,19 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, int idx, CurvatureType 
         curve.copyDataTo(testCurve_);
         subdivider_.subdivide(testCurve_, normRefSettings_.testSubdivLevel);
         real_t counterclockwisePenalty = smoothnessPenalty(testCurve_, idx, curvatureType);
+#ifdef DEBUG_OUTPUT
         std::cout << clockwisePenalty << " <c cc> " << counterclockwisePenalty << std::endl;
+#endif
         // We pick whichever one results in the lower curvature penalty
         if (clockwisePenalty < counterclockwisePenalty) {
             normal = clockwiseNormal;
+#ifdef DEBUG_OUTPUT
             std::cout << "\t clockwise" << std::endl;
+#endif
         } else {
-
+#ifdef DEBUG_OUTPUT
             std::cout << "\t counter clockwise" << std::endl; // else the normal is still on counterclockwise
+#endif
         }
         angle /= 2.0;
     }

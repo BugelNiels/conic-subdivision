@@ -1,7 +1,10 @@
 #include "coniscurve.hpp"
 
+#include <iostream>
+
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
+#include "conis/core/util/asyncrunner.hpp"
 #include "conis/core/vector.hpp"
 
 namespace conis::core {
@@ -53,12 +56,27 @@ void ConisCurve::recalculateNormals() {
 }
 
 void ConisCurve::refineNormals(CurvatureType curvatureType) {
-    normalRefiner_.refine(controlCurve_, curvatureType);
-    resubdivide();
+    const auto refineLambda = [this, curvatureType]() {
+        normalRefiner_.refine(controlCurve_, curvatureType);
+    };
+    const auto waitLambda = [this]() {
+        resubdivide();
+        notifyListeners();
+    };
+
+    AsyncRunner::runAndWait(refineLambda, waitLambda);
 }
 
 void ConisCurve::refineNormal(int idx, CurvatureType curvatureType) {
-    normalRefiner_.refineSelected(controlCurve_, curvatureType, idx);
+    const auto refineLambda = [this, idx, curvatureType]() {
+        normalRefiner_.refineSelected(controlCurve_, curvatureType, idx);
+    };
+    const auto waitLambda = [this]() {
+        resubdivide();
+        notifyListeners();
+    };
+
+    AsyncRunner::runAndWait(refineLambda, waitLambda);
     resubdivide();
 }
 
@@ -97,11 +115,17 @@ void ConisCurve::translate(const Vector2DD &d) {
 }
 
 void ConisCurve::addListener(Listener *listener) {
+    if (listener == nullptr) {
+        return;
+    }
     if (std::find(listeners.begin(), listeners.end(), listener) == listeners.end()) {
         listeners.emplace_back(listener);
     }
 }
 void ConisCurve::removeListener(Listener *listener) {
+    if (listener == nullptr) {
+        return;
+    }
     auto it = std::remove(listeners.begin(), listeners.end(), listener);
     if (it != listeners.end()) {
         listeners.erase(it, listeners.end());

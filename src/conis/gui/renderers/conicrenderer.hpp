@@ -14,7 +14,9 @@ public:
 
     ~ConicRenderer() override;
 
-    void updateBuffers(conis::core::Matrix3DD &q);
+    void updateBuffers(const conis::core::Matrix3DD &q);
+
+    void stopDrawingUntilBufferUpdate();
 
     void draw();
 

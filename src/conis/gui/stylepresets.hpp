@@ -16,6 +16,7 @@ using StylePreset = struct StylePreset {
     QColor smoothCurveCol;
     QColor selectedVertCol;
     QColor selectedNormCol;
+    QColor highlightedVertCol;
     QColor normCol;
     ColorMapName colorMapName;
 

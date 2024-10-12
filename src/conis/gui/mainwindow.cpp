@@ -299,8 +299,10 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *refineNormalsButton = new QPushButton("Refine Normals");
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
+        setCursor(Qt::WaitCursor);
         auto &conisCurve = sceneView_->getConisCurve();
         conisCurve.refineNormals(viewSettings_.curvatureType);
+        unsetCursor();
     });
     vertLayout->addWidget(refineNormalsButton);
 
@@ -333,12 +335,12 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(refinementIterationsSpinBox);
 
-    vertLayout->addWidget(new QLabel("Angle limit (* 1e-8)"));
+    vertLayout->addWidget(new QLabel("Angle limit (* 1e-4)"));
     DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
-                                                       normRefSettings_.angleLimit * 1e8,
+                                                       normRefSettings_.angleLimit * 1e4,
                                                        1.0e-12,
-                                                       1,
-                                                       BoundMode::UPPER_LOWER);
+                                                       1000,
+                                                       BoundMode::LOWER_ONLY);
     connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
         normRefSettings_.angleLimit = angleLimit / 1e8;
     });

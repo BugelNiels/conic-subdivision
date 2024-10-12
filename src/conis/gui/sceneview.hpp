@@ -57,14 +57,23 @@ private:
     ConicRenderer conicR_;
 
     bool dragging_ = false;
-    int selectedConicIdx_ = -1;
 
     conis::core::Vector2DD oldMouseCoords_;
     QMatrix4x4 toWorldCoordsMatrix_;
 
     bool attemptNormalHighlight(const conis::core::Vector2DD &scenePos);
-
     bool attemptVertexHighlight(const conis::core::Vector2DD &scenePos);
+    bool attemptEdgeHighlight(const conis::core::Vector2DD &scenePos);
+
+    void unHighlightAll();
+    void highlightNormal(int idx);
+    void highlightVertex(int idx);
+    void highlightEdge(int idx);
+
+    void selectVertex(int idx);
+    void selectEdge(int idx);
+
+    void updateSelectedConic();
 
     void updateCursor(const Qt::KeyboardModifiers &flags);
 

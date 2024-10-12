@@ -1,6 +1,7 @@
 #include "curverenderer.hpp"
 
 #include "conis/gui/util/colormap.hpp"
+#include <iostream>
 
 namespace conis::gui {
 

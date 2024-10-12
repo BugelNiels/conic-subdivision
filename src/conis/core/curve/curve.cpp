@@ -168,6 +168,41 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
     return ptIndex;
 }
 
+int Curve::findClosestEdge(const Vector2DD &p, const double maxDist) const {
+    int closestEdgeIndex = -1;
+    double minDist = std::numeric_limits<double>::infinity();
+    int n = coords_.size();
+    for (int k = 0; k < n; k++) {
+        const Vector2DD &start = coords_[k];
+        const Vector2DD &end = coords_[(k + 1) % n];
+        Vector2DD closestPoint = getClosestPointOnLineSegment(start, end, p);
+        double currentDist = (closestPoint - p).norm();
+        if (currentDist < minDist) {
+            minDist = currentDist;
+            closestEdgeIndex = k;
+        }
+    }
+    if (minDist >= maxDist) {
+        return -1;
+    }
+
+    return closestEdgeIndex;
+}
+
+Vector2DD Curve::getClosestPointOnLineSegment(const Vector2DD &start,
+                                              const Vector2DD &end,
+                                              const Vector2DD &point) const {
+    Vector2DD lineDir = end - start;
+    double lineLengthSquared = lineDir.dot(lineDir);
+    if (lineLengthSquared == 0)
+        return start;
+    // Project the point onto the line segment
+    double t = ((point - start).dot(lineDir)) / lineLengthSquared;
+    t = std::max(0.0, std::min(1.0, t)); // Clamp t to the segment [0, 1]
+    // Return the closest point on the line segment
+    return start + t * lineDir;
+}
+
 int Curve::getNextIdx(int idx) const {
     int n = int(coords_.size());
     return closed_ ? (idx + 1) % n : std::min(idx + 1, n - 1);

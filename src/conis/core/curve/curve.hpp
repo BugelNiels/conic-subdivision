@@ -24,7 +24,7 @@ public:
 
     Curve &operator=(const Curve &other) = default;
 
-    void copyDataTo(Curve& other) const;
+    void copyDataTo(Curve &other) const;
 
     [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
     [[nodiscard]] inline const std::vector<Vector2DD> &getNormals() const { return normals_; }
@@ -38,8 +38,8 @@ public:
     inline void setNormals(std::vector<Vector2DD> normals) { normals_ = normals; }
     inline void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = customNormals; }
 
+    [[nodiscard]] int findClosestEdge(const Vector2DD &p, double maxDist) const;
     [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
-
     [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist, const double normalLength) const;
 
     [[nodiscard]] bool isClosed() const;
@@ -75,6 +75,7 @@ private:
     std::vector<Vector2DD> normals_;
     std::vector<bool> customNormals_;
 
+    Vector2DD getClosestPointOnLineSegment(const Vector2DD &start, const Vector2DD &end, const Vector2DD &point) const;
     [[nodiscard]] std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &coords) const;
 
     [[nodiscard]] Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &coords,
