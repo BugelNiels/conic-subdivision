@@ -365,7 +365,7 @@ void SceneView::mouseMoveEvent(QMouseEvent *event) {
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                conisCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos);
+                conisCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos, settings_.constrainNormalMovement);
                 updateSelectedConic();
             }
             break;

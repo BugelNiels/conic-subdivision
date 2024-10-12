@@ -21,7 +21,7 @@ in vec2 norm_vs[];
 
 out vec4 line_color;
 
-bool calcNormals = false;
+bool calcNormals = true;
 
 // Just some color definitions
 const vec3 curvOutlineCol = vec3(0.66, 0.44, 0.81);
@@ -135,9 +135,32 @@ double calcCurvatureDouble(dvec2 a, dvec2 b, dvec2 c, int curvType) {
 
 // Calculates the (unnormalized) normal of point b in the line segment a-b-c with double precision
 dvec2 calcNormal(dvec2 a, dvec2 b, dvec2 c) {
+    dvec2 normal;
+
+    if (a == b) {
+        normal = c - b;
+        normal.x *= -1.0;
+        return normalize(dvec2(normal.y, normal.x));
+    }
+
+    if (b == c) {
+        normal = b - a;
+        normal.x *= -1.0;
+        return normalize(dvec2(normal.y, normal.x));
+    }
+
+    dvec2 t1 = a - b;
+    t1 = normalize(dvec2(-t1.y, t1.x));
+
+    dvec2 t2 = b - c;
+    t2 = normalize(dvec2(-t2.y, t2.x));
+    normal = normalize(t1 + t2);
+
+    // Ensure correct orientation; normal is always pointing outwards
     dvec2 ab = a - b;
     dvec2 cb = c - b;
-    return ab + cb;
+    double crossP = ab.x * cb.y - ab.y * cb.x;
+    return crossP > 0.0 ? -normal : normal;
 }
 
 // Calculates the position of a new point that sits along the normal based on the curvature
@@ -146,7 +169,7 @@ vec4 calcToothTip(vec4 p, dvec2 normal, double curvature) {
     vec4 toothTip = p;
     if (dot(normal, normal) > 0) {
         dvec2 offset = normal * curvature * curvatureVisualisationSize;
-        toothTip.xy -= vec2(offset);
+        toothTip.xy += vec2(offset);
     }
     return toothTip;
 }
@@ -163,7 +186,7 @@ void main() {
     dvec2 nc1 = calcNormal(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
     dvec2 n1 = calcNormals ? nc1 : dvec2(-norm_vs[1]);
     // Everything but the circular curvature calculation already takes care of ensuring the curvature points in the right direction
-    if (curvatureType != 0 || dot(n1, nc1) < 0) {
+    if (dot(n1, nc1) < 0) {
         n1 *= -1;
     }
     n1 = normalize(n1);
@@ -171,7 +194,7 @@ void main() {
     // Normal at p2
     dvec2 nc2 = calcNormal(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
     dvec2 n2 = calcNormals ? nc2 : dvec2(-norm_vs[2]);
-    if (curvatureType != 0 || dot(n2, nc2) < 0) {
+    if (dot(n2, nc2) < 0) {
         n2 *= -1;
     }
     n2 = normalize(n2);
@@ -185,8 +208,8 @@ void main() {
     // Curvature visualization
     if (visualize_curvature) {
         line_color = vec4(curvLineCol, 1.0);
-        double curv1 = calcCurvatureDouble(coords_dvs[0], coords_dvs[1], coords_dvs[2], curvatureType);
-        double curv2 = calcCurvatureDouble(coords_dvs[1], coords_dvs[2], coords_dvs[3], curvatureType);
+        double curv1 = abs(calcCurvatureDouble(coords_dvs[0], coords_dvs[1], coords_dvs[2], curvatureType));
+        double curv2 = abs(calcCurvatureDouble(coords_dvs[1], coords_dvs[2], coords_dvs[3], curvatureType));
 
         vec4 firstToothTip = calcToothTip(p1, n1, curv1);
         vec4 secondToothTip = calcToothTip(p2, n2, curv2);

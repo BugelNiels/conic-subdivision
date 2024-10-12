@@ -30,24 +30,15 @@ void ConicRenderer::initBuffers() {
 
     gl_->glBindVertexArray(0);
 
-    QVector<QVector3D> quad = {{-1.0, -1.0, 0.0},
-                               {1.0, -1.0, 0.0},
-                               {-1.0, 1.0, 0.0},
-                               {1.0, 1.0, 0.0}};
+    QVector<QVector3D> quad = {{-1.0, -1.0, 0.0}, {1.0, -1.0, 0.0}, {-1.0, 1.0, 0.0}, {1.0, 1.0, 0.0}};
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-    gl_->glBufferData(GL_ARRAY_BUFFER,
-                      sizeof(QVector3D) * quad.size(),
-                      quad.data(),
-                      GL_STATIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector3D) * quad.size(), quad.data(), GL_STATIC_DRAW);
 
     QVector<unsigned int> meshIndices = {0, 1, 2, 1, 3, 2};
 
     gl_->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_);
-    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                      sizeof(int) * meshIndices.size(),
-                      meshIndices.data(),
-                      GL_STATIC_DRAW);
+    gl_->glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * meshIndices.size(), meshIndices.data(), GL_STATIC_DRAW);
     vboSize_ = meshIndices.size();
 
     // unbind
@@ -55,7 +46,7 @@ void ConicRenderer::initBuffers() {
 }
 
 void ConicRenderer::updateBuffers(const conis::core::Matrix3DD &q) {
-    shouldDraw_ = true;
+
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             conicCoefs_(i, j) = qreal(q(i, j));
@@ -63,21 +54,14 @@ void ConicRenderer::updateBuffers(const conis::core::Matrix3DD &q) {
     }
 }
 
-void ConicRenderer::stopDrawingUntilBufferUpdate() {
-    shouldDraw_ = false;
-}
-
 void ConicRenderer::draw() {
-    if (!shouldDraw_) {
-        return;
-    }
     gl_->glBindVertexArray(vao_);
     auto shader = shaders_[ShaderType::CONIC];
     shader->bind();
 
-    shader->setUniformValue(shader->uniformLocation("toWorldMatrix"),
-                            (settings_.projectionMatrix * settings_.viewMatrix).inverted());
-    shader->setUniformValue(shader->uniformLocation("conic"), conicCoefs_);
+    shader->setUniformValue("toWorldMatrix", (settings_.projectionMatrix * settings_.viewMatrix).inverted());
+    shader->setUniformValue("conic", conicCoefs_);
+    shader->setUniformValue("width", settings_.conicWidth);
 
     gl_->glDrawElements(GL_TRIANGLES, vboSize_, GL_UNSIGNED_INT, nullptr);
 

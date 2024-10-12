@@ -14,7 +14,7 @@ void AsyncRunner::runAndWait(std::function<void()> runFunction, std::function<vo
 
     while (result.wait_for(targetFrameTime) != std::future_status::ready) {
         auto start = std::chrono::high_resolution_clock::now();
-        waitFunction();                             
+        waitFunction();
         auto end = std::chrono::high_resolution_clock::now();
 
         // Calculate time taken for wait function
@@ -27,6 +27,7 @@ void AsyncRunner::runAndWait(std::function<void()> runFunction, std::function<vo
             std::this_thread::sleep_for(remainingTime);
         }
     }
+    waitFunction(); // Ensure wait is also called at the end to propegate any last updates
 }
 
 } // namespace conis::core

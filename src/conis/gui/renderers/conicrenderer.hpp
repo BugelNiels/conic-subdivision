@@ -16,8 +16,6 @@ public:
 
     void updateBuffers(const conis::core::Matrix3DD &q);
 
-    void stopDrawingUntilBufferUpdate();
-
     void draw();
 
 protected:
@@ -27,6 +25,7 @@ protected:
 
 private:
     QMatrix3x3 conicCoefs_;
+    float conicWidth_ = 0.1;
 #ifdef SHADER_DOUBLE_PRECISION
     int numBuffers_ = 4;
 #else
@@ -36,7 +35,6 @@ private:
     GLuint vao_, ibo_;
     GLuint vbo_;
     int vboSize_ = 0;
-    bool shouldDraw_ = true;
 };
 
 } // namespace conis::gui

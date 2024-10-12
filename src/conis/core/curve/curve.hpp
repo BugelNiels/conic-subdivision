@@ -45,15 +45,11 @@ public:
     [[nodiscard]] bool isClosed() const;
 
     int addPoint(const Vector2DD &p);
-
     void setVertexPosition(int idx, const Vector2DD &p);
-
-    void redirectNormalToPoint(int idx, const Vector2DD &p);
-
+    void setNormal(int idx, const Vector2DD &normal);
     void removePoint(int idx);
 
     void recalculateNormals(bool areaWeightedNormals = false, bool circleNormals = false);
-
     void recalculateNormal(int idx);
 
     void setClosed(bool closed);

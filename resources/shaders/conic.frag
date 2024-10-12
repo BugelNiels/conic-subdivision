@@ -7,8 +7,7 @@ out vec4 fColor;
 
 // 3D matrix representing the conic
 uniform mat3 conic;
-
-const double width = 0.01;
+uniform float width;
 
 // Gradient of the matrix at point p (length of the normal)
 float gradient(vec3 p, mat3 Q) {

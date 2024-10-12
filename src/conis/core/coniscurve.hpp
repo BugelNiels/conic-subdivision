@@ -22,24 +22,27 @@ public:
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
     [[nodiscard]] inline int getSubdivLevel() const { return lastSubdivLevel_; }
 
-    Conic getConicAtIndex(int idx) const;
-    void insertInflectionPoints();
-    void resubdivide();
-    void recalculateNormals();
-    void recalculateNormal(int idx);
-    void refineNormals(CurvatureType curvatureType);
-    void refineNormal(int idx, CurvatureType curvatureType);
-
     void setControlCurve(Curve curve);
     void subdivideCurve(int numSteps);
-
     int addPoint(const Vector2DD &p);
     void removePoint(int idx);
 
+    void recalculateNormals();
+    void recalculateNormal(int idx);
+
+    void insertInflectionPoints();
+    void resubdivide();
+    void refineNormals(CurvatureType curvatureType);
+    void refineNormal(int idx, CurvatureType curvatureType);
+    void refineNormalsProgressively(CurvatureType curvatureType);
+    void refineNormalProgressively(int idx, CurvatureType curvatureType);
+
     void setControlCurveClosed(bool closed);
     void setVertexPosition(int idx, const Vector2DD &p);
-    void redirectNormalToPoint(int idx, const Vector2DD &p);
+    void redirectNormalToPoint(int idx, const Vector2DD &p, bool constrain);
     void translate(const Vector2DD &d);
+
+    Conic getConicAtIndex(int idx) const;
 
     void addListener(Listener *listener);
     void removeListener(Listener *listener);
@@ -48,6 +51,7 @@ public:
 private:
     const SubdivisionSettings &subdivSettings_;
     const NormalRefinementSettings &normRefSettings_;
+    std::vector<int> inflPointIndices_;
     std::vector<Listener *> listeners;
     ConicSubdivider subdivider_;
     NormalRefiner normalRefiner_;

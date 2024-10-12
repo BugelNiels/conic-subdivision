@@ -23,8 +23,16 @@ void ConisCurve::subdivideCurve(int numSteps) {
 }
 
 Conic ConisCurve::getConicAtIndex(int idx) const {
-    std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_.getCoords(),
-                                                             controlCurve_.getNormals(),
+    std::vector<Vector2DD> coords;
+    std::vector<Vector2DD> normals;
+    // We use a temp subdivider to ensure we can keep const correctness
+    // Otherwise the getInflPointCurve updates some local fields of tempSubdivider (which we don't care about)
+    // The local field updating is done for performance reasons to prevent allocations, but in this case const
+    // correctness is more important
+    ConicSubdivider tempSubdivider(subdivSettings_);
+    tempSubdivider.getInflPointCurve(controlCurve_, coords, normals);
+    std::vector<PatchPoint> patch = subdivider_.extractPatch(coords,
+                                                             normals,
                                                              idx,
                                                              subdivSettings_.patchSize,
                                                              controlCurve_.isClosed());
@@ -37,6 +45,7 @@ void ConisCurve::insertInflectionPoints() {
     controlCurve_.setCustomNormals(subdivider_.getInflPointCurve(controlCurve_, coords, normals));
     controlCurve_.setCoords(coords);
     controlCurve_.setNormals(normals);
+    // inflPointIndices_ = subdivider_. // TODO
     resubdivide();
 }
 
@@ -56,6 +65,20 @@ void ConisCurve::recalculateNormals() {
 }
 
 void ConisCurve::refineNormals(CurvatureType curvatureType) {
+    // Note that this does not refine the inflection point normals unless they have been explicitly inserted by the user
+    normalRefiner_.refine(controlCurve_, curvatureType);
+    resubdivide();
+    notifyListeners();
+}
+
+void ConisCurve::refineNormal(int idx, CurvatureType curvatureType) {
+    normalRefiner_.refineSelected(controlCurve_, curvatureType, idx);
+    resubdivide();
+    notifyListeners();
+}
+
+void ConisCurve::refineNormalsProgressively(CurvatureType curvatureType) {
+    // Note that this does not refine the inflection point normals unless they have been explicitly inserted by the user
     const auto refineLambda = [this, curvatureType]() {
         normalRefiner_.refine(controlCurve_, curvatureType);
     };
@@ -63,11 +86,10 @@ void ConisCurve::refineNormals(CurvatureType curvatureType) {
         resubdivide();
         notifyListeners();
     };
-
     AsyncRunner::runAndWait(refineLambda, waitLambda);
 }
 
-void ConisCurve::refineNormal(int idx, CurvatureType curvatureType) {
+void ConisCurve::refineNormalProgressively(int idx, CurvatureType curvatureType) {
     const auto refineLambda = [this, idx, curvatureType]() {
         normalRefiner_.refineSelected(controlCurve_, curvatureType, idx);
     };
@@ -75,9 +97,7 @@ void ConisCurve::refineNormal(int idx, CurvatureType curvatureType) {
         resubdivide();
         notifyListeners();
     };
-
     AsyncRunner::runAndWait(refineLambda, waitLambda);
-    resubdivide();
 }
 
 int ConisCurve::addPoint(const Vector2DD &p) {
@@ -105,10 +125,43 @@ void ConisCurve::setVertexPosition(int idx, const Vector2DD &p) {
     controlCurve_.setVertexPosition(idx, p);
     resubdivide();
 }
-void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p) {
-    controlCurve_.redirectNormalToPoint(idx, p);
+
+void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constrain) {
+    Vector2DD &normal = controlCurve_.getNormals()[idx];
+    const auto &coords = controlCurve_.getCoords();
+    normal = (p - coords[idx]).normalized();
+    if (constrain) {
+        int n = controlCurve_.numPoints();
+        // Constrain the normal in some sensible bounds
+        Vector2DD ab = coords[(idx - 1 + n) % n] - coords[idx];
+        ab.normalize();
+        Vector2DD cb = coords[(idx + 1) % n] - coords[idx];
+        cb.normalize();
+        // Calculate the dot products
+        float dotLeft = normal.dot(ab);
+        float dotRight = normal.dot(cb);
+
+        // Cross product is used to correct normal orientation (always point outside)
+        real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
+        // Some black magic clamping
+        if (dotLeft > 0 && dotRight > 0) {
+            if (dotLeft > dotRight) {
+                normal = {ab.y(), -ab.x()};
+            } else {
+                normal = {-cb.y(), cb.x()};
+            }
+            normal = cross < 0 ? -1 * normal : normal;
+        } else if (dotLeft > 0) {
+            normal = {ab.y(), -ab.x()};
+            normal = cross < 0 ? -1 * normal : normal;
+        } else if (dotRight > 0) {
+            normal = {-cb.y(), cb.x()};
+            normal = cross < 0 ? -1 * normal : normal;
+        }        
+    }
     resubdivide();
 }
+
 void ConisCurve::translate(const Vector2DD &d) {
     controlCurve_.translate(d);
     resubdivide();

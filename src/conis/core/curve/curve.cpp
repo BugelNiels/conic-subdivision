@@ -39,7 +39,12 @@ Vector2DD Curve::calcNormal(const Vector2DD &a, const Vector2DD &b, const Vector
         t1.normalize();
         t2.normalize();
     }
-    return (t1 + t2).normalized();
+    Vector2DD normal = (t1 + t2).normalized();
+    // Ensure correct orientation; normal is always pointing outwards
+    auto ab = a - b;
+    auto cb = c - b;
+    real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
+    return cross > 0 ? -1 * normal : normal;
 }
 
 std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &coords) const {
@@ -127,10 +132,8 @@ void Curve::setVertexPosition(int idx, const Vector2DD &p) {
     }
 }
 
-// Sets the normal to of the vertex at the provided index to point towards the provided point
-void Curve::redirectNormalToPoint(int idx, const Vector2DD &p) {
-    normals_[idx] = p - coords_[idx];
-    normals_[idx].normalize();
+void Curve::setNormal(int idx, const Vector2DD &normal) {
+    normals_[idx] = normal;
     customNormals_[idx] = true;
 }
 

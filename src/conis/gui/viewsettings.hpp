@@ -23,6 +23,7 @@ using ViewSettings = struct ViewSettings {
     bool showControlCurve = true;
     bool normalHandles = true;
     bool drawSelectedConic = true;
+    bool constrainNormalMovement = true;
     conis::core::CurvatureType curvatureType = conis::core::CurvatureType::CIRCLE_RADIUS;
 
 
@@ -34,6 +35,7 @@ using ViewSettings = struct ViewSettings {
     float drawPointRadius = 8.0f;
     
     // Draw settings
+    float conicWidth = 0.01f;
     float curveLineWidth = 3.0f;
     float controlLineWidth = 2.0f;
     float selectedLineWidth = 3.0f;

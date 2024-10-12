@@ -301,7 +301,7 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
         setCursor(Qt::WaitCursor);
         auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormals(viewSettings_.curvatureType);
+        conisCurve.refineNormalsProgressively(viewSettings_.curvatureType);
         unsetCursor();
     });
     vertLayout->addWidget(refineNormalsButton);
@@ -309,7 +309,7 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
         auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormal(viewSettings_.selectedVertex, viewSettings_.curvatureType);
+        conisCurve.refineNormalProgressively(viewSettings_.selectedVertex, viewSettings_.curvatureType);
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
@@ -372,6 +372,15 @@ QDockWidget *MainWindow::initSideMenu() {
         sceneView_->updateBuffers();
     });
     vertLayout->addWidget(curvatureScaleSlider);
+    double widthMultiplier = 100;
+    auto *conicWidthSlider = new DoubleSlider("Conic Width", viewSettings_.conicWidth * widthMultiplier, 0.1, 10.0);
+    conicWidthSlider->setToolTip(
+            "<html><head/><body><p>Changes how thick the select conic is drawn.</p></body></html>");
+    connect(conicWidthSlider, &DoubleSlider::valueUpdated, [this, widthMultiplier](double value) {
+        viewSettings_.conicWidth = value / widthMultiplier;
+        sceneView_->updateBuffers();
+    });
+    vertLayout->addWidget(conicWidthSlider);
     vertLayout->addStretch();
 
     auto *dockWidget = new QDockWidget(this);
@@ -610,6 +619,14 @@ QMenu *MainWindow::getRenderMenu() {
         sceneView_->updateBuffers();
     });
     renderMenu->addAction(normalHandlesAction);
+
+    auto *constrainNormalsAction = new QAction(QStringLiteral("Constrain Normal Movement"), renderMenu);
+    constrainNormalsAction->setCheckable(true);
+    constrainNormalsAction->setChecked(viewSettings_.constrainNormalMovement);
+    connect(constrainNormalsAction, &QAction::triggered, [this](bool toggled) {
+        viewSettings_.constrainNormalMovement = toggled;
+    });
+    renderMenu->addAction(constrainNormalsAction);
     return renderMenu;
 }
 
