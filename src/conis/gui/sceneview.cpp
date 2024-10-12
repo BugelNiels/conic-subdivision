@@ -86,17 +86,17 @@ void SceneView::paintGL() {
 
 void SceneView::viewToFit() {
     const auto &c = conisCurve_.getControlCurve();
-    const std::vector<Vector2DD> &coords = c.getCoords();
-    if (coords.empty()) {
+    const std::vector<Vector2DD> &verts = c.getVertices();
+    if (verts.empty()) {
         return; // Nothing to fit
     }
 
     // Bounding box
-    real_t minX = coords[0].x();
-    real_t maxX = coords[0].x();
-    real_t minY = coords[0].y();
-    real_t maxY = coords[0].y();
-    for (const auto &point: coords) {
+    real_t minX = verts[0].x();
+    real_t maxX = verts[0].x();
+    real_t minY = verts[0].y();
+    real_t maxY = verts[0].y();
+    for (const auto &point: verts) {
         minX = std::min(minX, point.x());
         maxX = std::max(maxX, point.x());
         minY = std::min(minY, point.y());

@@ -29,7 +29,7 @@ Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
         return Curve();
     }
 
-    std::vector<Vector2DD> coords, normals;
+    std::vector<Vector2DD> verts, normals;
     std::string line;
     while (std::getline(file, line)) {
         std::istringstream lineStream(line);
@@ -50,7 +50,7 @@ Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
                 Vector2DD vertex;
                 vertex.x() = std::stod(parts[1]);
                 vertex.y() = std::stod(parts[2]);
-                coords.emplace_back(vertex);
+                verts.emplace_back(vertex);
             }
         } else if (type == "vn") {
             if (parts.size() >= 3) {
@@ -67,12 +67,12 @@ Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
     bool closed = true;
 
     file.close();
-    std::cout << "Loaded curve with " << coords.size() << " vertices" << std::endl;
+    std::cout << "Loaded curve with " << verts.size() << " vertices" << std::endl;
 
     if (normals.empty()) {
-        return Curve(coords, closed);
+        return Curve(verts, closed);
     }
-    return Curve(coords, normals, closed);
+    return Curve(verts, normals, closed);
 }
 
 } // namespace conis::core

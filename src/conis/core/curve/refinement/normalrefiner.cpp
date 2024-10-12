@@ -87,17 +87,14 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, int idx, bool inflectio
 
 void NormalRefiner::refine(Curve &curve, CurvatureType curvatureType) {
     int n = curve.numPoints();
-    std::vector<Vector2DD> coords;
-    std::vector<Vector2DD> normals;
-    std::vector<bool> isInflPoint = subdivider_.getInflPointCurve(curve, coords, normals);
-    curve.setCoords(coords);
-    curve.setNormals(normals);
-    curve.setCustomNormals(isInflPoint);
+    Curve inflCurve = subdivider_.getInflPointCurve(curve);
+    inflCurve.copyDataTo(curve);
 
-    // TODO: do this until convergence with a maxIter being a max bound
+    // Eventually do this until convergence with a maxIter as a max bound
     for (int i = 0; i < normRefSettings_.maxRefinementIterations; i++) {
         for (int j = 0; j < n; j++) {
-            binarySearchBestNormal(curve, j, isInflPoint[j], curvatureType);
+            // The custom normal results correspond to the inflection points here
+            binarySearchBestNormal(curve, j, curve.isCustomNormal(j), curvatureType);
             std::cout << "Refined idx: " << j << std::endl;
         }
         std::cout << "Iteration done: " << i << std::endl;

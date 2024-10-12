@@ -15,7 +15,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionEmpty) {
     Curve curve;
     subdivider.subdivide(curve, 5);
     ASSERT_EQ(curve.numPoints(), 0);
-    ASSERT_EQ(curve.getCoords().size(), 0);
+    ASSERT_EQ(curve.getVertices().size(), 0);
     ASSERT_EQ(curve.getNormals().size(), 0);
     ASSERT_EQ(curve.getCustomNormals().size(), 0);
 }
@@ -35,7 +35,6 @@ TEST(ConicSubdivisionTest, TestNormalsPointInCorrectDirection) {
     Curve curve;
     Curve curve2 = curve;
     subdivider.subdivide(curve, 0);
-
 }
 
 TEST(ConicSubdivisionTest, TestSubdivisionStraightLine) {

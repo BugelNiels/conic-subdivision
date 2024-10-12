@@ -9,10 +9,10 @@ namespace conis::core {
 
 ConicFitter::ConicFitter() {}
 
-static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &coord, int numUnknowns) {
+static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &vertex, int numUnknowns) {
     row.setZero();
-    const real_t x = coord.x();
-    const real_t y = coord.y();
+    const real_t x = vertex.x();
+    const real_t y = vertex.y();
     row(0) = x * x;
     row(1) = y * y;
     row(2) = 2 * x * y;
@@ -22,13 +22,13 @@ static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &coord,
 }
 
 static void normEqXEigen(Eigen::RowVectorX<real_t> &row,
-                         const Vector2DD &coord,
+                         const Vector2DD &vertex,
                          const Vector2DD &normal,
                          int numUnknowns,
                          int normIdx) {
     row.setZero();
-    const real_t x = coord.x();
-    const real_t y = coord.y();
+    const real_t x = vertex.x();
+    const real_t y = vertex.y();
     row(0) = 2 * x; // A
     // row(1) = 0;     // B
     row(2) = 2 * y; // C
@@ -39,13 +39,13 @@ static void normEqXEigen(Eigen::RowVectorX<real_t> &row,
 }
 
 static void normEqYEigen(Eigen::RowVectorX<real_t> &row,
-                         const Vector2DD &coord,
+                         const Vector2DD &vertex,
                          const Vector2DD &normal,
                          int numUnknowns,
                          int normIdx) {
     row.setZero();
-    const real_t x = coord.x();
-    const real_t y = coord.y();
+    const real_t x = vertex.x();
+    const real_t y = vertex.y();
     // row(0) = 0;     // A
     row(1) = 2 * y; // B
     row(2) = 2 * x; // C
@@ -66,13 +66,13 @@ Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
     for (int i = 0; i < patchPoints.size(); i++) {
         // Per point, add 3 equations: one for the point itself and two for the normal (x and y)
         auto &p = patchPoints[i];
-        const Vector2DD &coord = p.coords;
+        const Vector2DD &vertex = p.vertex;
         const Vector2DD &normal = p.normal;
-        pointEqEigen(row, coord, numUnknowns_);
+        pointEqEigen(row, vertex, numUnknowns_);
         A.row(rowIdx++) = row * p.pointWeight;
-        normEqXEigen(row, coord, normal, numUnknowns_, i);
+        normEqXEigen(row, vertex, normal, numUnknowns_, i);
         A.row(rowIdx++) = row * p.normWeight;
-        normEqYEigen(row, coord, normal, numUnknowns_, i);
+        normEqYEigen(row, vertex, normal, numUnknowns_, i);
         A.row(rowIdx++) = row * p.normWeight;
     }
     return A;

@@ -53,15 +53,15 @@ void CurveNetRenderer::initBuffers() {
  * buffer(s) with.
  */
 void CurveNetRenderer::updateBuffers(const conis::core::Curve &curve) {
-    coords_ = qVecToVec(curve.getCoords());
+    vertices_ = qVecToVec(curve.getVertices());
     normals_ = qVecToVec(curve.getNormals());
-    int numVerts = coords_.size();
+    int numVerts = vertices_.size();
     if (numVerts == 0) {
         vboSize_ = 0;
         return;
     }
     for (int i = 0; i < numVerts; i++) {
-        normals_[i] = (coords_[i] + settings_.normalLength * normals_[i].normalized());
+        normals_[i] = (vertices_[i] + settings_.normalLength * normals_[i].normalized());
     }
 
     std::vector<int> indices;
@@ -75,7 +75,7 @@ void CurveNetRenderer::updateBuffers(const conis::core::Curve &curve) {
         // Technically this shouldn't be necessary with indexed rendering
         // However, the line segment drawing is not based on the index buffer
         // so we need this to be able to draw a line segment from the last vertex to the first
-        coords_.push_back(coords_[0]);
+        vertices_.push_back(vertices_[0]);
         normals_.push_back(normals_[0]);
     } else {
         indices.emplace_back(numVerts - 1);
@@ -125,7 +125,7 @@ void CurveNetRenderer::draw() {
     gl_->glLineWidth(settings_.controlLineWidth);
     gl_->glBindVertexArray(vao_);
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_coords_);
-    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * coords_.size(), coords_.data(), GL_DYNAMIC_DRAW);
+    gl_->glBufferData(GL_ARRAY_BUFFER, sizeof(QVector2D) * vertices_.size(), vertices_.data(), GL_DYNAMIC_DRAW);
 
     shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue("viewMatrix", settings_.viewMatrix);

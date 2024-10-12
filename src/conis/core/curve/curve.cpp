@@ -11,33 +11,33 @@ Curve::Curve() : Curve({}, {}, false) {}
 
 Curve::Curve(bool closed) : Curve({}, {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> coords, bool closed) : Curve(std::move(coords), calcNormals(coords), closed) {}
+Curve::Curve(std::vector<Vector2DD> verts, bool closed) : Curve(std::move(verts), calcNormals(verts), closed) {}
 
-Curve::Curve(std::vector<Vector2DD> coords, std::vector<Vector2DD> normals, bool closed)
+Curve::Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, bool closed)
     : closed_(closed),
-      coords_(std::move(coords)),
+      vertices_(std::move(verts)),
       normals_(std::move(normals)) {
-    customNormals_.resize(coords_.size());
+    customNormals_.resize(vertices_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &coords) const {
+std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &verts) const {
     std::vector<Vector2DD> normals;
-    int n = int(coords.size());
+    int n = int(verts.size());
     normals.resize(n);
     for (int i = 0; i < n; i++) {
-        normals[i] = calcNormalAtIndex(coords, normals, i);
+        normals[i] = calcNormalAtIndex(verts, normals, i);
     }
     return normals;
 }
 
-Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
+Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &verts,
                                    const std::vector<Vector2DD> &normals,
                                    int i) const {
     int n = int(normals.size());
-    Vector2DD a = coords[getPrevIdx(i)];
-    Vector2DD b = coords[i];
-    Vector2DD c = coords[getNextIdx(i)];
+    Vector2DD a = verts[getPrevIdx(i)];
+    Vector2DD b = verts[i];
+    Vector2DD c = verts[getNextIdx(i)];
     if (circleNormals_) {
         return CurveUtils::calcNormalOscCircles(a, b, c);
     } else {
@@ -47,25 +47,25 @@ Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
 
 real_t Curve::curvatureAtIdx(int i, CurvatureType curvatureType) const {
     int n = numPoints();
-    const auto &p_1 = coords_[getPrevIdx(i)];
-    const auto &p0 = coords_[i];
-    const auto &p1 = coords_[getNextIdx(i)];
+    const auto &p_1 = vertices_[getPrevIdx(i)];
+    const auto &p0 = vertices_[i];
+    const auto &p1 = vertices_[getNextIdx(i)];
     return std::abs(CurveUtils::calcCurvature(p_1, p0, p1, curvatureType));
 }
 
 int Curve::addPoint(const Vector2DD &p) {
     int idx = findInsertIdx(p);
-    coords_.insert(coords_.begin() + idx, p);
+    vertices_.insert(vertices_.begin() + idx, p);
     normals_.insert(normals_.begin() + idx, Vector2DD());
     customNormals_.insert(customNormals_.begin() + idx, false);
-    normals_[idx] = calcNormalAtIndex(coords_, normals_, idx);
-    normals_[getNextIdx(idx)] = calcNormalAtIndex(coords_, normals_, getNextIdx(idx));
-    normals_[getPrevIdx(idx)] = calcNormalAtIndex(coords_, normals_, getPrevIdx(idx));
+    normals_[idx] = calcNormalAtIndex(vertices_, normals_, idx);
+    normals_[getNextIdx(idx)] = calcNormalAtIndex(vertices_, normals_, getNextIdx(idx));
+    normals_[getPrevIdx(idx)] = calcNormalAtIndex(vertices_, normals_, getPrevIdx(idx));
     return idx;
 }
 
 void Curve::setVertexPosition(int idx, const Vector2DD &p) {
-    coords_[idx] = p;
+    vertices_[idx] = p;
     if (!customNormals_[idx]) {
         recalculateNormal(idx);
     }
@@ -79,7 +79,7 @@ void Curve::setVertexPosition(int idx, const Vector2DD &p) {
     }
 }
 
-void Curve::setNormal(int idx, const Vector2DD &normal) {
+void Curve::setCustomNormal(int idx, const Vector2DD &normal) {
     normals_[idx] = normal;
     customNormals_[idx] = true;
 }
@@ -88,7 +88,7 @@ void Curve::removePoint(int idx) {
     if (idx < 0 || idx > numPoints()) {
         return;
     }
-    coords_.erase(coords_.begin() + idx);
+    vertices_.erase(vertices_.begin() + idx);
     normals_.erase(normals_.begin() + idx);
     customNormals_.erase(customNormals_.begin() + idx);
     int prevIdx = getPrevIdx(idx);
@@ -107,8 +107,8 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
     int ptIndex = -1;
     double currentDist, minDist = std::numeric_limits<double>::infinity();
 
-    for (int k = 0; k < coords_.size(); k++) {
-        currentDist = (coords_[k] - p).norm();
+    for (int k = 0; k < vertices_.size(); k++) {
+        currentDist = (vertices_[k] - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -125,8 +125,8 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
 int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
     int ptIndex = -1;
     double currentDist, minDist = std::numeric_limits<double>::infinity();
-    for (int k = 0; k < coords_.size(); k++) {
-        Vector2DD normPos = coords_[k] + normalLength * normals_[k];
+    for (int k = 0; k < vertices_.size(); k++) {
+        Vector2DD normPos = vertices_[k] + normalLength * normals_[k];
         currentDist = (normPos - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
@@ -143,11 +143,11 @@ int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const dou
 int Curve::findClosestEdge(const Vector2DD &p, const double maxDist) const {
     int closestEdgeIndex = -1;
     double minDist = std::numeric_limits<double>::infinity();
-    int n = coords_.size();
+    int n = vertices_.size();
     // Don't loop over the last edge if the curve is not closed
     for (int k = 0; k < n - !isClosed(); k++) {
-        const Vector2DD &start = coords_[k];
-        const Vector2DD &end = coords_[getNextIdx(k)];
+        const Vector2DD &start = vertices_[k];
+        const Vector2DD &end = vertices_[getNextIdx(k)];
         Vector2DD closestPoint = getClosestPointOnLineSegment(start, end, p);
         double currentDist = (closestPoint - p).norm();
         if (currentDist < minDist) {
@@ -177,24 +177,24 @@ Vector2DD Curve::getClosestPointOnLineSegment(const Vector2DD &start,
 }
 
 int Curve::getNextIdx(int idx) const {
-    int n = int(coords_.size());
+    int n = int(vertices_.size());
     return closed_ ? (idx + 1) % n : std::min(idx + 1, n - 1);
 }
 
 int Curve::getPrevIdx(int idx) const {
-    int n = int(coords_.size());
+    int n = int(vertices_.size());
     return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
 int Curve::findInsertIdx(const Vector2DD &p) const {
-    if (coords_.empty()) {
+    if (vertices_.empty()) {
         return 0;
     }
     int ptIndex = -1;
     double currentDist, minDist = std::numeric_limits<double>::infinity();
 
-    for (int k = 0; k < coords_.size(); k++) {
-        currentDist = CurveUtils::distanceToEdge(coords_[k], coords_[getPrevIdx(k)], p);
+    for (int k = 0; k < vertices_.size(); k++) {
+        currentDist = CurveUtils::distanceToEdge(vertices_[k], vertices_[getPrevIdx(k)], p);
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -206,7 +206,7 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
 void Curve::recalculateNormals(bool areaWeightedNormals, bool circleNormals) {
     areaWeightedNormals_ = areaWeightedNormals;
     circleNormals_ = circleNormals;
-    normals_ = calcNormals(coords_);
+    normals_ = calcNormals(vertices_);
     for (int i = 0; i < normals_.size(); i++) {
         customNormals_[i] = false;
     }
@@ -214,7 +214,7 @@ void Curve::recalculateNormals(bool areaWeightedNormals, bool circleNormals) {
 
 void Curve::recalculateNormal(int idx) {
     customNormals_[idx] = false;
-    normals_[idx] = calcNormalAtIndex(coords_, normals_, idx);
+    normals_[idx] = calcNormalAtIndex(vertices_, normals_, idx);
 }
 
 bool Curve::isClosed() const {
@@ -223,7 +223,7 @@ bool Curve::isClosed() const {
 
 void Curve::setClosed(bool closed) {
     closed_ = closed;
-    if (coords_.empty()) {
+    if (vertices_.empty()) {
         return;
     }
     if (!customNormals_[0]) {
@@ -235,17 +235,17 @@ void Curve::setClosed(bool closed) {
 }
 
 void Curve::translate(const Vector2DD &translation) {
-    for (auto &c: coords_) {
+    for (auto &c: vertices_) {
         c += translation;
     }
 }
 
 int Curve::numPoints() const {
-    return coords_.size();
+    return vertices_.size();
 }
 
 void Curve::copyDataTo(Curve &other) const {
-    auto &otherCoords = other.getCoords();
+    auto &otherCoords = other.getVertices();
     auto &otherNormals = other.getNormals();
     auto &otherCustNormals = other.getCustomNormals();
     other.setClosed(isClosed());
@@ -255,16 +255,16 @@ void Curve::copyDataTo(Curve &other) const {
     otherCoords.resize(n);
     otherNormals.resize(n);
     otherCustNormals.resize(n);
-    std::copy(coords_.begin(), coords_.end(), otherCoords.begin());
+    std::copy(vertices_.begin(), vertices_.end(), otherCoords.begin());
     std::copy(normals_.begin(), normals_.end(), otherNormals.begin());
     std::copy(customNormals_.begin(), customNormals_.end(), otherCustNormals.begin());
 }
 
 Vector2DD Curve::prevEdge(int idx) const {
-    return coords_[getPrevIdx(idx)] - coords_[idx];
+    return vertices_[getPrevIdx(idx)] - vertices_[idx];
 }
 Vector2DD Curve::nextEdge(int idx) const {
-    return coords_[getNextIdx(idx)] - coords_[idx];
+    return vertices_[getNextIdx(idx)] - vertices_[idx];
 }
 
 int Curve::edgePointingDir(int idx) const {

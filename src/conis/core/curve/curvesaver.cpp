@@ -19,18 +19,18 @@ bool CurveSaver::saveCurve(const std::string &fileName, const Curve &curve) cons
     }
 
     // Get coordinates from curve
-    const std::vector<Vector2DD> &coords = curve.getCoords();
+    const std::vector<Vector2DD> &verts = curve.getVertices();
 
     // Write coordinates to the file
-    for (const auto &coord: coords) {
+    for (const auto &coord: verts) {
         file << std::fixed << std::setprecision(prec) << coord.x() << " " << std::fixed << std::setprecision(prec)
              << coord.y() << std::endl;
     }
 
     // If curve is closed, write the first coordinate again
     if (curve.isClosed()) {
-        file << std::fixed << std::setprecision(prec) << coords[0].x() << " " << std::fixed << std::setprecision(prec)
-             << coords[0].y() << std::endl;
+        file << std::fixed << std::setprecision(prec) << verts[0].x() << " " << std::fixed << std::setprecision(prec)
+             << verts[0].y() << std::endl;
     }
 
     file.close();
@@ -47,11 +47,11 @@ bool CurveSaver::saveCurveWithNormals(const std::string &fileName, const Curve &
     }
 
     // Get coordinates and normals from curve
-    const std::vector<Vector2DD> &coords = curve.getCoords();
+    const std::vector<Vector2DD> &verts = curve.getVertices();
     const std::vector<Vector2DD> &normals = curve.getNormals();
 
     // Write coordinates to the file with "v" prefix
-    for (const auto &coord: coords) {
+    for (const auto &coord: verts) {
         file << "v " << std::fixed << std::setprecision(prec) << coord.x() << " " << std::fixed
              << std::setprecision(prec) << coord.y() << std::endl;
     }

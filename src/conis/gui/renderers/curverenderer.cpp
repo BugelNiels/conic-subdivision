@@ -67,13 +67,13 @@ void CurveRenderer::initBuffers() {
 }
 
 void CurveRenderer::updateBuffers(const conis::core::Curve &curve) {
-    std::vector<QVector2D> coords = qVecToVec(curve.getCoords());
+    std::vector<QVector2D> verts = qVecToVec(curve.getVertices());
     std::vector<QVector2D> normals = qVecToVec(curve.getNormals());
     for (auto &norm: normals) {
         norm *= settings_.curvatureSign;
         norm.normalize();
     }
-    int numVerts = coords.size();
+    int numVerts = verts.size();
     if (numVerts == 0) {
         vboSize_ = 0;
         return;
@@ -82,7 +82,7 @@ void CurveRenderer::updateBuffers(const conis::core::Curve &curve) {
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[COORDS_IDX]);
     gl_->glBufferData(GL_ARRAY_BUFFER,
                       sizeof(QVector2D) * numVerts,
-                      coords.data(),
+                      verts.data(),
                       GL_DYNAMIC_DRAW);
 
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[NORM_IDX]);
@@ -92,7 +92,7 @@ void CurveRenderer::updateBuffers(const conis::core::Curve &curve) {
                       GL_DYNAMIC_DRAW);
 
 #ifdef SHADER_DOUBLE_PRECISION
-    const auto &coords_d = curve.getCoords();
+    const auto &coords_d = curve.getVertices();
 
     std::vector<double> doubleData;
     doubleData.reserve(coords_d.size() * 2);

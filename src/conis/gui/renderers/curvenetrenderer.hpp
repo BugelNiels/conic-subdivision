@@ -32,7 +32,7 @@ protected:
 private:
     GLuint vao_, vbo_coords_, vbo_norms_, ibo_;
     int vboSize_ = 0;
-    std::vector<QVector2D> coords_;
+    std::vector<QVector2D> vertices_;
     std::vector<QVector2D> normals_;
 };
 

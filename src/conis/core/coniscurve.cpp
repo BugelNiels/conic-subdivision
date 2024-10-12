@@ -23,21 +23,15 @@ void ConisCurve::subdivideCurve(int numSteps) {
 }
 
 Conic ConisCurve::getConicAtIndex(int idx) const {
-    std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_.getCoords(),
-                                                             controlCurve_.getNormals(),
+    std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_,
                                                              idx,
-                                                             subdivSettings_.patchSize,
-                                                             controlCurve_.isClosed());
+                                                             subdivSettings_.patchSize);
     return Conic(patch, subdivSettings_.epsilon);
 }
 
 void ConisCurve::insertInflectionPoints() {
-    std::vector<Vector2DD> coords;
-    std::vector<Vector2DD> normals;
-    auto customNorms = subdivider_.getInflPointCurve(controlCurve_, coords, normals);
-    controlCurve_.setCustomNormals(customNorms);
-    controlCurve_.setCoords(coords);
-    controlCurve_.setNormals(normals);
+    controlCurve_ = subdivider_.getInflPointCurve(controlCurve_);
+    const auto& customNorms = controlCurve_.getCustomNormals();
 
     inflPointIndices_.clear();
     for (int i = 0; i < customNorms.size(); i++) {
@@ -127,7 +121,7 @@ void ConisCurve::setVertexPosition(int idx, const Vector2DD &p) {
 
 void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constrain) {
     Vector2DD &normal = controlCurve_.getNormal(idx);
-    normal = (p - controlCurve_.getCoord(idx)).normalized();
+    normal = (p - controlCurve_.getVertex(idx)).normalized();
     // Always allow free movement of the inflection point indices
     if (constrain && inflPointIndices_.count(idx) == 0) {
         int n = controlCurve_.numPoints();

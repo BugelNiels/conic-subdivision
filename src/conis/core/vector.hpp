@@ -15,7 +15,7 @@ using Matrix4DD = Eigen::Matrix4<real_t>;
 using Matrix3DD = Eigen::Matrix3<real_t>;
 
 using PatchPoint = struct PatchPoint {
-    Vector2DD coords;
+    Vector2DD vertex;
     Vector2DD normal;
     real_t pointWeight;
     real_t normWeight;
