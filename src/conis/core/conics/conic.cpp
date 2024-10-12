@@ -121,6 +121,9 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
     } else {
         t = (-b + root) / a;
     }
+    // if(t < 0) {
+    //     std::cout << "t is negative: " << t << std::endl;
+    // }
     return true;
 #else
     real_t t0 = -b - root;

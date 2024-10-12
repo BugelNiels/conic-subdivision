@@ -2,7 +2,7 @@
 
 # Help message
 usage() {
-  echo "Builds the conicsubdiv binary."
+  echo "Builds the conis software."
   echo ""
   echo "Usage: $0 [options]"
   echo ""
@@ -41,6 +41,7 @@ build() {
       -r|--run) run=true ;;
       -l|--library-only) library_only=true ;;
       *)
+        echo "Unrecognised command: $1"
         usage
         ;;
     esac

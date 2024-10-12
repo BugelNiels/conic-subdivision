@@ -126,20 +126,17 @@ void ConisCurve::setVertexPosition(int idx, const Vector2DD &p) {
 }
 
 void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constrain) {
-    Vector2DD &normal = controlCurve_.getNormals()[idx];
-    const auto &coords = controlCurve_.getCoords();
-    normal = (p - coords[idx]).normalized();
+    Vector2DD &normal = controlCurve_.getNormal(idx);
+    normal = (p - controlCurve_.getCoord(idx)).normalized();
     // Always allow free movement of the inflection point indices
     if (constrain && inflPointIndices_.count(idx) == 0) {
         int n = controlCurve_.numPoints();
         // Constrain the normal in some sensible bounds
-        Vector2DD ab = coords[(idx - 1 + n) % n] - coords[idx];
-        ab.normalize();
-        Vector2DD cb = coords[(idx + 1) % n] - coords[idx];
-        cb.normalize();
+        Vector2DD ab = controlCurve_.prevEdge(idx).normalized();
+        Vector2DD cb = controlCurve_.nextEdge(idx).normalized();
         // Calculate the dot products
-        float dotLeft = normal.dot(ab);
-        float dotRight = normal.dot(cb);
+        real_t dotLeft = normal.dot(ab);
+        real_t dotRight = normal.dot(cb);
         // Cross product is used to correct normal orientation (always point outside)
         real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
         // Some black magic clamping. Difficult to explain without a drawing

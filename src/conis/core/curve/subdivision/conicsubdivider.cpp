@@ -43,6 +43,7 @@ void ConicSubdivider::subdivide(Curve &curve, int level) {
             subdivideRecursive(coords, normals, pointsBuffer, normalsBuffer, n, level, curve.isClosed());
         }
     }
+    curve.getCustomNormals().resize(curve.numPoints());
 }
 
 void ConicSubdivider::subdivideRecursive(std::vector<Vector2DD> &points,
@@ -93,7 +94,14 @@ void ConicSubdivider::edgePoint(const std::vector<Vector2DD> &points,
 
     const Vector2DD origin = (newPoints[prevIdx] + newPoints[nextIdx]) / 2.0;
     Vector2DD dir = newPoints[prevIdx] - newPoints[nextIdx];
-    dir = {-dir.y(), dir.x()}; // rotate the line segment counterclockwise 90 degree to get the normal of it
+    dir = {dir.y(), -dir.x()}; // rotate the line segment counterclockwise 90 degree to get the normal of it
+    // While not strictly necessary for the subdivision, we rotate the normal here so that it is always pointing "outwards"
+
+    const Vector2DD dirCheck = newPoints[prevIdx] - newPoints[(prevIdx - 2 + n) % n];
+    if(dir.dot(dirCheck) < 0) {
+        dir *= -1;
+    }
+
     // Note that dir is not normalized!
     Conic conic(patchPoints, settings_.epsilon);
     Vector2DD sampledPoint;
@@ -254,15 +262,15 @@ std::vector<bool> ConicSubdivider::getInflPointCurve(const Curve &curve,
     // For all points
     for (int i = 0; i < n; i++) {
         int nextIdx = curve.getNextIdx(i);
-        const Vector2DD &v0 = curve.getCoords()[curve.getPrevIdx(i)];
-        const Vector2DD &v1 = curve.getCoords()[i];
-        const Vector2DD &v2 = curve.getCoords()[nextIdx];
-        const Vector2DD &v3 = curve.getCoords()[curve.getNextIdx(nextIdx)];
+        const Vector2DD &v0 = curve.getCoord(curve.getPrevIdx(i));
+        const Vector2DD &v1 = curve.getCoord(i);
+        const Vector2DD &v2 = curve.getCoord(nextIdx);
+        const Vector2DD &v3 = curve.getCoord(curve.getNextIdx(nextIdx));
 
         // Insert original point and normal
         coords.emplace_back(v1);
-        normals.emplace_back(curve.getNormals()[i]);
-        customNorms.emplace_back(curve.getCustomNormals()[i]);
+        normals.emplace_back(curve.getNormal(i));
+        customNorms.emplace_back(curve.isCustomNormal(i));
         idx++;
         // For non-closed curves or when there are not enough points (<= 2)
         if (v0 == v1 || v2 == v3 || v1 == v2) {

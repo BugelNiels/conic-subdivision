@@ -55,6 +55,7 @@ MainWindow::MainWindow(conis::core::ConisCurve &conisCurve,
 
 void MainWindow::resetView(bool recalculate) {
     presetName = "Blank";
+    viewSettings_.selectedVertex = -1;
     sceneView_->getConisCurve().setControlCurve(presetFactory_.getPreset(presetName));
     presetLabel->setText(QString("<b>Preset:</b> %1").arg(QString::fromStdString(presetName)));
     subdivStepsSpinBox->setVal(0);
@@ -71,6 +72,7 @@ QDockWidget *MainWindow::initSideMenu() {
         auto &conisCurve = sceneView_->getConisCurve();
         subdivStepsSpinBox->setVal(0);
         presetLabel->setText(QString("<b>Preset:</b> %1").arg(QString::fromStdString(presetName)));
+        viewSettings_.selectedVertex = -1;
         conisCurve.setControlCurve(presetFactory_.getPreset(presetName));
         closedCurveAction->setChecked(conisCurve.getControlCurve().isClosed());
     });
@@ -89,6 +91,7 @@ QDockWidget *MainWindow::initSideMenu() {
     connect(applySubdivButton, &QPushButton::pressed, [this] {
         auto &conisCurve = sceneView_->getConisCurve();
         auto curv = conisCurve.getSubdivCurve();
+        viewSettings_.selectedVertex = -1;
         conisCurve.setControlCurve(curv);
         subdivStepsSpinBox->setVal(0);
     });
@@ -305,8 +308,10 @@ QDockWidget *MainWindow::initSideMenu() {
 
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
+        setCursor(Qt::WaitCursor);
         auto &conisCurve = sceneView_->getConisCurve();
         conisCurve.refineNormalProgressively(viewSettings_.selectedVertex, viewSettings_.curvatureType);
+        unsetCursor();
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
@@ -332,14 +337,14 @@ QDockWidget *MainWindow::initSideMenu() {
     });
     vertLayout->addWidget(refinementIterationsSpinBox);
 
-    vertLayout->addWidget(new QLabel("Angle limit (* 1e-4)"));
+    vertLayout->addWidget(new QLabel("Angle limit (degrees)"));
     DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
-                                                       normRefSettings_.angleLimit * 1e4,
-                                                       1.0e-12,
-                                                       1000,
-                                                       BoundMode::LOWER_ONLY);
+                                                       normRefSettings_.angleLimit,
+                                                       0.001,
+                                                       5,
+                                                       BoundMode::UPPER_LOWER);
     connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
-        normRefSettings_.angleLimit = angleLimit / 1e8;
+        normRefSettings_.angleLimit = angleLimit * (M_PI / 180.0);
     });
     vertLayout->addWidget(angleLimitSpinBox);
 
@@ -432,6 +437,7 @@ QMenu *MainWindow::getFileMenu() {
         conis::core::CurveLoader loader;
         conis::core::Curve curve = loader.loadCurveFromFile(filePath.toStdString());
         auto &conisCurve = sceneView_->getConisCurve();
+        viewSettings_.selectedVertex = -1;
         conisCurve.setControlCurve(curve);
         subdivStepsSpinBox->setVal(0);
         closedCurveAction->setChecked(curve.isClosed());
@@ -539,6 +545,7 @@ QMenu *MainWindow::getPresetMenu() {
         connect(newAction, &QAction::triggered, [this, name]() {
             auto &conisCurve = sceneView_->getConisCurve();
             presetName = name;
+            viewSettings_.selectedVertex = -1;
             conisCurve.setControlCurve(presetFactory_.getPreset(presetName));
             presetLabel->setText(QString("<b>Preset:</b> %1").arg(QString::fromStdString(name)));
             subdivStepsSpinBox->setVal(0);

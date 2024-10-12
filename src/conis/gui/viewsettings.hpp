@@ -2,7 +2,7 @@
 
 #include <QMatrix4x4>
 
-#include "conis/core/curve/refinement/curvaturetype.hpp"
+#include "conis/core/curve/curvaturetype.hpp"
 #include "conis/gui/renderers/shadertypes.hpp"
 #include "conis/gui/stylepresets.hpp"
 

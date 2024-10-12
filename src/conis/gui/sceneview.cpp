@@ -205,37 +205,24 @@ bool SceneView::attemptEdgeHighlight(const Vector2DD &scenePos) {
     return false;
 }
 
-real_t curvAtIndex(const Curve &curve, int i) {
-    // int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
-    int n = curve.numPoints();
-    const auto &points = curve.getCoords();
-    const auto &p_1 = points[(i - 1 + n) % n];
-    const auto &p0 = points[i];
-    const auto &p1 = points[(i + 1) % n];
-
-    // clockwise turning angle
-    Vector2DD e1 = p1 - p0;
-    Vector2DD e_1 = p_1 - p0;
-    real_t det = e_1.x() * e1.y() - e_1.y() * e1.x();
-    real_t dot = e_1.x() * e1.x() + e_1.y() * e1.y();
-
-    // Calculate the angle using atan2
-    real_t v = std::atan2(det, dot);
-    real_t c = 4 * std::tan(v / 2.0) / (e_1.norm() + e1.norm());
-    return c;
-}
-
-void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel) {
+void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel, CurvatureType curvatureType) {
+    std::cout << curve.vertexPointingDir(idx) << std::endl;
     int n = curve.numPoints();
     if (idx < 0 || idx >= n) {
         return;
     }
     int i = idx * std::pow(2, testSubdivLevel);
-    real_t curvature_1 = curvAtIndex(curve, (i - 1 + n) % n);
-    real_t curvature1 = curvAtIndex(curve, (i + 1) % n);
-    std::cout << "c -1: " << curvature_1 << " c 1: " << curvature1 << std::endl;
+    real_t curvature_1 = curve.curvatureAtIdx(curve.getPrevIdx(i), curvatureType);
+    real_t curvature1 = curve.curvatureAtIdx(curve.getNextIdx(i), curvatureType);
+    std::cout << "Line segment: A-B-C -- " << curve.getPrevIdx(i) << " " << i << " " << curve.getNextIdx(i) << std::endl;
+    std::cout << "\tCurvature at A: " << curvature_1 << std::endl << "\tCurvature at C: " << curvature1 << std::endl;
     real_t p = std::abs(curvature_1 - curvature1);
-    std::cout << "\tPenalty: " << p << std::endl;
+    if (curvature1 > curvature_1) {
+        p = curvature1 / curvature_1;
+    } else {
+        p = curvature_1 / curvature1;
+    }
+    std::cout << "\tPenalty   at B: " << p << std::endl;
 }
 
 void SceneView::unHighlightAll() {
@@ -261,13 +248,16 @@ void SceneView::highlightEdge(int idx) {
 void SceneView::selectVertex(int idx) {
     settings_.selectedVertex = idx;
 #if 1
-    smoothnessPenalty(conisCurve_.getSubdivCurve(), settings_.highlightedVertex, conisCurve_.getSubdivLevel());
+    smoothnessPenalty(conisCurve_.getSubdivCurve(), settings_.highlightedVertex, conisCurve_.getSubdivLevel(), settings_.curvatureType);
 #endif
     updateSelectedConic();
     update();
 }
 void SceneView::selectEdge(int idx) {
     settings_.selectedEdge = idx;
+    if(idx >= 0) {
+        std::cout << "edge: " << conisCurve_.getControlCurve().edgePointingDir(idx) << std::endl;
+    }
     updateSelectedConic();
     update();
 }

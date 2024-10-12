@@ -108,7 +108,7 @@ if(NOT LIBRARY_ONLY)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets OpenGL OpenGLWidgets)
 
     # Define the main executable for the GUI
-    file(GLOB_RECURSE CPP_SOURCES src/conis/gui/*.cpp src/conis/main.cpp)
+    file(GLOB_RECURSE CPP_SOURCES src/conis/gui/*.cpp)
     file(GLOB_RECURSE H_HEADERS src/conis/gui/*.hpp)
 
     qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE

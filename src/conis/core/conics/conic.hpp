@@ -29,6 +29,10 @@ public:
      */
     bool sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD &point, Vector2DD &normal) const;
 
+    void printConic() const;
+
+    Matrix3DD getMatrix() { return Q_; }
+
     /**
      * @brief Checks whether the given ray intersects this conic.
      * 
@@ -39,10 +43,6 @@ public:
      * @return false otherwise.
      */
     bool intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) const;
-
-    void printConic() const;
-
-    Matrix3DD getMatrix() { return Q_; }
 
     [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p, const Vector2DD &rd) const;
     [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p) const;

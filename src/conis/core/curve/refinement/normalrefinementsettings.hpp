@@ -6,7 +6,7 @@ namespace conis::core {
 
 using NormalRefinementSettings = struct NormalRefinementSettings {
     int maxRefinementIterations = 1;
-    real_t angleLimit = 1.0e-8;
+    real_t angleLimit = 0.01;
     int testSubdivLevel = 6;
 };
 

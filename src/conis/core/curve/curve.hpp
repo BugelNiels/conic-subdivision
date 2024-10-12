@@ -3,6 +3,7 @@
 #include <set>
 
 #include "conis/core/vector.hpp"
+#include "conis/core/curve/curvaturetype.hpp"
 
 namespace conis::core {
 
@@ -29,20 +30,33 @@ public:
     [[nodiscard]] inline const std::vector<Vector2DD> &getCoords() const { return coords_; }
     [[nodiscard]] inline const std::vector<Vector2DD> &getNormals() const { return normals_; }
     [[nodiscard]] inline const std::vector<bool> &getCustomNormals() const { return customNormals_; }
+    [[nodiscard]] inline const Vector2DD &getCoord(int idx) const { return coords_[idx]; }
+    [[nodiscard]] inline const Vector2DD &getNormal(int idx) const { return normals_[idx]; }
+    [[nodiscard]] inline const bool isCustomNormal(int idx) const { return customNormals_[idx]; }
 
     [[nodiscard]] inline std::vector<Vector2DD> &getCoords() { return coords_; }
     [[nodiscard]] inline std::vector<Vector2DD> &getNormals() { return normals_; }
+    [[nodiscard]] inline Vector2DD &getCoord(int idx) { return coords_[idx]; }
+    [[nodiscard]] inline Vector2DD &getNormal(int idx) { return normals_[idx]; }
     [[nodiscard]] inline std::vector<bool> &getCustomNormals() { return customNormals_; }
 
     inline void setCoords(std::vector<Vector2DD> coords) { coords_ = coords; }
     inline void setNormals(std::vector<Vector2DD> normals) { normals_ = normals; }
+
+    inline void setCoords(int idx, Vector2DD coord) { coords_[idx] = coord; }
+    inline void setNormals(int idx, Vector2DD normal) { normals_[idx] = normal; }
     inline void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = customNormals; }
 
     [[nodiscard]] int findClosestEdge(const Vector2DD &p, double maxDist) const;
     [[nodiscard]] int findClosestVertex(const Vector2DD &p, double maxDist) const;
     [[nodiscard]] int findClosestNormal(const Vector2DD &p, double maxDist, const double normalLength) const;
-
+    [[nodiscard]] int getNextIdx(int idx) const;
+    [[nodiscard]] int getPrevIdx(int idx) const;
     [[nodiscard]] bool isClosed() const;
+    [[nodiscard]] Vector2DD prevEdge(int idx) const; // In the line segment a-b-c returns bc
+    [[nodiscard]] Vector2DD nextEdge(int idx) const; // in the line segment a-b-c returns ba
+    int edgePointingDir(int idx) const; // -1 for inside, 0 for flat and +1 for outside
+    int vertexPointingDir(int idx) const; // -1 for inside, 0 for flat and +1 for outside
 
     int addPoint(const Vector2DD &p);
     void setVertexPosition(int idx, const Vector2DD &p);
@@ -53,14 +67,9 @@ public:
     void recalculateNormal(int idx);
 
     void setClosed(bool closed);
-
     void translate(const Vector2DD &translation);
-
     int numPoints() const;
-
-    [[nodiscard]] int getNextIdx(int idx) const;
-
-    [[nodiscard]] int getPrevIdx(int idx) const;
+    real_t curvatureAtIdx(int idx, CurvatureType curvatureType) const;
 
 private:
     bool closed_ = true;
@@ -79,8 +88,6 @@ private:
                                               int i) const;
 
     [[nodiscard]] int findInsertIdx(const Vector2DD &p) const;
-
-    Vector2DD calcNormal(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c, bool areaWeighted) const;
 };
 
 } // namespace conis::core

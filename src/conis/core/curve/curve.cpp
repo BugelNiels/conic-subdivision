@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "conis/core/conics/conic.hpp"
+#include "conis/core/curve/curveutils.hpp"
 
 namespace conis::core {
 
@@ -20,33 +21,6 @@ Curve::Curve(std::vector<Vector2DD> coords, std::vector<Vector2DD> normals, bool
     std::fill(customNormals_.begin(), customNormals_.end(), false);
 }
 
-Vector2DD Curve::calcNormal(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c, bool areaWeighted) const {
-    if (a == b) {
-        Vector2DD normal = c - b;
-        normal.x() *= -1;
-        return Vector2DD(normal.y(), normal.x()).normalized();
-    }
-    if (b == c) {
-        Vector2DD normal = b - a;
-        normal.x() *= -1;
-        return Vector2DD(normal.y(), normal.x()).normalized();
-    }
-    Vector2DD t1 = (a - b);
-    t1 = {-t1.y(), t1.x()};
-    Vector2DD t2 = (b - c);
-    t2 = {-t2.y(), t2.x()};
-    if (!areaWeighted) {
-        t1.normalize();
-        t2.normalize();
-    }
-    Vector2DD normal = (t1 + t2).normalized();
-    // Ensure correct orientation; normal is always pointing outwards
-    auto ab = a - b;
-    auto cb = c - b;
-    real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
-    return cross > 0 ? -1 * normal : normal;
-}
-
 std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &coords) const {
     std::vector<Vector2DD> normals;
     int n = int(coords.size());
@@ -61,49 +35,22 @@ Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &coords,
                                    const std::vector<Vector2DD> &normals,
                                    int i) const {
     int n = int(normals.size());
-    int nextIdx;
-    int prevIdx;
-    if (closed_) {
-        prevIdx = (i - 1 + n) % n;
-        nextIdx = (i + 1) % n;
-    } else {
-        prevIdx = std::max(0, i - 1);
-        nextIdx = std::min(i + 1, n - 1);
-    }
-    Vector2DD a = coords[prevIdx];
+    Vector2DD a = coords[getPrevIdx(i)];
     Vector2DD b = coords[i];
-    Vector2DD c = coords[nextIdx];
+    Vector2DD c = coords[getNextIdx(i)];
     if (circleNormals_) {
-        if (a == b) {
-            Vector2DD normal = c - b;
-            normal.x() *= -1;
-            return Vector2DD(normal.y(), normal.x()).normalized();
-        } else if (b == c) {
-            Vector2DD normal = b - a;
-            normal.x() *= -1;
-            return Vector2DD(normal.y(), normal.x()).normalized();
-        } else {
-            real_t d = 2 * (a.x() * (b.y() - c.y()) + b.x() * (c.y() - a.y()) + c.x() * (a.y() - b.y()));
-            real_t ux = ((a.x() * a.x() + a.y() * a.y()) * (b.y() - c.y()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (c.y() - a.y()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (a.y() - b.y())) /
-                        d;
-            real_t uy = ((a.x() * a.x() + a.y() * a.y()) * (c.x() - b.x()) +
-                         (b.x() * b.x() + b.y() * b.y()) * (a.x() - c.x()) +
-                         (c.x() * c.x() + c.y() * c.y()) * (b.x() - a.x())) /
-                        d;
-            Vector2DD oscCircleCenter = Vector2DD(ux, uy);
-            Vector2DD norm = (oscCircleCenter - b).normalized();
-
-            Vector2DD check = calcNormal(a, b, c, areaWeightedNormals_);
-            if (check.dot(normals[i]) < 0) {
-                norm *= -1;
-            }
-            return norm;
-        }
+        return CurveUtils::calcNormalOscCircles(a, b, c);
     } else {
-        return calcNormal(a, b, c, areaWeightedNormals_);
+        return CurveUtils::calcNormal(a, b, c, areaWeightedNormals_);
     }
+}
+
+real_t Curve::curvatureAtIdx(int i, CurvatureType curvatureType) const {
+    int n = numPoints();
+    const auto &p_1 = coords_[getPrevIdx(i)];
+    const auto &p0 = coords_[i];
+    const auto &p1 = coords_[getNextIdx(i)];
+    return std::abs(CurveUtils::calcCurvature(p_1, p0, p1, curvatureType));
 }
 
 int Curve::addPoint(const Vector2DD &p) {
@@ -138,7 +85,7 @@ void Curve::setNormal(int idx, const Vector2DD &normal) {
 }
 
 void Curve::removePoint(int idx) {
-    if(idx < 0 || idx > numPoints()) {
+    if (idx < 0 || idx > numPoints()) {
         return;
     }
     coords_.erase(coords_.begin() + idx);
@@ -174,13 +121,33 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
     return ptIndex;
 }
 
+// Returns index of the point normal handle
+int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
+    int ptIndex = -1;
+    double currentDist, minDist = std::numeric_limits<double>::infinity();
+    for (int k = 0; k < coords_.size(); k++) {
+        Vector2DD normPos = coords_[k] + normalLength * normals_[k];
+        currentDist = (normPos - p).norm();
+        if (currentDist < minDist) {
+            minDist = currentDist;
+            ptIndex = k;
+        }
+    }
+    if (minDist >= maxDist) {
+        return -1;
+    }
+
+    return ptIndex;
+}
+
 int Curve::findClosestEdge(const Vector2DD &p, const double maxDist) const {
     int closestEdgeIndex = -1;
     double minDist = std::numeric_limits<double>::infinity();
     int n = coords_.size();
-    for (int k = 0; k < n; k++) {
+    // Don't loop over the last edge if the curve is not closed
+    for (int k = 0; k < n - !isClosed(); k++) {
         const Vector2DD &start = coords_[k];
-        const Vector2DD &end = coords_[(k + 1) % n];
+        const Vector2DD &end = coords_[getNextIdx(k)];
         Vector2DD closestPoint = getClosestPointOnLineSegment(start, end, p);
         double currentDist = (closestPoint - p).norm();
         if (currentDist < minDist) {
@@ -219,16 +186,6 @@ int Curve::getPrevIdx(int idx) const {
     return closed_ ? (idx - 1 + n) % n : std::max(idx - 1, 0);
 }
 
-static double distanceToEdge(const Vector2DD &A, const Vector2DD &B, const Vector2DD &P) {
-    Vector2DD AB = B - A;
-    Vector2DD AP = P - A;
-    double AB_len2 = AB.squaredNorm();
-    double t = AP.dot(AB) / AB_len2;
-    t = std::max(0.0, std::min(1.0, t)); // clamp to [0, 1]
-    Vector2DD Q = A + t * AB;
-    return std::hypot(P.x() - Q.x(), P.y() - Q.y());
-}
-
 int Curve::findInsertIdx(const Vector2DD &p) const {
     if (coords_.empty()) {
         return 0;
@@ -237,32 +194,12 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
     double currentDist, minDist = std::numeric_limits<double>::infinity();
 
     for (int k = 0; k < coords_.size(); k++) {
-        currentDist = distanceToEdge(coords_[k], coords_[getPrevIdx(k)], p);
+        currentDist = CurveUtils::distanceToEdge(coords_[k], coords_[getPrevIdx(k)], p);
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
         }
     }
-    return ptIndex;
-}
-
-// Returns index of the point normal handle
-int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
-    int ptIndex = -1;
-    double currentDist, minDist = 4;
-
-    for (int k = 0; k < coords_.size(); k++) {
-        Vector2DD normPos = coords_[k] + normalLength * normals_[k];
-        currentDist = (normPos - p).norm();
-        if (currentDist < minDist) {
-            minDist = currentDist;
-            ptIndex = k;
-        }
-    }
-    if (minDist >= maxDist) {
-        return -1;
-    }
-
     return ptIndex;
 }
 
@@ -321,6 +258,27 @@ void Curve::copyDataTo(Curve &other) const {
     std::copy(coords_.begin(), coords_.end(), otherCoords.begin());
     std::copy(normals_.begin(), normals_.end(), otherNormals.begin());
     std::copy(customNormals_.begin(), customNormals_.end(), otherCustNormals.begin());
+}
+
+Vector2DD Curve::prevEdge(int idx) const {
+    return coords_[getPrevIdx(idx)] - coords_[idx];
+}
+Vector2DD Curve::nextEdge(int idx) const {
+    return coords_[getNextIdx(idx)] - coords_[idx];
+}
+
+int Curve::edgePointingDir(int idx) const {
+    return std::clamp(vertexPointingDir(idx) + vertexPointingDir(getNextIdx(idx)), -1, 1);
+}
+
+int Curve::vertexPointingDir(int idx) const {
+    auto ab = prevEdge(idx);
+    auto cb = nextEdge(idx);
+    real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
+    if(cross == 0.0) {
+        return 0;
+    }
+    return cross > 0 ? 1 : -1;
 }
 
 } // namespace conis::core

@@ -50,6 +50,7 @@ private:
     const SubdivisionSettings &settings_;
     std::vector<int> inflPointIndices_;
     // These buffers persist between between subdivisions to prevent re-allocation
+    // Curve bufferCurve;
     std::vector<Vector2DD> pointsBuffer;
     std::vector<Vector2DD> normalsBuffer;
 
