@@ -138,6 +138,9 @@ void Curve::setNormal(int idx, const Vector2DD &normal) {
 }
 
 void Curve::removePoint(int idx) {
+    if(idx < 0 || idx > numPoints()) {
+        return;
+    }
     coords_.erase(coords_.begin() + idx);
     normals_.erase(normals_.begin() + idx);
     customNormals_.erase(customNormals_.begin() + idx);

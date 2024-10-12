@@ -23,16 +23,8 @@ void ConisCurve::subdivideCurve(int numSteps) {
 }
 
 Conic ConisCurve::getConicAtIndex(int idx) const {
-    std::vector<Vector2DD> coords;
-    std::vector<Vector2DD> normals;
-    // We use a temp subdivider to ensure we can keep const correctness
-    // Otherwise the getInflPointCurve updates some local fields of tempSubdivider (which we don't care about)
-    // The local field updating is done for performance reasons to prevent allocations, but in this case const
-    // correctness is more important
-    ConicSubdivider tempSubdivider(subdivSettings_);
-    tempSubdivider.getInflPointCurve(controlCurve_, coords, normals);
-    std::vector<PatchPoint> patch = subdivider_.extractPatch(coords,
-                                                             normals,
+    std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_.getCoords(),
+                                                             controlCurve_.getNormals(),
                                                              idx,
                                                              subdivSettings_.patchSize,
                                                              controlCurve_.isClosed());
@@ -42,10 +34,17 @@ Conic ConisCurve::getConicAtIndex(int idx) const {
 void ConisCurve::insertInflectionPoints() {
     std::vector<Vector2DD> coords;
     std::vector<Vector2DD> normals;
-    controlCurve_.setCustomNormals(subdivider_.getInflPointCurve(controlCurve_, coords, normals));
+    auto customNorms = subdivider_.getInflPointCurve(controlCurve_, coords, normals);
+    controlCurve_.setCustomNormals(customNorms);
     controlCurve_.setCoords(coords);
     controlCurve_.setNormals(normals);
-    // inflPointIndices_ = subdivider_. // TODO
+
+    inflPointIndices_.clear();
+    for (int i = 0; i < customNorms.size(); i++) {
+        if (customNorms[i]) {
+            inflPointIndices_.insert(i);
+        }
+    }
     resubdivide();
 }
 
@@ -130,7 +129,8 @@ void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constra
     Vector2DD &normal = controlCurve_.getNormals()[idx];
     const auto &coords = controlCurve_.getCoords();
     normal = (p - coords[idx]).normalized();
-    if (constrain) {
+    // Always allow free movement of the inflection point indices
+    if (constrain && inflPointIndices_.count(idx) == 0) {
         int n = controlCurve_.numPoints();
         // Constrain the normal in some sensible bounds
         Vector2DD ab = coords[(idx - 1 + n) % n] - coords[idx];
@@ -140,10 +140,9 @@ void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constra
         // Calculate the dot products
         float dotLeft = normal.dot(ab);
         float dotRight = normal.dot(cb);
-
         // Cross product is used to correct normal orientation (always point outside)
         real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
-        // Some black magic clamping
+        // Some black magic clamping. Difficult to explain without a drawing
         if (dotLeft > 0 && dotRight > 0) {
             if (dotLeft > dotRight) {
                 normal = {ab.y(), -ab.x()};
@@ -157,7 +156,7 @@ void ConisCurve::redirectNormalToPoint(int idx, const Vector2DD &p, bool constra
         } else if (dotRight > 0) {
             normal = {-cb.y(), cb.x()};
             normal = cross < 0 ? -1 * normal : normal;
-        }        
+        }
     }
     resubdivide();
 }

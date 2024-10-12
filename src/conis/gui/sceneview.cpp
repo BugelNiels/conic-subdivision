@@ -205,59 +205,6 @@ bool SceneView::attemptEdgeHighlight(const Vector2DD &scenePos) {
     return false;
 }
 
-void SceneView::unHighlightAll() {
-    settings_.highlightedEdge = -1;
-    settings_.highlightedVertex = -1;
-    settings_.highlightedNormal = -1;
-}
-void SceneView::highlightNormal(int idx) {
-    settings_.highlightedEdge = -1;
-    settings_.highlightedVertex = -1;
-    settings_.highlightedNormal = idx;
-}
-void SceneView::highlightVertex(int idx) {
-    settings_.highlightedEdge = -1;
-    settings_.highlightedVertex = idx;
-    settings_.highlightedNormal = -1;
-}
-void SceneView::highlightEdge(int idx) {
-    settings_.highlightedEdge = idx;
-    settings_.highlightedVertex = -1;
-    settings_.highlightedNormal = -1;
-}
-void SceneView::selectVertex(int idx) {
-    settings_.selectedVertex = idx;
-    updateSelectedConic();
-    update();
-}
-void SceneView::selectEdge(int idx) {
-    settings_.selectedEdge = idx;
-    updateSelectedConic();
-    update();
-}
-
-void SceneView::updateSelectedConic() {
-    if(settings_.selectedEdge < 0) {
-        conicR_.updateBuffers(Matrix3DD());
-        return;
-    }
-    Matrix3DD selectedConic = conisCurve_.getConicAtIndex(settings_.selectedEdge).getMatrix();
-    conicR_.updateBuffers(selectedConic);
-}
-
-void SceneView::translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos) {
-    if (!dragging_) {
-        dragging_ = true;
-        oldMouseCoords_ = scenePos;
-        return;
-    }
-    Vector2DD translationUpdate = (scenePos - oldMouseCoords_) * settings_.dragSensitivity;
-    settings_.viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
-    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
-    oldMouseCoords_ = toNormalizedScreenCoordinates(mousePos.x(), mousePos.y());
-    update();
-}
-
 real_t curvAtIndex(const Curve &curve, int i) {
     // int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
     int n = curve.numPoints();
@@ -291,6 +238,61 @@ void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel) {
     std::cout << "\tPenalty: " << p << std::endl;
 }
 
+void SceneView::unHighlightAll() {
+    settings_.highlightedEdge = -1;
+    settings_.highlightedVertex = -1;
+    settings_.highlightedNormal = -1;
+}
+void SceneView::highlightNormal(int idx) {
+    settings_.highlightedEdge = -1;
+    settings_.highlightedVertex = -1;
+    settings_.highlightedNormal = idx;
+}
+void SceneView::highlightVertex(int idx) {
+    settings_.highlightedEdge = -1;
+    settings_.highlightedVertex = idx;
+    settings_.highlightedNormal = -1;
+}
+void SceneView::highlightEdge(int idx) {
+    settings_.highlightedEdge = idx;
+    settings_.highlightedVertex = -1;
+    settings_.highlightedNormal = -1;
+}
+void SceneView::selectVertex(int idx) {
+    settings_.selectedVertex = idx;
+#if 1
+    smoothnessPenalty(conisCurve_.getSubdivCurve(), settings_.highlightedVertex, conisCurve_.getSubdivLevel());
+#endif
+    updateSelectedConic();
+    update();
+}
+void SceneView::selectEdge(int idx) {
+    settings_.selectedEdge = idx;
+    updateSelectedConic();
+    update();
+}
+
+void SceneView::updateSelectedConic() {
+    if (settings_.selectedEdge < 0) {
+        conicR_.updateBuffers(Matrix3DD());
+        return;
+    }
+    Matrix3DD selectedConic = conisCurve_.getConicAtIndex(settings_.selectedEdge).getMatrix();
+    conicR_.updateBuffers(selectedConic);
+}
+
+void SceneView::translationUpdate(const Vector2DD &scenePos, const QPointF &mousePos) {
+    if (!dragging_) {
+        dragging_ = true;
+        oldMouseCoords_ = scenePos;
+        return;
+    }
+    Vector2DD translationUpdate = (scenePos - oldMouseCoords_) * settings_.dragSensitivity;
+    settings_.viewMatrix.translate(translationUpdate.x(), translationUpdate.y());
+    toWorldCoordsMatrix_ = (settings_.projectionMatrix * settings_.viewMatrix).inverted();
+    oldMouseCoords_ = toNormalizedScreenCoordinates(mousePos.x(), mousePos.y());
+    update();
+}
 void SceneView::mousePressEvent(QMouseEvent *event) {
     // In order to allow keyPressEvents:
     setFocus();
@@ -302,7 +304,7 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
             if (event->modifiers().testFlag(Qt::ControlModifier)) {
                 int idx = conisCurve_.addPoint(scenePos);
                 highlightVertex(idx);
-                update();
+                selectVertex(idx);
                 break;
             }
             // Select a vertex
@@ -323,15 +325,13 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
                 break;
             }
             selectEdge(-1);
-            // smoothnessPenalty(conisCurve_.getSubdivCurve(),
-            //                   settings_.highlightedVertex,
-            //                   conisCurve_.getSubdivLevel());
             break;
         }
         case Qt::RightButton: {
             // Add new control point
             int idx = conisCurve_.addPoint(scenePos);
             highlightVertex(idx);
+            selectVertex(idx);
             break;
         }
         case Qt::MiddleButton: {
@@ -356,16 +356,18 @@ void SceneView::mouseMoveEvent(QMouseEvent *event) {
     switch (event->buttons()) {
         case Qt::RightButton:
         case Qt::LeftButton: {
-            if (settings_.highlightedVertex > -1) {
+            if (settings_.selectedVertex > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control point
-                conisCurve_.setVertexPosition(settings_.highlightedVertex, scenePos);
+                conisCurve_.setVertexPosition(settings_.selectedVertex, scenePos);
                 updateSelectedConic();
             }
             if (settings_.highlightedNormal > -1) {
                 setCursor(Qt::ClosedHandCursor);
                 // Update position of the control normal
-                conisCurve_.redirectNormalToPoint(settings_.highlightedNormal, scenePos, settings_.constrainNormalMovement);
+                conisCurve_.redirectNormalToPoint(settings_.highlightedNormal,
+                                                  scenePos,
+                                                  settings_.constrainNormalMovement);
                 updateSelectedConic();
             }
             break;
@@ -420,10 +422,10 @@ void SceneView::keyPressEvent(QKeyEvent *event) {
         case Qt::Key_Backspace:
         case Qt::Key_Delete:
         case Qt::Key_X:
-            if (settings_.highlightedVertex > -1) {
+            if (settings_.selectedVertex > -1) {
                 // Remove selected control point
-                conisCurve_.removePoint(settings_.highlightedVertex);
-                settings_.highlightedVertex = -1;
+                conisCurve_.removePoint(settings_.selectedVertex);
+                selectVertex(-1);
             }
             break;
     }

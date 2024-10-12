@@ -171,8 +171,6 @@ QDockWidget *MainWindow::initSideMenu() {
         conisCurve.resubdivide();
     });
 
-    vertLayout->addStretch();
-
     vertLayout->addWidget(patchSizeSlider);
     vertLayout->addWidget(dynamicPatchSizeCheckBox);
 
@@ -208,7 +206,6 @@ QDockWidget *MainWindow::initSideMenu() {
         conisCurve.resubdivide();
     });
     vertLayout->addWidget(midVertWeightSpinBox);
-    vertLayout->addStretch();
 
     vertLayout->addWidget(new QLabel("Normal weights"));
     auto *edgeNormWeightSpinBox = new DoubleSlider("Inner", subdivSettings_.middleNormalWeight, 0, maxWeight);

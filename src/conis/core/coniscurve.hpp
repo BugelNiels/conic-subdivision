@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/curve/curve.hpp"
 #include "conis/core/curve/refinement/normalrefinementsettings.hpp"
@@ -51,7 +53,7 @@ public:
 private:
     const SubdivisionSettings &subdivSettings_;
     const NormalRefinementSettings &normRefSettings_;
-    std::vector<int> inflPointIndices_;
+    std::unordered_set<int> inflPointIndices_;
     std::vector<Listener *> listeners;
     ConicSubdivider subdivider_;
     NormalRefiner normalRefiner_;
