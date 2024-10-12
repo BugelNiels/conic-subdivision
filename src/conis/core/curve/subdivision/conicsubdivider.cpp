@@ -79,8 +79,8 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, i
     // The conic solver finds a multiple of the normal anyway, so the length does not matter
 
     // While not strictly necessary for the subdivision, we rotate the normal here so that it is always pointing "outwards"
-
-    // TODO dircheck
+    dir *= controlCurve.edgePointingDir(i / 2);
+    // TODO: this does not always orient well
 
     std::vector<PatchPoint> patchPoints = extractPatch(controlCurve, i / 2, settings_.patchSize);
     Conic conic(patchPoints, settings_.epsilon);
@@ -125,17 +125,19 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve, int pI
     const int leftMiddleIdx = pIdx;
     const bool leftInflPoint = std::find(inflPointIndices_.begin(), inflPointIndices_.end(), leftMiddleIdx) !=
                                inflPointIndices_.end();
-    patchPoints.push_back(
-            {verts[leftMiddleIdx], normals[leftMiddleIdx], settings_.middlePointWeight, settings_.middleNormalWeight});
+    patchPoints.emplace_back(verts[leftMiddleIdx],
+                             normals[leftMiddleIdx],
+                             settings_.middlePointWeight,
+                             settings_.middleNormalWeight);
 
     // Right middle
     const int rightMiddleIdx = (pIdx + 1) % n;
     const bool rightInflPoint = std::find(inflPointIndices_.begin(), inflPointIndices_.end(), rightMiddleIdx) !=
                                 inflPointIndices_.end();
-    patchPoints.push_back({verts[rightMiddleIdx],
-                           normals[rightMiddleIdx],
-                           settings_.middlePointWeight,
-                           settings_.middleNormalWeight});
+    patchPoints.emplace_back(verts[rightMiddleIdx],
+                             normals[rightMiddleIdx],
+                             settings_.middlePointWeight,
+                             settings_.middleNormalWeight);
 
     if (curve.isClosed()) {
         if (!leftInflPoint) {
@@ -145,8 +147,10 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve, int pI
                 if (!areInSameHalfPlane(verts[leftMiddleIdx], verts[rightMiddleIdx], verts[leftOuterIdx], verts[idx])) {
                     break;
                 }
-                patchPoints.push_back(
-                        {verts[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
+                patchPoints.emplace_back(verts[idx],
+                                         normals[idx],
+                                         settings_.outerPointWeight,
+                                         settings_.outerNormalWeight);
             }
         }
         if (!rightInflPoint) {
@@ -159,8 +163,10 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve, int pI
                                         verts[idx])) {
                     break;
                 }
-                patchPoints.push_back(
-                        {verts[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
+                patchPoints.emplace_back(verts[idx],
+                                         normals[idx],
+                                         settings_.outerPointWeight,
+                                         settings_.outerNormalWeight);
             }
         }
     } else {
@@ -174,8 +180,10 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve, int pI
                 if (!areInSameHalfPlane(verts[leftMiddleIdx], verts[rightMiddleIdx], verts[leftOuterIdx], verts[idx])) {
                     break;
                 }
-                patchPoints.push_back(
-                        {verts[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
+                patchPoints.emplace_back(verts[idx],
+                                         normals[idx],
+                                         settings_.outerPointWeight,
+                                         settings_.outerNormalWeight);
             }
         }
         if (!rightInflPoint) {
@@ -191,14 +199,17 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve, int pI
                                         verts[idx])) {
                     break;
                 }
-                patchPoints.push_back(
-                        {verts[idx], normals[idx], settings_.outerPointWeight, settings_.outerNormalWeight});
+                patchPoints.emplace_back(verts[idx],
+                                         normals[idx],
+                                         settings_.outerPointWeight,
+                                         settings_.outerNormalWeight);
             }
         }
     }
     return patchPoints;
 }
 
+// TODO: double check whether this is fully accurate
 bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
                                          const Vector2DD &v1,
                                          const Vector2DD &v2,
@@ -218,7 +229,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
     return dotProduct2 * sign >= 0;
 }
 
-void ConicSubdivider::insertInflPoints(const Curve &curve, Curve& targetCurve) {
+void ConicSubdivider::insertInflPoints(const Curve &curve, Curve &targetCurve) {
     targetCurve.setClosed(curve.isClosed());
     // Setup
     const int n = int(curve.numPoints());
@@ -282,6 +293,7 @@ void ConicSubdivider::insertInflPoints(const Curve &curve, Curve& targetCurve) {
             customNormals.emplace_back(true);
             inflPointIndices_.push_back(idx);
             idx++;
+        std::cout << "Inserting inflection point" << std::endl;
         }
     }
 }

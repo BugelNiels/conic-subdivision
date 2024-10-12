@@ -11,7 +11,7 @@ Curve::Curve() : Curve({}, {}, false) {}
 
 Curve::Curve(bool closed) : Curve({}, {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> verts, bool closed) : Curve(std::move(verts), calcNormals(verts), closed) {}
+Curve::Curve(std::vector<Vector2DD> verts, bool closed) : Curve(std::move(verts), {}, closed) {}
 
 Curve::Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, bool closed)
     : closed_(closed),
@@ -19,6 +19,9 @@ Curve::Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, bool 
       normals_(std::move(normals)) {
     customNormals_.resize(vertices_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
+    if(normals.size() != vertices_.size()) {
+        normals_ = calcNormals(vertices_);
+    }
 }
 
 std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &verts) const {
@@ -268,7 +271,10 @@ Vector2DD Curve::nextEdge(int idx) const {
 }
 
 int Curve::edgePointingDir(int idx) const {
-    return std::clamp(vertexPointingDir(idx) + vertexPointingDir(getNextIdx(idx)), -1, 1);
+    if(vertexPointingDir(idx) == 1 ||  vertexPointingDir(getNextIdx(idx)) == 1) {
+        return 1;
+    }
+    return -1;
 }
 
 int Curve::vertexPointingDir(int idx) const {

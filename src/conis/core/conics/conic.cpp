@@ -114,21 +114,22 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         return false;
     }
     real_t root = std::sqrt(disc);
-#if 1
+    if(std::isnan(root)) {
+        return false;
+    }
+#ifndef DIRECTIONAL_INTERSECTION
     // If b is negative, then -b is positive, so `-b - root` will always be smaller than `-b + root`
     if (b < 0) {
         t = (-b - root) / a;
     } else {
         t = (-b + root) / a;
     }
-    // if(t < 0) {
-    //     std::cout << "t is negative: " << t << std::endl;
-    // }
     return true;
 #else
+    // This returns the smallest positive number; disabled for now
+    // Returns the smallest absolute number if neither are positive
     real_t t0 = -b - root;
     real_t t1 = -b + root;
-    // This returns the smallest positive number; disabled for now
     if (t0 > 0 && t1 > 0) {
         t = std::min(t0, t1) / a;
         return true;
@@ -141,6 +142,15 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         t = t1 / a;
         return true;
     }
+
+    
+    std::cout << "No positive solution: " << t0 << " " <<  t1 << std::endl;
+    // if (b < 0) {
+    //     t = (-b - root) / a;
+    // } else {
+    //     t = (-b + root) / a;
+    // }
+    // return true;
     return false;
 #endif
 }

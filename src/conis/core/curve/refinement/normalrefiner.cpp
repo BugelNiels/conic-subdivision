@@ -43,7 +43,7 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, int idx, bool inflectio
         cb = {-cb.y(), cb.x()};
         cb.normalize();
         // Put the normal halfway in between and set the search angle. This constrains the search
-        normal = (ab + cb).normalized();
+        normal = (ab + cb).normalized() * curve.vertexPointingDir(idx);
         // divide by 4, because half the angle is the angle between the normal (which is in the middle) and its two bounds
         // Since we are doing binary search, we need to half that again to ensure we don't go out of bounds
         angle = acos(ab.dot(cb)) / 4.0;

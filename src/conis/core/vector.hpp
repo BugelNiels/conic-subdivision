@@ -19,6 +19,12 @@ using PatchPoint = struct PatchPoint {
     Vector2DD normal;
     real_t pointWeight;
     real_t normWeight;
+
+    PatchPoint(Vector2DD vertex, Vector2DD normal, real_t pointWeight, real_t normWeight)
+        : vertex(vertex),
+          normal(normal),
+          pointWeight(pointWeight),
+          normWeight(normWeight) {}
 };
 
 template<typename T>

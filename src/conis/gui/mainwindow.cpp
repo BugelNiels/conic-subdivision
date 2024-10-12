@@ -340,8 +340,8 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(new QLabel("Angle limit (degrees)"));
     DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
                                                        normRefSettings_.angleLimit,
-                                                       0.001,
-                                                       5,
+                                                       0.0000001,
+                                                       1,
                                                        BoundMode::UPPER_LOWER);
     connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
         normRefSettings_.angleLimit = angleLimit * (M_PI / 180.0);

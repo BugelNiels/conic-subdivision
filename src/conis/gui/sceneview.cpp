@@ -206,7 +206,6 @@ bool SceneView::attemptEdgeHighlight(const Vector2DD &scenePos) {
 }
 
 void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel, CurvatureType curvatureType) {
-    std::cout << curve.vertexPointingDir(idx) << std::endl;
     int n = curve.numPoints();
     if (idx < 0 || idx >= n) {
         return;
@@ -214,7 +213,8 @@ void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel, Curvatu
     int i = idx * std::pow(2, testSubdivLevel);
     real_t curvature_1 = curve.curvatureAtIdx(curve.getPrevIdx(i), curvatureType);
     real_t curvature1 = curve.curvatureAtIdx(curve.getNextIdx(i), curvatureType);
-    std::cout << "Line segment: A-B-C -- " << curve.getPrevIdx(i) << " " << i << " " << curve.getNextIdx(i) << std::endl;
+    std::cout << "Line segment: A-B-C -- " << curve.getPrevIdx(i) << " " << i << " " << curve.getNextIdx(i)
+              << std::endl;
     std::cout << "\tCurvature at A: " << curvature_1 << std::endl << "\tCurvature at C: " << curvature1 << std::endl;
     real_t p = std::abs(curvature_1 - curvature1);
     if (curvature1 > curvature_1) {
@@ -248,14 +248,21 @@ void SceneView::highlightEdge(int idx) {
 void SceneView::selectVertex(int idx) {
     settings_.selectedVertex = idx;
 #if 1
-    smoothnessPenalty(conisCurve_.getSubdivCurve(), settings_.highlightedVertex, conisCurve_.getSubdivLevel(), settings_.curvatureType);
+    smoothnessPenalty(conisCurve_.getSubdivCurve(),
+                      settings_.highlightedVertex,
+                      conisCurve_.getSubdivLevel(),
+                      settings_.curvatureType);
 #endif
+    if (idx > 0) {
+
+        std::cout << "vertex dir: " << conisCurve_.getControlCurve().vertexPointingDir(idx) << std::endl;
+    }
     updateSelectedConic();
     update();
 }
 void SceneView::selectEdge(int idx) {
     settings_.selectedEdge = idx;
-    if(idx >= 0) {
+    if (idx >= 0) {
         std::cout << "edge: " << conisCurve_.getControlCurve().edgePointingDir(idx) << std::endl;
     }
     updateSelectedConic();
