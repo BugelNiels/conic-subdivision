@@ -2,6 +2,7 @@
 
 #include <QMatrix4x4>
 
+#include "conis/core/curve/refinement/curvaturetype.hpp"
 #include "conis/gui/renderers/shadertypes.hpp"
 #include "conis/gui/stylepresets.hpp"
 
@@ -20,6 +21,8 @@ using ViewSettings = struct ViewSettings {
     bool showControlCurve = true;
     bool normalHandles = true;
     bool drawSelectedConic = false;
+    conis::core::CurvatureType curvatureType = conis::core::CurvatureType::CIRCLE_RADIUS;
+
 
     // UI related constants
     float normalLength = 0.15;

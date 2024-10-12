@@ -9,30 +9,53 @@ NormalRefiner::NormalRefiner(const NormalRefinementSettings &normRefSettings, co
       subdivider_(subdivSettings) {}
 
 // Calculates the curvature at point b for the segment a-b-c
-real_t NormalRefiner::calcCurvature(const Vector2DD &a, const Vector2DD &b, const Vector2DD &c) const {
-    Vector2DD ab = a - b;
-    Vector2DD cb = c - b;
-    real_t normAB = ab.norm();
-    real_t normCB = cb.norm();
-    real_t crossLength = std::abs(ab.x() * cb.y() - ab.y() * cb.x());
-    return 2.0 * crossLength / (normAB * normCB * (normAB + normCB));
+real_t NormalRefiner::calcCurvature(const Vector2DD &a,
+                                    const Vector2DD &b,
+                                    const Vector2DD &c,
+                                    CurvatureType curvatureType) const {
+    if (curvatureType == CurvatureType::CIRCLE_RADIUS) {
+        Vector2DD ab = a - b;
+        Vector2DD cb = c - b;
+        Vector2DD ac = a - c;
+
+        real_t denom = ab.dot(ab) * cb.dot(cb) * ac.dot(ac);
+
+        // Avoid division by zero
+        if (denom == 0.0)
+            return 0.0;
+        real_t cross = ab.x() * cb.y() - ab.y() * cb.x();
+        return sqrt((cross * cross) / denom);
+    }
+
+    const auto e1 = b - a;
+    const auto e_1 = c - a;
+    real_t cross = e_1.x() * e1.y() - e_1.y() * e1.x();
+    real_t dot = e_1.x() * e1.x() + e_1.y() * e1.y();
+    real_t v = atan(cross / dot);
+
+    real_t denom = e_1.norm() + e1.norm();
+    if (denom == 0.0)
+        return 0.0;
+
+    if (curvatureType == CurvatureType::DISCRETE_WINDING) {
+        return 2.0 * v / denom;
+    } else if (curvatureType == CurvatureType::GRADIENT_ARC_LENGTH) {
+        return 4.0 * sin(v / 2.0) / denom;
+    } else if (curvatureType == CurvatureType::AREA_INFLATION) {
+        return 4.0 * tan(v / 2.0) / denom;
+    }
+    std::cerr << "Unsupported curvature type: " << curvatureType;
+    return 0; // Unsupported curvature type
 }
 
-real_t NormalRefiner::curvatureAtControlIdx(Curve &curve, int idx) const {
-    int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
+real_t NormalRefiner::curvatureAtIdx(Curve &curve, int i, CurvatureType curvatureType) const {
     int n = curve.numPoints();
-
     const auto &points = curve.getCoords();
-
-    const auto &p_2 = points[(i - 2 + n) % n];
     const auto &p_1 = points[(i - 1 + n) % n];
     const auto &p0 = points[i];
     const auto &p1 = points[(i + 1) % n];
-    const auto &p2 = points[(i + 2) % n];
-    real_t c_1 = std::abs(calcCurvature(p_2, p_1, p0));
-    real_t c0 = std::abs(calcCurvature(p_1, p0, p1));
-    real_t c1 = std::abs(calcCurvature(p0, p1, p2));
-    return std::abs(c_1 + c1 - 2 * c0);
+
+    return calcCurvature(p_1, p0, p1, curvatureType);
 }
 
 /**
@@ -40,22 +63,21 @@ real_t NormalRefiner::curvatureAtControlIdx(Curve &curve, int idx) const {
  *
  * @param curve The subdivided curve to calculate the smoothness on
  * @param idx The index of the point on the curve for which to calculate the smoothness
- * @param numControlPoints The number of points in the original control curve.
  * @return int A number representing how smooth the curve is. Lower numbers are better (i.e. a smoother curve)
  */
-real_t NormalRefiner::smoothnessPenalty(Curve &curve, int idx, int numControlPoints) const {
-    real_t penalty_1 = curvatureAtControlIdx(curve, (idx - 1 + numControlPoints) % numControlPoints);
-    real_t penalty0 = curvatureAtControlIdx(curve, idx);
-    real_t penalty1 = curvatureAtControlIdx(curve, (idx + 1) % numControlPoints);
-    // This puts more weight on the middle one. Perhaps we can improve something here
-    return penalty_1 + 2 * penalty0 + penalty1;
-    // return penalty0;
+real_t NormalRefiner::smoothnessPenalty(Curve &curve, int idx, CurvatureType curvatureType) const {
+    int n = curve.numPoints();
+    int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
+    real_t curvature_1 = curvatureAtIdx(curve, (i - 1 + n) % n, curvatureType);
+    real_t curvature1 = curvatureAtIdx(curve, (i + 1) % n, curvatureType);
+    return std::abs(curvature_1 - curvature1);
 }
 
-void NormalRefiner::binarySearchBestNormal(Curve &curve, Vector2DD &normal, int idx) {
+void NormalRefiner::binarySearchBestNormal(Curve &curve, int idx, CurvatureType curvatureType) {
     // To search the full unit, this should start at 0.5 (45 degrees)
     // This generally rotates too much and leads to difficult cases
     const auto &controlPoints = curve.getCoords();
+    auto &normal = curve.getNormals()[idx];
     int nc = curve.numPoints();
     // Find the normal of the line segment to the left
     Vector2DD ab = controlPoints[(idx - 1 + nc) % nc] - controlPoints[idx];
@@ -94,40 +116,41 @@ void NormalRefiner::binarySearchBestNormal(Curve &curve, Vector2DD &normal, int 
         normal = clockwiseNormal;
         curve.copyDataTo(testCurve_);
         subdivider_.subdivide(testCurve_, normRefSettings_.testSubdivLevel);
-        real_t clockwisePenalty = smoothnessPenalty(testCurve_, idx, nc);
+        real_t clockwisePenalty = smoothnessPenalty(testCurve_, idx, curvatureType);
 
         // Calc curvature difference rotating counterclockwise
         normal = counterclockwiseNormal;
         curve.copyDataTo(testCurve_);
         subdivider_.subdivide(testCurve_, normRefSettings_.testSubdivLevel);
-        real_t counterclockwisePenalty = smoothnessPenalty(testCurve_, idx, nc);
+        real_t counterclockwisePenalty = smoothnessPenalty(testCurve_, idx, curvatureType);
+        std::cout << clockwisePenalty << " <c cc> " << counterclockwisePenalty << std::endl;
         // We pick whichever one results in the lower curvature penalty
         if (clockwisePenalty < counterclockwisePenalty) {
             normal = clockwiseNormal;
-        } // else the normal is still on counterclockwise
+            std::cout << "\t clockwise" << std::endl;
+        } else {
 
+            std::cout << "\t counter clockwise" << std::endl; // else the normal is still on counterclockwise
+        }
         angle /= 2.0;
     }
 }
 
-void NormalRefiner::refine(Curve &curve) {
-    auto &norms = curve.getNormals();
-    int n = norms.size();
+void NormalRefiner::refine(Curve &curve, CurvatureType curvatureType) {
+    int n = curve.numPoints();
 
     // TODO: do this until convergence with a maxIter being a max bound
     for (int i = 0; i < normRefSettings_.maxRefinementIterations; i++) {
         for (int j = 0; j < n; j++) {
-            binarySearchBestNormal(curve, norms[j], j);
+            binarySearchBestNormal(curve, j, curvatureType);
             std::cout << "Refined idx: " << j << std::endl;
         }
         std::cout << "Iteration done: " << i << std::endl;
     }
 }
 
-void NormalRefiner::refineSelected(Curve &curve, int idx) {
-    auto &norms = curve.getNormals();
-    int n = norms.size();
-    binarySearchBestNormal(curve, norms[idx], idx);
+void NormalRefiner::refineSelected(Curve &curve, CurvatureType curvatureType, int idx) {
+    binarySearchBestNormal(curve, idx, curvatureType);
 }
 
 } // namespace conis::core

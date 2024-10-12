@@ -4,6 +4,7 @@ layout (line_strip, max_vertices = 12) out;
 
 const float norm_length = 0.1f;
 uniform float curvatureScale;
+uniform int curvatureType;
 
 uniform bool visualize_normals;
 uniform bool visualize_curvature;
@@ -64,9 +65,8 @@ void emitNormal(vec4 p, dvec2 norm) {
     emitLine(p, p + norm_length * norm4);
 }
 
-// Calculates the curvature at point b in the line segment a-b-c with double precision
-// The curvature is based on the curvature of the circle defined by the 3 given points
-double calcCurvatureDouble(dvec2 a, dvec2 b, dvec2 c) {
+// The curvature is based on the radius of the circle defined by the 3 given points
+double calcCurvatureCircular(dvec2 a, dvec2 b, dvec2 c) {
     dvec2 ab = a - b;
     dvec2 cb = c - b;
     dvec2 ac = a - c;
@@ -76,10 +76,61 @@ double calcCurvatureDouble(dvec2 a, dvec2 b, dvec2 c) {
     // Avoid division by zero
     if (denom == 0.0) return 0.0;
 
-    // return 2.0 * length(cross(dvec3(ab, 0.0), dvec3(cb, 0.0))) / (normAB * normCB * (normAB + normCB));
-
     dvec3 t = cross(dvec3(ab, 0.0), dvec3(cb, 0.0));
-    return 2 * sqrt(dot(t, t) / denom);
+    return sqrt(dot(t, t) / denom);
+}
+
+// The following three methods are based on the formulas provided in:
+// https://www.cs.utexas.edu/~evouga/uploads/4/5/6/8/45689883/notes1.pdf
+
+// The curvature is based on the winding number theorem
+double calcCurvatureWinding(dvec2 a, dvec2 b, dvec2 c) {
+    dvec2 e1 = b - a;
+    dvec2 e_1 = c - a;
+    
+    double cross = e_1.x * e1.y - e_1.y * e1.x;
+    double dot = e_1.x * e1.x + e_1.y * e1.y;
+    // Note that there is no float64 support for trigonometric operations
+    float v = atan(float(cross / dot));
+
+    return 2.0 * v / (length(e_1) + length(e1));
+}
+
+// The curvature is based on the gradient arc length
+double calcCurvatureGradientArcLength(dvec2 a, dvec2 b, dvec2 c) {
+    dvec2 e1 = b - a;
+    dvec2 e_1 = c - a;
+    
+    double cross = e_1.x * e1.y - e_1.y * e1.x;
+    double dot = e_1.x * e1.x + e_1.y * e1.y;
+    float v = atan(float(cross / dot));
+    
+    return 4.0 * sin(v / 2.0) / (length(e_1) + length(e1));
+}
+
+// The curvature is based on the gradient arc length
+double calcCurvatureAreaInflation(dvec2 a, dvec2 b, dvec2 c) {
+    dvec2 e1 = b - a;
+    dvec2 e_1 = c - a;
+    
+    double cross = e_1.x * e1.y - e_1.y * e1.x;
+    double dot = e_1.x * e1.x + e_1.y * e1.y;
+    float v = atan(float(cross / dot));
+    
+    return 4.0 * tan(v / 2.0) / (length(e_1) + length(e1));
+}
+
+// Calculates the curvature at point b in the line segment a-b-c with double precision based on the provided curvature calculation
+double calcCurvatureDouble(dvec2 a, dvec2 b, dvec2 c, int curvType) {
+    if(curvType == 0) {
+        return calcCurvatureCircular(a, b, c);
+    } else if(curvType == 1) {
+        return calcCurvatureWinding(a, b, c);
+    } else if(curvType == 2) {
+        return calcCurvatureGradientArcLength(a, b, c);
+    } else if(curvType == 3) {
+        return calcCurvatureAreaInflation(a, b, c);
+    }
 }
 
 // Calculates the (unnormalized) normal of point b in the line segment a-b-c with double precision
@@ -91,7 +142,7 @@ dvec2 calcNormal(dvec2 a, dvec2 b, dvec2 c) {
 
 // Calculates the position of a new point that sits along the normal based on the curvature
 vec4 calcToothTip(vec4 p, dvec2 normal, double curvature) {
-    double curvatureVisualisationSize = 0.05 * curvatureScale;
+    double curvatureVisualisationSize = 0.1 * curvatureScale;
     vec4 toothTip = p;
     if (dot(normal, normal) > 0) {
         dvec2 offset = normal * curvature * curvatureVisualisationSize;
@@ -111,7 +162,8 @@ void main() {
     // Normal at p1
     dvec2 nc1 = calcNormal(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
     dvec2 n1 = calcNormals ? nc1 : dvec2(-norm_vs[1]);
-    if (dot(n1, nc1) < 0) {
+    // Everything but the circular curvature calculation already takes care of ensuring the curvature points in the right direction
+    if (curvatureType != 0 || dot(n1, nc1) < 0) {
         n1 *= -1;
     }
     n1 = normalize(n1);
@@ -119,7 +171,7 @@ void main() {
     // Normal at p2
     dvec2 nc2 = calcNormal(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
     dvec2 n2 = calcNormals ? nc2 : dvec2(-norm_vs[2]);
-    if (dot(n2, nc2) < 0) {
+    if (curvatureType != 0 || dot(n2, nc2) < 0) {
         n2 *= -1;
     }
     n2 = normalize(n2);
@@ -133,8 +185,8 @@ void main() {
     // Curvature visualization
     if (visualize_curvature) {
         line_color = vec4(curvLineCol, 1.0);
-        double curv1 = calcCurvatureDouble(coords_dvs[0], coords_dvs[1], coords_dvs[2]);
-        double curv2 = calcCurvatureDouble(coords_dvs[1], coords_dvs[2], coords_dvs[3]);
+        double curv1 = calcCurvatureDouble(coords_dvs[0], coords_dvs[1], coords_dvs[2], curvatureType);
+        double curv2 = calcCurvatureDouble(coords_dvs[1], coords_dvs[2], coords_dvs[3], curvatureType);
 
         vec4 firstToothTip = calcToothTip(p1, n1, curv1);
         vec4 secondToothTip = calcToothTip(p2, n2, curv2);

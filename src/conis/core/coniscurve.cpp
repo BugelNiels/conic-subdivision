@@ -52,13 +52,13 @@ void ConisCurve::recalculateNormals() {
     resubdivide();
 }
 
-void ConisCurve::refineNormals() {
-    normalRefiner_.refine(controlCurve_);
+void ConisCurve::refineNormals(CurvatureType curvatureType) {
+    normalRefiner_.refine(controlCurve_, curvatureType);
     resubdivide();
 }
 
-void ConisCurve::refineNormal(int idx) {
-    normalRefiner_.refineSelected(controlCurve_, idx);
+void ConisCurve::refineNormal(int idx, CurvatureType curvatureType) {
+    normalRefiner_.refineSelected(controlCurve_, curvatureType, idx);
     resubdivide();
 }
 

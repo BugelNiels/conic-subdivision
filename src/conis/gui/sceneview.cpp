@@ -201,6 +201,39 @@ void SceneView::translationUpdate(const Vector2DD &scenePos, const QPointF &mous
     update();
 }
 
+real_t curvAtIndex(const Curve &curve, int i) {
+    // int i = idx * std::pow(2, normRefSettings_.testSubdivLevel);
+    int n = curve.numPoints();
+    const auto &points = curve.getCoords();
+    const auto &p_1 = points[(i - 1 + n) % n];
+    const auto &p0 = points[i];
+    const auto &p1 = points[(i + 1) % n];
+
+    // clockwise turning angle
+    Vector2DD e1 = p1 - p0;
+    Vector2DD e_1 = p_1 - p0;
+    real_t det = e_1.x() * e1.y() - e_1.y() * e1.x();
+    real_t dot = e_1.x() * e1.x() + e_1.y() * e1.y();
+
+    // Calculate the angle using atan2
+    real_t v = std::atan2(det, dot);
+    real_t c = 4 * std::tan(v / 2.0) / (e_1.norm() + e1.norm());
+    return c;
+}
+
+void smoothnessPenalty(const Curve &curve, int idx, int testSubdivLevel) {
+    int n = curve.numPoints();
+    if(idx < 0 || idx >= n) {
+        return;
+    }
+    int i = idx * std::pow(2, testSubdivLevel);
+    real_t curvature_1 = curvAtIndex(curve, (i - 1 + n) % n);
+    real_t curvature1 = curvAtIndex(curve, (i + 1) % n);
+    std::cout << "c -1: " << curvature_1 << " c 1: " << curvature1 << std::endl;
+    real_t p = std::abs(curvature_1 - curvature1);
+    std::cout << "\tPenalty: " << p << std::endl;
+}
+
 void SceneView::mousePressEvent(QMouseEvent *event) {
     // In order to allow keyPressEvents:
     setFocus();
@@ -222,6 +255,7 @@ void SceneView::mousePressEvent(QMouseEvent *event) {
                     conicR_.updateBuffers(selectedConic);
                     selectedConicIdx_ = settings_.highlightedVertex;
                 }
+                smoothnessPenalty(conisCurve_.getSubdivCurve(), settings_.highlightedVertex, conisCurve_.getSubdivLevel());
             }
             update();
             break;

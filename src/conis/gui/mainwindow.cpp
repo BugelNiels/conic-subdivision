@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QLabel>
@@ -92,7 +93,6 @@ QDockWidget *MainWindow::initSideMenu() {
         subdivStepsSpinBox->setVal(0);
     });
     vertLayout->addWidget(applySubdivButton);
-
 
     auto *insertInflPointsButton = new QPushButton("Insert Inflection Points");
     insertInflPointsButton->setToolTip("<html><head/><body><p>If pressed, inserts inflection points.</body></html>");
@@ -300,14 +300,14 @@ QDockWidget *MainWindow::initSideMenu() {
     auto *refineNormalsButton = new QPushButton("Refine Normals");
     connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
         auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormals();
+        conisCurve.refineNormals(viewSettings_.curvatureType);
     });
     vertLayout->addWidget(refineNormalsButton);
 
     auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
     connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
         auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormal(viewSettings_.selectedVertex);
+        conisCurve.refineNormal(viewSettings_.selectedVertex, viewSettings_.curvatureType);
     });
     vertLayout->addWidget(refineSelectedNormalButton);
 
@@ -345,6 +345,22 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(angleLimitSpinBox);
 
     vertLayout->addStretch();
+
+    auto *curvatureTypeDropdown = new QComboBox();
+    curvatureTypeDropdown->addItem("Circle Radius", conis::core::CurvatureType::CIRCLE_RADIUS);
+    curvatureTypeDropdown->addItem("Winding Number Theorem", conis::core::CurvatureType::DISCRETE_WINDING);
+    curvatureTypeDropdown->addItem("Gradient of Arc Length", conis::core::CurvatureType::GRADIENT_ARC_LENGTH);
+    curvatureTypeDropdown->addItem("Area Inflation", conis::core::CurvatureType::AREA_INFLATION);
+    curvatureTypeDropdown->setToolTip(
+            "<html><head/><body><p>Select the type of curvature calculation.</p></body></html>");
+
+    connect(curvatureTypeDropdown, &QComboBox::currentIndexChanged, [this, curvatureTypeDropdown](int index) {
+        viewSettings_.curvatureType = static_cast<conis::core::CurvatureType>(
+                curvatureTypeDropdown->itemData(index).toInt());
+        sceneView_->updateBuffers();
+    });
+    vertLayout->addWidget(new QLabel("Curvature Type"));
+    vertLayout->addWidget(curvatureTypeDropdown);
 
     auto *curvatureScaleSlider = new DoubleSlider("Curvature Scale", viewSettings_.curvatureScale, 0.01, 10);
     curvatureScaleSlider->setToolTip(

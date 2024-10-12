@@ -7,13 +7,13 @@ usage() {
   echo "Usage: $0 [options]"
   echo ""
   echo "options:"
-  echo "  -h, --help:                               Shows help output."
-  echo "  -c, --clean:                              Cleans the build directory."
-  echo "      --skip-cmake:                         Skips the cmake step of the build_rpm stage during the build process."
-  echo "  -b, --cmake-build-type <build-type>:      Specifies the build type for cmake. Must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
-  echo "  -t  --test:                               Builds and runs the unit tests."
-  echo "  -r, --run:                                Runs the built binary."
-  echo "  -l, --library-only:                       Only builts the core library. No Qt needed to run this"
+  echo "  -h, --help:               Shows help output."
+  echo "  -c, --clean:              Cleans the build directory."
+  echo "      --skip-cmake:         Skips the cmake step of the build_rpm stage during the build process."
+  echo "  -d, --debug:              Builds the program in Debug mode instead of Release."
+  echo "  -t  --test:               Builds and runs the unit tests."
+  echo "  -r, --run:                Runs the built binary."
+  echo "  -l, --library-only:       Only builts the core library. No Qt needed to run this"
   exit 1
 }
 
@@ -34,19 +34,7 @@ build() {
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       -h | --help) usage ;;
-      -b|--cmake-build-type)
-        if [[ $# -gt 1 ]]; then
-          if [ "$2" != "Release" ] && [ "$2" != "Debug" ] && [ "$2" != "RelWithDebInfo" ] && [ "$2" != "MinSizeRel" ]; then
-            echo "--cmake-build-type must be one of [Release, Debug, RelWithDebInfo, or MinSizeRel]."
-            exit 1
-          fi
-          build_type="$2"
-          shift
-        else
-          echo "Error: --cmake-build-type requires an argument"
-          usage
-        fi
-        ;;
+      -d|--debug) build_type="Debug" ;;
       -c|--clean) clean=true ;;
       --skip-cmake) skip_cmake=true ;;
       -t|--test) do_tests=true ;;

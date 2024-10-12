@@ -139,6 +139,7 @@ void CurveRenderer::draw() {
     shader->setUniformValue("viewMatrix", settings_.viewMatrix);
     shader->setUniformValue("projectionMatrix", settings_.projectionMatrix);
     shader->setUniformValue("curvatureScale", settings_.curvatureScale);
+    shader->setUniformValue("curvatureType", settings_.curvatureType);
 
     shader->setUniformValue("colorMap", 0);
 

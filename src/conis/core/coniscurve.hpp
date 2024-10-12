@@ -20,14 +20,15 @@ public:
 
     [[nodiscard]] inline const Curve &getControlCurve() const { return controlCurve_; }
     [[nodiscard]] inline const Curve &getSubdivCurve() const { return subdivCurve_; }
+    [[nodiscard]] inline int getSubdivLevel() const { return lastSubdivLevel_; }
 
     Conic getConicAtIndex(int idx) const;
     void insertInflectionPoints();
     void resubdivide();
     void recalculateNormals();
     void recalculateNormal(int idx);
-    void refineNormals();
-    void refineNormal(int idx);
+    void refineNormals(CurvatureType curvatureType);
+    void refineNormal(int idx, CurvatureType curvatureType);
 
     void setControlCurve(Curve curve);
     void subdivideCurve(int numSteps);
