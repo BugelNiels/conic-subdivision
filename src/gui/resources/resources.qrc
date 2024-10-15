@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/dashed.frag</file>
+        <file>shaders/dashed.vert</file>
+        <file>shaders/conic.frag</file>
+        <file>shaders/conic.vert</file>
+        <file>shaders/curvature.geom</file>
+        <file>shaders/curvature.vert</file>
+        <file>shaders/curvature.frag</file>
+        <file>shaders/double/curvature.geom</file>
+        <file>shaders/double/curvature.vert</file>
+        <file>shaders/double/curvature.frag</file>
+        <file>icons/theme.png</file>
+    </qresource>
+</RCC>
