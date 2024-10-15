@@ -16,6 +16,14 @@ You need the following to be able to compile and run the project:
 * [Qt 6.2+](https://www.qt.io/)
   * Only necessary to run the program with gui. Optional for building the library
 
+## Quick Start
+
+To build and run:
+
+```shell
+./build.sh -r
+```
+
 ## Compilation
 
 Compilation can be done easily via the provided build script:
@@ -24,7 +32,22 @@ Compilation can be done easily via the provided build script:
 ./build.sh
 ```
 
-See `./build.sh --help` for more information on how to use the build script.
+See `./build.sh --help` for more information on how to use the build script:
+
+```txt
+Builds the conis software.
+
+Usage: ./build.sh [options]
+
+options:
+  -h, --help:               Shows help output.
+  -c, --clean:              Cleans the build directory.
+      --skip-cmake:         Skips the cmake step of the build_rpm stage during the build process.
+  -d, --debug:              Builds the program in Debug mode instead of Release.
+  -t  --test:               Builds and runs the unit tests.
+  -r, --run:                Runs the built binary.
+  -l, --library-only:       Only builts the core library. No Qt needed to run this
+```
 
 Alternatively, you can compile it manually (note that this does not create a _release_ build):
 ```shell
@@ -33,16 +56,6 @@ cd build
 cmake ..
 make -j6
 ```
-
-## Running
-
-After building the program, you can run it using:
-
-```shell
-./conicsubdiv
-```
-
-Or run via an IDE of your choice.
 
 ## Usage
 
@@ -58,4 +71,5 @@ Controls:
 - Click and drag to move points/normals.
 - Right-clicking adds a new point.
 - Double-clicking on a normal will reset it.
+- Selecting an edge will display the conic constructed based on the patch surrounding said edge (not that this does not automatically insert inflection points)
 - Up/Down/Left/Right arrow keys can be used to translate the mesh.
