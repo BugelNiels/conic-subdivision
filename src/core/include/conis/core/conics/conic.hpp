@@ -6,15 +6,13 @@ namespace conis::core {
 
 class Conic {
 public:
-    Conic() {};
+    Conic() = default;
 
-    /**
-     * @brief Construct a new Conic object that fits the given patch points.
-     * 
-     * @param patchPoints A collection of point-normal pairs that the conic should be constructed around.
-     * @param epsilon Error margin.
-     */
-    Conic(const std::vector<PatchPoint> &patchPoints, real_t epsilon);
+
+    // Coefficients of the equation:
+    // a*x^2 + b*x*y + c*y^2 + d*x + e*y + f
+    Conic(real_t a, real_t b, real_t c, real_t d, real_t e, real_t f, real_t epsilon);
+    Conic(Matrix3DD Q, real_t epsilon);
 
     /**
      * @brief Checks whether the ray with the given origin and direction intersects and samples the intersection point. 
@@ -48,11 +46,9 @@ public:
     [[nodiscard]] Vector2DD conicNormal(const Vector2DD &p) const;
 
 private:
-    bool valid_ = true;
+    bool valid_ = false;
     real_t epsilon_ = 0;
     Matrix3DD Q_;
-
-    Matrix3DD fitConic(const std::vector<PatchPoint> &patchPoints);
 };
 
 } // namespace conis::core

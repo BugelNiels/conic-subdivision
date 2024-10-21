@@ -7,7 +7,9 @@
 
 namespace conis::core {
 
-ConicSubdivider::ConicSubdivider(const SubdivisionSettings &settings) : settings_(settings) {}
+ConicSubdivider::ConicSubdivider(const SubdivisionSettings &settings)
+    : settings_(settings),
+      fitter_(settings.epsilon) {}
 
 void ConicSubdivider::subdivide(Curve &curve, const int level) {
     if (curve.numPoints() == 0 || level == 0) {
@@ -67,7 +69,7 @@ void ConicSubdivider::subdivideRecursive(Curve &controlCurve, Curve &subdivCurve
     subdivideRecursive(subdivCurve, controlCurve, level - 1);
 }
 
-void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, const int i) const {
+void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, const int i) {
     const int n = subdivCurve.numPoints();
     const int prevIdx = (i - 1 + n) % n;
     const int nextIdx = (i + 1) % n;
@@ -83,7 +85,7 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, c
     // TODO: this does not always orient well
 
     std::vector<PatchPoint> patchPoints = extractPatch(controlCurve, i / 2, settings_.patchSize);
-    const Conic conic(patchPoints, settings_.epsilon);
+    const Conic conic = fitter_.fitConic(patchPoints);
     Vector2DD sampledPoint;
     Vector2DD sampledNormal;
     bool valid = conic.sample(origin, dir, sampledPoint, sampledNormal);
@@ -102,7 +104,7 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, c
                     break;
                 }
                 oldPatchSize = patchPoints.size();
-                Conic conic2(patchPoints, settings_.epsilon);
+                const Conic conic2 = fitter_.fitConic(patchPoints);
                 valid = conic2.sample(origin, dir, sampledPoint, sampledNormal);
                 patchSize++;
             }
@@ -143,7 +145,8 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
 
     if (curve.isClosed()) {
         if (!leftInflPoint) {
-            const int leftOuterIdx = curve.getPrevIdx(leftMiddleIdx);;
+            const int leftOuterIdx = curve.getPrevIdx(leftMiddleIdx);
+            ;
             for (int i = 1; i < maxPatchSize; ++i) {
                 const int idx = (leftMiddleIdx - i + n) % n;
                 if (!areInSameHalfPlane(verts[leftMiddleIdx], verts[rightMiddleIdx], verts[leftOuterIdx], verts[idx])) {

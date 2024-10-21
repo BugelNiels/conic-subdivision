@@ -2,40 +2,30 @@
 
 #include <cmath>
 #include <iostream>
+#include <utility>
 
 #include "conis/core/conics/conicfitter.hpp"
 
 namespace conis::core {
 
-Conic::Conic(const std::vector<PatchPoint> &patchPoints, const real_t epsilon) : epsilon_(epsilon) {
-    Q_ = fitConic(patchPoints);
-}
+Conic::Conic(const real_t a,
+             const real_t b,
+             const real_t c,
+             const real_t d,
+             const real_t e,
+             const real_t f,
+             real_t epsilon)
+    : epsilon_(epsilon) {
+    Q_ << a, b, d, b, c, e, d, e, f;
+    valid_ = !Q_.isZero(); // No fully zero matrix
 
-/**
- * @brief Quadric::fitQuadric Attempts to fit a quadric to the provided patch
- * based on the provided solve settings.
- * @param patchPoints The patch to fit the quadric to.
- * @return True if a quadric was constructed successfully. False otherwise.
- */
-Matrix3DD Conic::fitConic(const std::vector<PatchPoint> &patchPoints) {
-    ConicFitter fitter;
-    Eigen::VectorX<real_t> coefs = fitter.fitConic(patchPoints);
-    const real_t a = coefs[0]; // A - x*x
-    const real_t b = coefs[2]; // C - x*y
-    const real_t c = coefs[1]; // B - y*y
-    const real_t d = coefs[3]; // D - x
-    const real_t e = coefs[4]; // E - y
-    const real_t f = coefs[5]; // F - constant
-
-    Matrix3DD matrix;
-    for (int i = 0; i < 6; i++) {
-        if (coefs[i] == 0 || std::isnan(coefs[i])) {
+    for (int i = 0; i < Q_.size(); ++i) {
+        if (std::isnan(Q_(i))) {
             valid_ = false;
         }
     }
-    matrix << a, b, d, b, c, e, d, e, f;
-    return matrix;
 }
+Conic::Conic(Matrix3DD Q, const real_t epsilon) : epsilon_(epsilon), Q_(std::move(Q)) {}
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
     Vector2DD normal = conicNormal(p);
@@ -46,6 +36,9 @@ Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
 }
 
 Vector2DD Conic::conicNormal(const Vector2DD &p) const {
+    if (!valid_) {
+        return {0, 0};
+    }
 #if 0
     Vector3DD p3(p.x(), p.y(), 1);
     real_t xn = Q_.row(0).dot(p3);
@@ -114,7 +107,7 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         return false;
     }
     const real_t root = std::sqrt(disc);
-    if(std::isnan(root)) {
+    if (std::isnan(root)) {
         return false;
     }
 #ifndef DIRECTIONAL_INTERSECTION
@@ -143,8 +136,7 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         return true;
     }
 
-    
-    std::cout << "No positive solution: " << t0 << " " <<  t1 << std::endl;
+    std::cout << "No positive solution: " << t0 << " " << t1 << std::endl;
     // if (b < 0) {
     //     t = (-b - root) / a;
     // } else {

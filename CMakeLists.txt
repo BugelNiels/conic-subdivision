@@ -8,7 +8,6 @@ set(CONIC_VERSION "${CONIC_VERSION_MAJOR}.${CONIC_VERSION_MINOR}.${CONIC_VERSION
 
 project(conis VERSION ${CONIC_VERSION} LANGUAGES CXX)
 
-# Set policies and include directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 cmake_policy(SET CMP0079 NEW)
 add_subdirectory(src/core)
