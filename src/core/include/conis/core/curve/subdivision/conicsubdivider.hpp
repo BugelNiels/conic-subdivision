@@ -1,5 +1,6 @@
 #pragma once
 
+#include "conis/core/conics/conicfitter.hpp"
 #include "conis/core/curve/curve.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
 #include "conis/core/vector.hpp"
@@ -37,6 +38,7 @@ public:
 
 private:
     const SubdivisionSettings &settings_;
+    ConicFitter fitter_;
     std::vector<int> inflPointIndices_;
     // These buffers persist between subdivisions to prevent re-allocation
     Curve bufferCurve_;
@@ -62,7 +64,7 @@ private:
      * @param subdivCurve The curve where the calculated point-normal pair will be inserted.
      * @param i The index of the first vertex of the edge to find the patch for. That is, for the edge A-B, i denotes the index of A. This is the index with respect to the newPoints/nerNormals collection.
      */
-    void edgePoint(const Curve &controlCurve, Curve &subdivCurve, int i) const;
+    void edgePoint(const Curve &controlCurve, Curve &subdivCurve, int i);
 
     /**
      * For 3 vertices A-B-C, this calculates the normal of the inflection point on the edge B-C based only on the A, B and C.

@@ -7,7 +7,7 @@
 
 namespace conis::core {
 
-ConicFitter::ConicFitter() = default;
+ConicFitter::ConicFitter(const real_t epsilon) : epsilon_(epsilon) {};
 
 static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &vertex, int numUnknowns) {
     row.setZero();
@@ -83,13 +83,20 @@ Eigen::VectorX<real_t> ConicFitter::solveLinSystem(const Eigen::MatrixX<real_t> 
     return svd.matrixV().rightCols<1>();
 }
 
-Eigen::VectorX<real_t> ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
+Conic ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
     const int numPoints = static_cast<int>(patchPoints.size());
     // 6 for the conic coefficients + however many normal scaling factors we need to find
     numUnknowns_ = 6 + numPoints;
     // 1 eq per coordinate + 2 per normal
     numEq_ = numPoints * 3;
-    return solveLinSystem(initAEigen(patchPoints));
+    Eigen::VectorX<real_t> coefs = solveLinSystem(initAEigen(patchPoints));
+    const real_t a = coefs[0]; // A - x*x
+    const real_t b = coefs[2]; // C - x*y
+    const real_t c = coefs[1]; // B - y*y
+    const real_t d = coefs[3]; // D - x
+    const real_t e = coefs[4]; // E - y
+    const real_t f = coefs[5]; // F - constant
+    return Conic(a, b, c, d, e, f, epsilon_);
 }
 
 } // namespace conis::core
