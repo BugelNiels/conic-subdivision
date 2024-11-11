@@ -146,7 +146,6 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
     if (curve.isClosed()) {
         if (!leftInflPoint) {
             const int leftOuterIdx = curve.getPrevIdx(leftMiddleIdx);
-            ;
             for (int i = 1; i < maxPatchSize; ++i) {
                 const int idx = (leftMiddleIdx - i + n) % n;
                 if (!areInSameHalfPlane(verts[leftMiddleIdx], verts[rightMiddleIdx], verts[leftOuterIdx], verts[idx])) {

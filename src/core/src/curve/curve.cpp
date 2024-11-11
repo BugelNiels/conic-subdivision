@@ -5,6 +5,8 @@
 #include "conis/core/conics/conic.hpp"
 #include "curveutils.hpp"
 
+#include <iostream>
+
 namespace conis::core {
 
 Curve::Curve() : Curve({}, {}, false) {}
@@ -52,6 +54,7 @@ real_t Curve::curvatureAtIdx(int idx, const CurvatureType curvatureType) const {
 }
 
 int Curve::addPoint(const Vector2DD &p) {
+    std::cout.flush();
     const int idx = findInsertIdx(p);
     vertices_.insert(vertices_.begin() + idx, p);
     normals_.insert(normals_.begin() + idx, Vector2DD());

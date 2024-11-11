@@ -25,7 +25,7 @@ public:
     [[nodiscard]] int getSubdivLevel() const { return lastSubdivLevel_; }
 
     void setControlCurve(Curve curve);
-    void subdivideCurve(int numSteps);
+    void subdivideCurve(int level);
     int addPoint(const Vector2DD &p);
     void removePoint(int idx);
 

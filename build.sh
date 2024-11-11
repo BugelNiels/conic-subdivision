@@ -13,7 +13,7 @@ usage() {
   echo "  -d, --debug:              Builds the program in Debug mode instead of Release."
   echo "  -t  --test:               Builds and runs the unit tests."
   echo "  -r, --run:                Runs the built binary."
-  echo "  -l, --library-only:       Only builts the core library. No Qt needed to run this"
+  echo "  -l, --library-only:       Only builds the core library. No Qt needed to run this"
   exit 1
 }
 

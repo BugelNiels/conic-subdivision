@@ -73,3 +73,63 @@ Controls:
 - Double-clicking on a normal will reset it.
 - Selecting an edge will display the conic constructed based on the patch surrounding said edge (not that this does not automatically insert inflection points)
 - Up/Down/Left/Right arrow keys can be used to translate the mesh.
+
+## Design
+
+A simplified diagram of the `core` library:
+
+```mermaid
+classDiagram
+    class Conic {
+        +Conic(coefficients: Matrix3D) : Conic
+        +sample(ro: Vector2D, rd: Vector2D, point: Vector2D, normal: Vector2D) : bool
+      
+    }
+    
+    class ConicFitter {
+        +fitConic(patch: PathPoint[0..*]) : Conic
+    }
+
+    class Curve {
+        +isClosed() : bool
+        +recalculateNormals() : void;
+        -vertices: Vector2D[0..*]
+        -normals: Vector2D[0..*]
+    }
+
+    class PatchPoint {
+        -vertex: Vector2D
+        -normal: Vector2D
+        -vertexWeight: double
+        -normalWeight: double
+    }
+
+    class ConicSubdivider {
+        +subdivide(curve: Curve, level: int) : void
+        +extractPatch(curve: Curve, idx: int, maxPatchSize: int) : PatchPoint[0..*]
+        +getInflPointCurve(curve: Curve) : Curve
+        -conicFitter : ConicFitter
+        
+    }
+
+    class ConisCurve {
+        +setControlCurve(curve: Curve) : void;
+        +getControlCurve() : Curve;
+        +getSubdividedCurve() : Curve;
+        +subdivideCurve(level: int) : void;
+        -subdivider : ConicSubdivider
+        -controlCurve : Curve
+        -subdivCurve : Curve
+        -listeners: Listener[0..*]
+    }
+
+    class Listener {
+      <<interface>>
+      +onListenerUpdated() : void
+    }
+
+    ConicSubdivider "1" o-- "1" ConicFitter
+    ConisCurve "1" o-- "1" ConicSubdivider
+    ConisCurve "1" o-- "2" Curve
+    ConisCurve "1" o-- "*" Listener
+```
