@@ -68,14 +68,14 @@ bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Vector2D
 }
 
 /*
-  diff_of_products() computes a*b-c*d with a maximum error <= 1.5 ulp
-
-  Claude-Pierre Jeannerod, Nicolas Louvet, and Jean-Michel Muller,
-  "Further Analysis of Kahan's Algorithm for the Accurate Computation
-  of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284,
-  Oct. 2013, pp. 2245-2264
-*/
-static real_t diff_of_products(const real_t a, const real_t b, const real_t c, const real_t d) {
+ * Computes a*b-c*d with a maximum error <= 1.5 ulp
+ *
+ *  Claude-Pierre Jeannerod, Nicolas Louvet, and Jean-Michel Muller,
+ *  "Further Analysis of Kahan's Algorithm for the Accurate Computation
+ *  of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284,
+ *  Oct. 2013, pp. 2245-2264
+ */
+static real_t diffOfProducts(const real_t a, const real_t b, const real_t c, const real_t d) {
     const real_t w = d * c;
     const real_t e = fmal(-d, c, w);
     const real_t f = fmal(a, b, -w);
@@ -102,7 +102,7 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         }
         return true;
     }
-    const real_t disc = diff_of_products(b, b, a, c);
+    const real_t disc = diffOfProducts(b, b, a, c);
     if (disc < 0.0) {
         return false;
     }

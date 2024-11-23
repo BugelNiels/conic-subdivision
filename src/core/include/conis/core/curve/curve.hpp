@@ -20,7 +20,9 @@ public:
 
     explicit Curve(std::vector<Vector2DD> verts, bool closed = true);
 
-    Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, bool closed = true);
+    Curve(std::vector<Vector2DD> verts,
+          std::vector<Vector2DD> normals,
+          bool closed = true);
 
     Curve(const Curve &other) = default;
 
@@ -28,8 +30,13 @@ public:
 
     void copyDataTo(Curve &other) const;
 
-    [[nodiscard]] const std::vector<Vector2DD> &getVertices() const { return vertices_; }
-    [[nodiscard]] const std::vector<Vector2DD> &getNormals() const { return normals_; }
+    // TODO: don't define these in the header files and add additional checks to them
+    [[nodiscard]] const std::vector<Vector2DD> &getVertices() const {
+        return vertices_;
+    }
+    [[nodiscard]] const std::vector<Vector2DD> &getNormals() const {
+        return normals_;
+    }
     [[nodiscard]] const std::vector<bool> &getCustomNormals() const { return customNormals_; }
     [[nodiscard]] const Vector2DD &getVertex(const int idx) const { return vertices_[idx]; }
     [[nodiscard]] const Vector2DD &getNormal(const int idx) const { return normals_[idx]; }
@@ -42,7 +49,9 @@ public:
     [[nodiscard]] std::vector<bool> &getCustomNormals() { return customNormals_; }
 
     void setCoords(std::vector<Vector2DD> verts) { vertices_ = std::move(verts); }
-    void setNormals(std::vector<Vector2DD> normals) { normals_ = std::move(normals); }
+    void setNormals(std::vector<Vector2DD> normals) {
+        normals_ = std::move(normals);
+    }
 
     void setVertex(const int idx, Vector2DD coord) { vertices_[idx] = std::move(coord); }
     void setNormal(const int idx, Vector2DD normal) { normals_[idx] = std::move(normal); }
