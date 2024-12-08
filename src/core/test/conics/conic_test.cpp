@@ -143,7 +143,7 @@ TEST(ConicTest, TestConicNormalParabolaAtVertex) {
 
 TEST(ConicTest, TestIntersectsLine) {
     // Line y = 2
-    const Conic conic(0, 0, 0, 0, .5, -2, eps);
+    const Conic conic(0, 0, 0, 0, 0.5, -2, eps);
     const Vector2DD ro(0, 0);    // Ray origin
     const Vector2DD rd(0, 1);    // Ray direction (straight upward)
     real_t t;

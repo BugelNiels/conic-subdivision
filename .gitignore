@@ -36,3 +36,4 @@ appdir/usr/share/doc
 *.AppImage
 
 Testing
+images/

@@ -4,6 +4,8 @@ Repository containing the implementation of a conic subdivision scheme for curve
 
 The program supports the loading of object files (provided that the `.obj` file contains a single 2D curve).
 
+![CONIS GUI](assets/conis_screenshot.png)
+
 ## Prerequisites
 
 You need the following to be able to compile and run the project:
@@ -78,58 +80,4 @@ Controls:
 
 A simplified diagram of the `core` library:
 
-```mermaid
-classDiagram
-    class Conic {
-        + Conic(coefficients: Matrix3D) : Conic
-        + sample(ro: Vector2D, rd: Vector2D, point: Vector2D, normal: Vector2D) : bool
-      
-    }
-    
-    class ConicFitter {
-        + fitConic(patch: PathPoint[0..*]) : Conic
-    }
-
-    class Curve {
-        + isClosed() : bool
-        + recalculateNormals() : void;
-        - vertices: Vector2D[0..*]
-        - normals: Vector2D[0..*]
-    }
-
-    class PatchPoint {
-        - vertex: Vector2D
-        - normal: Vector2D
-        - vertexWeight: real_t
-        - normalWeight: real_t
-    }
-
-    class ConicSubdivider {
-        + subdivide(curve: Curve, level: int) : void
-        + extractPatch(curve: Curve, idx: int, maxPatchSize: int) : PatchPoint[0..*]
-        + getInflPointCurve(curve: Curve) : Curve
-        - conicFitter : ConicFitter
-        
-    }
-
-    class ConisCurve {
-        + setControlCurve(curve: Curve) : void;
-        + getControlCurve() : Curve;
-        + getSubdividedCurve() : Curve;
-        + subdivideCurve(level: int) : void;
-        - subdivider : ConicSubdivider
-        - controlCurve : Curve
-        - subdivCurve : Curve
-        - listeners: Listener[0..*]
-    }
-
-    class Listener {
-      <<interface>>
-      + onListenerUpdated() : void
-    }
-
-    ConicSubdivider "1" o-- "1" ConicFitter
-    ConisCurve "1" o-- "1" ConicSubdivider
-    ConisCurve "1" o-- "2" Curve
-    ConisCurve "1" o-- "*" Listener
-```
+![UML Diagram CONIS](assets/conis-uml.png)

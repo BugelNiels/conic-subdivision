@@ -101,17 +101,17 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
     const real_t c = p.dot(Q_ * p);
 
     if (std::abs(a) <= epsilon_) {
-        t = -c / b;
+        t = -c / (2 * b);
         if (std::isnan(t)) {
             return false;
         }
         return true;
     }
-    const real_t disc = diffOfProducts(b, b, a, c);
-    if (disc < 0.0) {
+    const real_t determinant = diffOfProducts(b, b, a, c);
+    if (determinant < 0.0) {
         return false;
     }
-    const real_t root = std::sqrt(disc);
+    const real_t root = std::sqrt(determinant);
     if (std::isnan(root)) {
         return false;
     }
@@ -133,8 +133,9 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
         }
         return true;
     }
-    const real_t determinant = b*b - 4 * a * c;
-    if (determinant < 0.0) return false;
+    const real_t determinant = b * b - 4 * a * c;
+    if (determinant < 0.0)
+        return false;
     real_t t1 = (-b + std::sqrt(determinant)) / (2 * a);
     real_t t2 = (-b - std::sqrt(determinant)) / (2 * a);
     t = std::abs(t1) < std::abs(t2) ? t1 : t2;
