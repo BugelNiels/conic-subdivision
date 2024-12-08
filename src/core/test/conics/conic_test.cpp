@@ -13,6 +13,8 @@ bool pointSatisfiesConic(const Eigen::VectorX<real_t>& conic, const Vector2DD& p
     return std::abs(result) < tolerance;
 }
 
+// Note that the conic expects a*x^2 + 2b*x*y + c*y^2 + 2d*x + 2e*y + f
+
 // a*x^2 + b*x*y + c*y^2 + d*x + e*y + f
 Vector2DD referenceConicNormal(const Vector2DD& p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
     real_t x = p.x();
@@ -36,7 +38,7 @@ TEST(ConicTest, TestConicNormalEmptyIsZeroVector) {
 
 TEST(ConicTest, TestConicNormalStraightLineHorizontal) {
     // Line y = 2
-    const Conic conic(0, 0, 0, 0, 1, -2, eps);
+    const Conic conic(0, 0, 0, 0, 0.5, -2, eps);
     const Vector2DD point(0, 2);
     const Vector2DD expectedNormal = referenceConicNormal(point, 0, 0, 0, 0, 1, -2);
     const Vector2DD actualNormal = conic.conicNormal(point);
@@ -46,7 +48,7 @@ TEST(ConicTest, TestConicNormalStraightLineHorizontal) {
 
 TEST(ConicTest, TestConicNormalStraightLineVertical) {
     // Line x = 3
-    const Conic conic(0, 0, 0, 1, 0, -3, eps);
+    const Conic conic(0, 0, 0, 0.5, 0, -3, eps);
     const Vector2DD point(3, 0);
     const Vector2DD expectedNormal = referenceConicNormal(point, 0, 0, 0, 1, 0, -3);
     const Vector2DD actualNormal = conic.conicNormal(point);
@@ -56,7 +58,7 @@ TEST(ConicTest, TestConicNormalStraightLineVertical) {
 
 TEST(ConicTest, TestConicNormalStraightLineDiagonal) {
     // Line y = x (45 degrees)
-    const Conic conic(0, 0, 0, -1, 1, 0, eps);
+    const Conic conic(0, 0, 0, -0.5, 0.5, 0, eps);
     const Vector2DD point(1, 1);
     const Vector2DD expectedNormal = referenceConicNormal(point, 0, 0, 0, -1, 1, 0);
     const Vector2DD actualNormal = conic.conicNormal(point);
@@ -116,7 +118,7 @@ TEST(ConicTest, TestConicNormalHyperbola) {
 
 TEST(ConicTest, TestConicNormalParabola) {
     // Parabola: -x^2 + 4y = 0
-    const Conic conic(-1, 0, 0, 0, 4, 0, eps);
+    const Conic conic(-1, 0, 0, 0, 2, 0, eps);
     const Vector2DD point(2, 1);
     const Vector2DD expectedNormal = referenceConicNormal(point, -1, 0, 0, 0, 4, 0);
     const Vector2DD actualNormal = conic.conicNormal(point);
@@ -126,7 +128,7 @@ TEST(ConicTest, TestConicNormalParabola) {
 
 TEST(ConicTest, TestConicNormalParabolaAtVertex) {
     // Parabola: -x^2 + 4y = 0
-    const Conic conic(-1, 0, 0, 0, 4, 0, eps);
+    const Conic conic(-1, 0, 0, 0, 2, 0, eps);
     const Vector2DD point(0, 0); // Vertex of the parabola
     const Vector2DD expectedNormal = referenceConicNormal(point, -1, 0, 0, 0, 4, 0);
     const Vector2DD actualNormal = conic.conicNormal(point);
@@ -141,9 +143,9 @@ TEST(ConicTest, TestConicNormalParabolaAtVertex) {
 
 TEST(ConicTest, TestIntersectsLine) {
     // Line y = 2
-    const Conic conic(0, 0, 0, 0, 1, -2, eps);
+    const Conic conic(0, 0, 0, 0, .5, -2, eps);
     const Vector2DD ro(0, 0);    // Ray origin
-    const Vector2DD rd(0, 1);    // Ray direction (upward)
+    const Vector2DD rd(0, 1);    // Ray direction (straight upward)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t));
@@ -184,7 +186,7 @@ TEST(ConicTest, TestIntersectsEllipse) {
 
 TEST(ConicTest, TestIntersectsParabola) {
     // Parabola: -x^2 + 4y = 0
-    const Conic conic(-1, 0, 0, 0, 4, 0, eps);
+    const Conic conic(-1, 0, 0, 0, 2, 0, eps);
     const Vector2DD ro(4, 0);    // Ray origin to the right of the vertex
     const Vector2DD rd(0, 1);    // Ray direction (upward)
     real_t t;
@@ -207,7 +209,7 @@ TEST(ConicTest, TestIntersectsEdgeCaseTangent) {
 // Tests: Sampling of conic with ray
 TEST(ConicTest, TestSampleLine) {
     // Line y = 2
-    const Conic conic(0, 0, 0, 0, 1, -2, eps);
+    const Conic conic(0, 0, 0, 0, .5, -2, eps);
     const Vector2DD origin(0, 0);
     const Vector2DD direction(0, 1);  // Moving upward
 
@@ -256,7 +258,7 @@ TEST(ConicTest, TestSampleEllipse) {
 
 TEST(ConicTest, TestSampleParabola) {
     // Parabola: -x^2 + 4y = 0
-    const Conic conic(-1, 0, 0, 0, 4, 0, eps);
+    const Conic conic(-1, 0, 0, 0, 2, 0, eps);
     const Vector2DD origin(2, 0);
     const Vector2DD direction(0, 1);  // Moving upward
 

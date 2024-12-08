@@ -68,22 +68,25 @@ PointNormalPairs ellipse(int numPoints, real_t x, real_t y, real_t a, real_t b) 
     return {points, normals};
 }
 
-PointNormalPairs hyperbola(int numPoints, real_t x, real_t y, real_t a, real_t b) {
+// Hardcoded for y^2 - 4x^2 = 4
+PointNormalPairs hyperbolaSingleBranch(int numPoints) {
     std::vector<Vector2DD> points;
     std::vector<Vector2DD> normals;
 
-    real_t step = 4 * a / (numPoints - 1); // spread points along one branch
+    // go from -4 to 4
+    real_t startX = -4;
+    real_t step = 8 / static_cast<real_t>(numPoints);
 
     for (int i = 0; i < numPoints; ++i) {
-        real_t t = -2 * a + i * step;
-
-        // Parametric hyperbola equation for one branch (x = a sec(t), y = b tan(t))
-        real_t px = x + t;
-        real_t py = y + (b / a) * std::sqrt(t * t - a * a);
+        real_t px = startX + i * step; // x values spaced linearly
+        // y^2 - 4x^2 = 4 -> y = +-sqrt(4 + 4x^2), we only take + to ensure we are on a single branch
+        real_t py = std::sqrt(4 * (px * px) + 4); // Solve for y using hyperbola equation
         points.emplace_back(px, py);
 
-        // Normal to hyperbola at this point
-        Vector2DD normal(b * t, -a * std::sqrt(t * t - a * a));
+        // Gradient for normal calculation
+        real_t nx = -8 * px;   // df/dx -> -8x
+        real_t ny = 2 * py;  // df/dy -> 2y
+        Vector2DD normal(nx, ny);
         normal.normalize();
         normals.push_back(normal);
     }
@@ -91,27 +94,29 @@ PointNormalPairs hyperbola(int numPoints, real_t x, real_t y, real_t a, real_t b
     return {points, normals};
 }
 
-PointNormalPairs parabola(int numPoints, real_t a, real_t b, real_t c) {
+// Hardcoded for x^2 - y = 0
+PointNormalPairs parabola(int numPoints) {
     std::vector<Vector2DD> points;
     std::vector<Vector2DD> normals;
 
-    real_t startX = -numPoints / 2.0;
-    real_t endX = numPoints / 2.0;
-    real_t step = (endX - startX) / (numPoints - 1);
+    // go from -4 to 4
+    real_t startX = -4;
+    real_t step = 8 / static_cast<real_t>(numPoints);
 
     for (int i = 0; i < numPoints; ++i) {
-        real_t x = startX + i * step;
-        real_t y = a * x * x + b * x + c;
-        points.emplace_back(x, y);
+        real_t px = startX + i * step; // x values spaced linearly
+        real_t py = px * px; // y = x^2
+        points.emplace_back(px, py);
 
-        // Derivative of y = ax^2 + bx + c is dy/dx = 2ax + b
-        // The normal vector is perpendicular to the tangent, so (-dy, dx)
-        real_t dy_dx = 2 * a * x + b;
-        Vector2DD normal(-dy_dx, 1);
+        // Gradient for normal calculation
+        real_t nx = 2 * px;  // df/dx = 2x
+        real_t ny = -1;      // df/dy = -1
+        Vector2DD normal(nx, ny);
         normal.normalize();
         normals.push_back(normal);
     }
 
     return {points, normals};
 }
+
 }

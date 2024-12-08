@@ -9,8 +9,16 @@ public:
     Conic() = default;
 
 
-    // Coefficients of the equation:
-    // a*x^2 + b*x*y + c*y^2 + d*x + e*y + f
+    // The conic matrix Q represents the coefficients of the general conic equation:
+    // ax^2 + bxy + cy^2 + dx + ey + f = 0.
+    // It is constructed as a symmetric 3x3 matrix:
+    //
+    // Q = [ a    b/2   d/2 ]
+    //     [ b/2  c     e/2 ]
+    //     [ d/2  e/2   f   ]
+    //
+    // Note that the arguments here are therefore assumed to be:
+    // ax^2 + 2bxy + cy^2 + 2dx + 2ey + f = 0.
     Conic(real_t a, real_t b, real_t c, real_t d, real_t e, real_t f, real_t epsilon);
     Conic(Matrix3DD Q, real_t epsilon);
 

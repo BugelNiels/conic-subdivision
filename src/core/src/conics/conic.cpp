@@ -39,13 +39,13 @@ Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     if (!valid_) {
         return {0, 0};
     }
-#if 0
+#ifdef EXTRA_CONIC_PRECISION
+    real_t xn = fmal(Q_(0, 0), p.x(), fmal(Q_(0, 1), p.y(), Q_(0, 2)));
+    real_t yn = fmal(Q_(1, 0), p.x(), fmal(Q_(1, 1), p.y(), Q_(1, 2)));
+#else
     Vector3DD p3(p.x(), p.y(), 1);
     real_t xn = Q_.row(0).dot(p3);
     real_t yn = Q_.row(1).dot(p3);
-#else
-    real_t xn = fmal(Q_(0, 0), p.x(), fmal(Q_(0, 1), p.y(), Q_(0, 2)));
-    real_t yn = fmal(Q_(1, 0), p.x(), fmal(Q_(1, 1), p.y(), Q_(1, 2)));
 #endif
     return {xn, yn};
 }
@@ -58,6 +58,10 @@ bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Vector2D
     if (intersects(origin, direction, t)) {
         point = origin + t * direction;
         normal = conicNormal(point, direction);
+        if (normal.x() == 0.0 && normal.y() == 0.0) {
+            // Failed to get a proper normal
+            return false;
+        }
         return true;
     }
 #if 0
@@ -85,6 +89,7 @@ static real_t diffOfProducts(const real_t a, const real_t b, const real_t c, con
 bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) const {
     const Vector3DD p(ro.x(), ro.y(), 1);
     const Vector3DD u(rd.x(), rd.y(), 0);
+#ifdef EXTRA_CONIC_PRECISION
     // Technically, b = p.dot(Q_ * u) + u.dot(Q_ * p);
     // However, since Q_ is symmetric, p.dot(Q_ * u) = u.dot(Q_ * p)
     // As such, b = 2 * u.dot(Q_ * p)
@@ -110,7 +115,6 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
     if (std::isnan(root)) {
         return false;
     }
-#ifndef DIRECTIONAL_INTERSECTION
     // If b is negative, then -b is positive, so `-b - root` will always be smaller than `-b + root`
     if (b < 0) {
         t = (-b - root) / a;
@@ -119,31 +123,22 @@ bool Conic::intersects(const Vector2DD &ro, const Vector2DD &rd, real_t &t) cons
     }
     return true;
 #else
-    // This returns the smallest positive number; disabled for now
-    // Returns the smallest absolute number if neither are positive
-    real_t t0 = -b - root;
-    real_t t1 = -b + root;
-    if (t0 > 0 && t1 > 0) {
-        t = std::min(t0, t1) / a;
+    const real_t a = u.dot(Q_ * u);
+    const real_t b = 2 * u.dot(Q_ * p);
+    const real_t c = p.dot(Q_ * p);
+    if (std::abs(a) <= epsilon_) {
+        t = -c / b;
+        if (std::isnan(t)) {
+            return false;
+        }
         return true;
     }
-    if (t0 > 0) {
-        t = t0 / a;
-        return true;
-    }
-    if (t1 > 0) {
-        t = t1 / a;
-        return true;
-    }
-
-    std::cout << "No positive solution: " << t0 << " " << t1 << std::endl;
-    // if (b < 0) {
-    //     t = (-b - root) / a;
-    // } else {
-    //     t = (-b + root) / a;
-    // }
-    // return true;
-    return false;
+    const real_t determinant = b*b - 4 * a * c;
+    if (determinant < 0.0) return false;
+    real_t t1 = (-b + std::sqrt(determinant)) / (2 * a);
+    real_t t2 = (-b - std::sqrt(determinant)) / (2 * a);
+    t = std::abs(t1) < std::abs(t2) ? t1 : t2;
+    return true;
 #endif
 }
 

@@ -15,7 +15,7 @@ void ConicSubdivider::subdivide(Curve &curve, const int level) {
     if (curve.numPoints() == 0 || level == 0) {
         return;
     }
-    bufferCurve_.setClosed(curve.isClosed());
+    bufferCurve_.setClosed(curve.isClosed(), false);
     if (settings_.convexitySplit) {
         // Insert directly into the buffer curve to prevent re-allocations
         insertInflPoints(curve, bufferCurve_);
@@ -113,6 +113,9 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, c
             sampledNormal = dir;
         }
     }
+#ifdef NORMALIZE_CONIC_NORMALS
+    sampledNormal.normalize();
+#endif
     subdivCurve.setVertex(i, sampledPoint);
     subdivCurve.setNormal(i, sampledNormal);
 }
@@ -233,7 +236,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
 }
 
 void ConicSubdivider::insertInflPoints(const Curve &curve, Curve &targetCurve) {
-    targetCurve.setClosed(curve.isClosed());
+    targetCurve.setClosed(curve.isClosed(), false);
     // Setup
     const int n = int(curve.numPoints());
     inflPointIndices_.clear();

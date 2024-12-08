@@ -27,7 +27,20 @@ Curve::Curve(std::vector<Vector2DD> verts,
     if (normals_.size() != vertices_.size()) {
         normals_ = calcNormals(vertices_);
     }
-    std::cout << "size constr: " << vertices_.size() << " " << normals_.size() << std::endl;
+}
+
+void Curve::setVertex(const int idx, Vector2DD coord) {
+    if (idx < 0 || idx >= static_cast<int>(vertices_.size())) {
+        throw std::out_of_range("Index out of bounds in setVertex");
+    }
+    vertices_[idx] = std::move(coord);
+}
+
+void Curve::setNormal(const int idx, Vector2DD normal) {
+    if (idx < 0 || idx >= static_cast<int>(normals_.size())) {
+        throw std::out_of_range("Index out of bounds in setNormal");
+    }
+    normals_[idx] = std::move(normal);
 }
 
 std::vector<Vector2DD> Curve::calcNormals(
@@ -235,9 +248,9 @@ bool Curve::isClosed() const {
     return closed_;
 }
 
-void Curve::setClosed(const bool closed) {
+void Curve::setClosed(const bool closed, bool recalculate) {
     closed_ = closed;
-    if (vertices_.empty()) {
+    if (vertices_.empty() || !recalculate) {
         return;
     }
     if (!customNormals_[0]) {
@@ -262,7 +275,7 @@ void Curve::copyDataTo(Curve &other) const {
     auto &otherCoords = other.getVertices();
     auto &otherNormals = other.getNormals();
     auto &otherCustNormals = other.getCustomNormals();
-    other.setClosed(isClosed());
+    other.setClosed(isClosed(), false);
     const int n = numPoints();
     // Prevent re-allocating the buffer, so copy it into existing buffer
     // Note that resize does not reduce capacity

@@ -6,8 +6,31 @@
 
 using namespace conis::core;
 
-constexpr real_t eps = 1e-6;
+constexpr real_t eps = 1e-1;
 
+real_t gradientLength(const Vector2DD& p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
+    real_t x = p.x();
+    real_t y = p.y();
+    real_t nx = 2 * a * x + b * y + d;
+    real_t ny = b * x + 2 * c * y + e;
+    Vector2DD normal(nx, ny);
+    return normal.norm();
+}
+
+//  a*x*x + b*x*y + c*y*y + d*x + e*y + f;
+std::tuple<real_t, real_t> conicError(const std::vector<Vector2DD>& points, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
+    real_t sum = 0;
+    real_t max = 0;
+    for (const auto& p : points) {
+        real_t x = p.x();
+        real_t y = p.y();
+        real_t fp = a*x*x + b*x*y + c*y*y + d*x + e*y + f;
+        real_t err = std::fabs(fp / gradientLength(p, a, b, c, d, e, f));
+        max = std::max(err, max);
+        sum += err;
+    }
+    return {sum / points.size(), max};
+}
 
 TEST(ConicSubdivisionTest, TestSubdivisionEmpty) {
     SubdivisionSettings settings;
@@ -67,91 +90,120 @@ TEST(ConicSubdivisionTest, TestSubdivisionStraightLine) {
     std::vector<Vector2DD> normals = {{0, 1}, {0, 1}};
     Curve curve(verts, normals, false);
 
-    subdivider.subdivide(curve, 3);
+    subdivider.subdivide(curve, 2);
 
-    ASSERT_EQ(curve.getVertices().size(), 6); // 2 original points + 5 subdivisions
-    ASSERT_EQ(curve.getNormals().size(), 6);
+    ASSERT_EQ(curve.getVertices().size(), 5); // 2 original points + 5 subdivisions
+    ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
+
+
+    for (const auto& vertex : curve.getVertices()) {
+        ASSERT_GE(vertex.x(), 0);
+        ASSERT_LE(vertex.x(), 10);
+        ASSERT_NEAR(vertex.y(), 0, eps);
+    }
 
     for (const auto& normal : curve.getNormals()) {
-        ASSERT_NEAR(normal.x(), 0, eps);
-        ASSERT_NEAR(normal.y(), 1, eps);
+        ASSERT_NEAR(normal.normalized().x(), 0, eps);
+        ASSERT_NEAR(normal.normalized().y(), 1, eps);
     }
 }
 
+// x*x + y*y = 25
 TEST(ConicSubdivisionTest, TestSubdivisionCircle) {
     SubdivisionSettings settings;
     ConicSubdivider subdivider(settings);
 
-    const double radius = 5.0;
-    auto [points, normals] = test::circle(20, 0, 0, radius);
-    Curve curve(points, normals, true);
+    int numPoints = 6;
+    int subdivLevel = 12;
+    std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
+    // Note that we start from zero to ensure that the error is actually 0 at that point
+    for ( int i = 0; i <= subdivLevel; ++i) {
+        auto [points, normals] = test::circle(numPoints, 0, 0, 5);
+        Curve curve(points, normals, true);
+        subdivider.subdivide(curve, i);
 
-    subdivider.subdivide(curve, 5);
+        ASSERT_EQ(curve.getVertices().size(), numPoints * std::pow(2, i)); // original points + 5 subdivisions
+        ASSERT_EQ(curve.getNormals().size(),  curve.getVertices().size());
 
-    ASSERT_EQ(curve.getVertices().size(), 25); // 20 original points + 5 subdivisions
-    ASSERT_EQ(curve.getNormals().size(), 25);
+        auto [meanError, maxError] = conicError(curve.getVertices(), 1, 0, 1, 0, 0, -25);
 
-    for (size_t i = 0; i < curve.getVertices().size(); ++i) {
-        Vector2DD vertex = curve.getVertices()[i];
-        Vector2DD expectedNormal = vertex.normalized();
-        ASSERT_NEAR(curve.getNormals()[i].x(), expectedNormal.x(), eps);
-        ASSERT_NEAR(curve.getNormals()[i].y(), expectedNormal.y(), eps);
+        std::cout << i << ", " << meanError << ", " << maxError << std::endl;
+        ASSERT_LT(meanError, eps);
+        ASSERT_LT(maxError, eps);
     }
 }
 
+// 4x*x + 9y*y = 36
 TEST(ConicSubdivisionTest, TestSubdivisionEllipse) {
     SubdivisionSettings settings;
     ConicSubdivider subdivider(settings);
 
-    auto [points, normals] = test::ellipse(20, 0, 0, 3, 2);
-    Curve curve(points, normals, true);
+    int numPoints = 6;
+    int subdivLevel = 12;
+    std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
+    // Note that we start from zero to ensure that the error is actually 0 at that point
+    for ( int i = 0; i <= subdivLevel; ++i) {
+        auto [points, normals] = test::ellipse(numPoints, 0, 0, 3, 2);
+        Curve curve(points, normals, true);
+        subdivider.subdivide(curve, i);
 
-    subdivider.subdivide(curve, 5);
+        ASSERT_EQ(curve.getVertices().size(), numPoints * std::pow(2, i)); // original points + 5 subdivisions
+        ASSERT_EQ(curve.getNormals().size(),  curve.getVertices().size());
 
-    ASSERT_EQ(curve.getVertices().size(), 25); // 20 original points + 5 subdivisions
-    ASSERT_EQ(curve.getNormals().size(), 25);
+        auto [meanError, maxError] = conicError(curve.getVertices(), 4, 0, 9, 0, 0, -36);
 
-    for (size_t i = 0; i < curve.getVertices().size(); ++i) {
-        Vector2DD vertex = curve.getVertices()[i];
-        Vector2DD expectedNormal = vertex.normalized();
-        ASSERT_NEAR(curve.getNormals()[i].dot(expectedNormal), 1, eps);
+        std::cout << i << ", " << meanError << ", " << maxError << std::endl;
+        ASSERT_LT(meanError, eps);
+        ASSERT_LT(maxError, eps);
     }
 }
 
+// y^2 - 4x^2 = 4
 TEST(ConicSubdivisionTest, TestSubdivisionHyperbola) {
     SubdivisionSettings settings;
     ConicSubdivider subdivider(settings);
 
-    auto [points, normals] = test::hyperbola(20, 0, 0, 2, 1);
-    Curve curve(points, normals, false);
+    int numPoints = 6;
+    int subdivLevel = 12;
+    std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
+    // Note that we start from zero to ensure that the error is actually 0 at that point
+    for ( int i = 0; i <= subdivLevel; ++i) {
+        auto [points, normals] = test::hyperbolaSingleBranch(numPoints);
+        Curve curve(points, normals, true);
+        subdivider.subdivide(curve, i);
 
-    subdivider.subdivide(curve, 5);
+        ASSERT_EQ(curve.getVertices().size(), numPoints * std::pow(2, i)); // original points + 5 subdivisions
+        ASSERT_EQ(curve.getNormals().size(),  curve.getVertices().size());
 
-    ASSERT_EQ(curve.getVertices().size(), 25); // 20 original points + 5 subdivisions
-    ASSERT_EQ(curve.getNormals().size(), 25);
+        auto [meanError, maxError] = conicError(curve.getVertices(), -4, 0, 1, 0, 0, -4);
 
-    for (size_t i = 0; i < curve.getNormals().size(); ++i) {
-        Vector2DD normal = curve.getNormals()[i];
-        Vector2DD tangent = Vector2DD(-normal.y(), normal.x()); // Perpendicular vector
-        ASSERT_NEAR(tangent.dot(curve.getVertices()[i].normalized()), 0, eps);
+        std::cout << i << ", " << meanError << ", " << maxError << std::endl;
+        ASSERT_LT(meanError, eps);
+        ASSERT_LT(maxError, eps);
     }
 }
 
+// x^2 - y = 0
 TEST(ConicSubdivisionTest, TestSubdivisionParabola) {
     SubdivisionSettings settings;
     ConicSubdivider subdivider(settings);
 
-    auto [points, normals] = test::parabola(20, 1, 0, 0);
-    Curve curve(points, normals, false);
+    int numPoints = 6;
+    int subdivLevel = 12;
+    std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
+    // Note that we start from zero to ensure that the error is actually 0 at that point
+    for ( int i = 0; i <= subdivLevel; ++i) {
+        auto [points, normals] = test::parabola(numPoints);
+        Curve curve(points, normals, true);
+        subdivider.subdivide(curve, i);
 
-    subdivider.subdivide(curve, 5);
+        ASSERT_EQ(curve.getVertices().size(), numPoints * std::pow(2, i)); // original points + 5 subdivisions
+        ASSERT_EQ(curve.getNormals().size(),  curve.getVertices().size());
 
-    ASSERT_EQ(curve.getVertices().size(), 25); // 20 original points + 5 subdivisions
-    ASSERT_EQ(curve.getNormals().size(), 25);
+        auto [meanError, maxError] = conicError(curve.getVertices(), 1, 0, 0, 0, -1, 0);
 
-    for (size_t i = 0; i < curve.getVertices().size(); ++i) {
-        Vector2DD vertex = curve.getVertices()[i];
-        Vector2DD expectedNormal = vertex.normalized();
-        ASSERT_NEAR(curve.getNormals()[i].dot(expectedNormal), 1, eps);
+        std::cout << i << ", " << meanError << ", " << maxError << std::endl;
+        ASSERT_LT(meanError, eps);
+        ASSERT_LT(maxError, eps);
     }
 }

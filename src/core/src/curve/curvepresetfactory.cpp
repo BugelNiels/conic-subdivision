@@ -150,6 +150,20 @@ Curve getJiriTest() {
     return Curve(netCoords, netNormals, false);
 }
 
+Curve getZoomTest() {
+    std::vector<Vector2DD> netCoords;
+    netCoords.reserve(5);
+    real_t zoom = 2;
+    real_t xOffset = 0.5;
+    real_t yOffset = 0.9;
+    netCoords.emplace_back(xOffset + zoom * 0.025, yOffset + zoom * -1.45);
+    netCoords.emplace_back(xOffset + zoom * -0.325,yOffset + zoom *  -0.65);
+    netCoords.emplace_back(xOffset + zoom * 0.025, yOffset + zoom * -.15);
+    netCoords.emplace_back(xOffset + zoom * 1.525, yOffset + zoom * -0.4);
+    netCoords.emplace_back(xOffset + zoom * 1.15, yOffset + zoom * -2.275);
+    return Curve(netCoords);
+}
+
 CurvePresetFactory::CurvePresetFactory() {
     presets_["Blank"] = getBlank;
     presets_["Line"] = getLine;
@@ -161,6 +175,7 @@ CurvePresetFactory::CurvePresetFactory() {
     presets_["Circle"] = getCircle;
     presets_["Ellipse"] = getEllipse;
     presets_["JiriTest"] = getJiriTest;
+    presets_["ZoomTest"] = getZoomTest;
 }
 
 CurvePresetFactory::~CurvePresetFactory() = default;

@@ -53,8 +53,8 @@ public:
         normals_ = std::move(normals);
     }
 
-    void setVertex(const int idx, Vector2DD coord) { vertices_[idx] = std::move(coord); }
-    void setNormal(const int idx, Vector2DD normal) { normals_[idx] = std::move(normal); }
+    void setVertex(int idx, Vector2DD coord);
+    void setNormal(int idx, Vector2DD normal);
     void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = std::move(customNormals); }
 
     [[nodiscard]] int findClosestEdge(const Vector2DD &p, double maxDist) const;
@@ -76,7 +76,7 @@ public:
     void recalculateNormals(bool areaWeightedNormals = false, bool circleNormals = false);
     void recalculateNormal(int idx);
 
-    void setClosed(bool closed);
+    void setClosed(bool closed, bool recalculate = true);
     void translate(const Vector2DD &translation);
     int numPoints() const;
     real_t curvatureAtIdx(int idx, CurvatureType curvatureType) const;

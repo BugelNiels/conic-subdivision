@@ -5,7 +5,8 @@
 
 namespace conis::core {
 
-// Using regular doubles seems to work fine as well, but this is to achieve optimal accuracy.
+#define EXTRA_CONIC_PRECISION
+// #define NORMALIZE_CONIC_NORMALS
 using real_t = long double;
 
 
