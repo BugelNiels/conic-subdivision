@@ -11,18 +11,6 @@ namespace conis::core {
 
 CurveLoader::CurveLoader() {}
 
-static void insertLineSegment(std::map<int, int> &lineSegments, int startIdx, int endIdx) {
-    const auto it = lineSegments.find(startIdx);
-    if (it == lineSegments.end()) {
-        lineSegments[startIdx] = endIdx;
-        return;
-    }
-    const int newEndIdx = it->second;
-    insertLineSegment(lineSegments, newEndIdx, startIdx);
-    lineSegments[startIdx] = endIdx;
-}
-
-// TODO: do some formatting checks
 Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
     std::ifstream file(filePath);
     if (!file.is_open()) {

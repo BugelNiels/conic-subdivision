@@ -4,6 +4,8 @@ Repository containing the implementation of a conic subdivision scheme for curve
 
 The program supports the loading of object files (provided that the `.obj` file contains a single 2D curve).
 
+![CONIS GUI](assets/conis_screenshot.png)
+
 ## Prerequisites
 
 You need the following to be able to compile and run the project:
@@ -73,3 +75,9 @@ Controls:
 - Double-clicking on a normal will reset it.
 - Selecting an edge will display the conic constructed based on the patch surrounding said edge (not that this does not automatically insert inflection points)
 - Up/Down/Left/Right arrow keys can be used to translate the mesh.
+
+## Design
+
+A simplified diagram of the `core` library:
+
+![UML Diagram CONIS](assets/conis-uml.png)

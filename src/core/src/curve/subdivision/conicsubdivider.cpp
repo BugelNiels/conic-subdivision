@@ -15,7 +15,7 @@ void ConicSubdivider::subdivide(Curve &curve, const int level) {
     if (curve.numPoints() == 0 || level == 0) {
         return;
     }
-    bufferCurve_.setClosed(curve.isClosed());
+    bufferCurve_.setClosed(curve.isClosed(), false);
     if (settings_.convexitySplit) {
         // Insert directly into the buffer curve to prevent re-allocations
         insertInflPoints(curve, bufferCurve_);
@@ -74,16 +74,15 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, c
     const int prevIdx = (i - 1 + n) % n;
     const int nextIdx = (i + 1) % n;
 
+    // Construct origin and direction of the ray we use to intersect the found conic
     const Vector2DD origin = (subdivCurve.getVertex(prevIdx) + subdivCurve.getVertex(nextIdx)) / 2.0;
     Vector2DD dir = subdivCurve.getVertex(prevIdx) - subdivCurve.getVertex(nextIdx);
-    dir = {dir.y(), -dir.x()}; // rotate the line segment counterclockwise 90 degree to get the normal of it
+    // rotate the line segment counterclockwise 90 degree to get the normal of it
     // Note that dir is not normalized! This is to prevent introducing further rounding errors.
-    // The conic solver finds a multiple of the normal anyway, so the length does not matter
+    // The conic solver finds a multiple of the normal, so the length does not matter
+    dir = {dir.y(), -dir.x()};
 
-    // While not strictly necessary for the subdivision, we rotate the normal here so that it is always pointing "outwards"
-    dir *= controlCurve.edgePointingDir(i / 2);
-    // TODO: this does not always orient well
-
+    // i/2 as we extract the patch from the control curve (while we're currently in the index space of the subdiv curve)
     std::vector<PatchPoint> patchPoints = extractPatch(controlCurve, i / 2, settings_.patchSize);
     const Conic conic = fitter_.fitConic(patchPoints);
     Vector2DD sampledPoint;
@@ -109,10 +108,14 @@ void ConicSubdivider::edgePoint(const Curve &controlCurve, Curve &subdivCurve, c
                 patchSize++;
             }
         } else {
+            // No valid conic found, set to midpoint and its normal
             sampledPoint = origin;
             sampledNormal = dir;
         }
     }
+#ifdef NORMALIZE_CONIC_NORMALS
+    sampledNormal.normalize();
+#endif
     subdivCurve.setVertex(i, sampledPoint);
     subdivCurve.setNormal(i, sampledNormal);
 }
@@ -146,7 +149,6 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
     if (curve.isClosed()) {
         if (!leftInflPoint) {
             const int leftOuterIdx = curve.getPrevIdx(leftMiddleIdx);
-            ;
             for (int i = 1; i < maxPatchSize; ++i) {
                 const int idx = (leftMiddleIdx - i + n) % n;
                 if (!areInSameHalfPlane(verts[leftMiddleIdx], verts[rightMiddleIdx], verts[leftOuterIdx], verts[idx])) {
@@ -214,7 +216,6 @@ std::vector<PatchPoint> ConicSubdivider::extractPatch(const Curve &curve,
     return patchPoints;
 }
 
-// TODO: double check whether this is fully accurate
 bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
                                          const Vector2DD &v1,
                                          const Vector2DD &v2,
@@ -235,7 +236,7 @@ bool ConicSubdivider::areInSameHalfPlane(const Vector2DD &v0,
 }
 
 void ConicSubdivider::insertInflPoints(const Curve &curve, Curve &targetCurve) {
-    targetCurve.setClosed(curve.isClosed());
+    targetCurve.setClosed(curve.isClosed(), false);
     // Setup
     const int n = int(curve.numPoints());
     inflPointIndices_.clear();

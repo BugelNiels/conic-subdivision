@@ -40,16 +40,6 @@ protected:
 
     static std::vector<QVector2D> qVecToVec(const std::vector<core::Vector2DD> &items);
 
-    template<class T>
-    static std::vector<T> qVecToVec(const std::vector<core::Vector2DD> &items) {
-        std::vector<T> qItems;
-        qItems.reserve(items.size() * 2);
-        for (auto &item: items) {
-            qItems.emplace_back(T(item.x()));
-            qItems.emplace_back(T(item.y()));
-        }
-        return qItems;
-    }
 };
 
 } // namespace conis::gui

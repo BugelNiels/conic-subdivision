@@ -12,7 +12,9 @@ endif()
 
 file(GLOB_RECURSE CORE_SOURCES src/*.cpp src/*.hpp include/*.hpp)
 
-add_library(conis_core STATIC ${CORE_SOURCES})
+add_library(conis_core STATIC ${CORE_SOURCES}
+        test/test_helpers.cpp
+        test/test_helpers.hpp)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # GCC or Clang compiler: enable FMA and target the native architecture

@@ -19,7 +19,7 @@ bool CurveSaver::saveCurve(const std::string &fileName, const Curve &curve) cons
     }
 
     // Get coordinates from curve
-    const std::vector<Vector2DD> &verts = curve.getVertices();
+    const auto &verts = curve.getVertices();
 
     // Write coordinates to the file
     for (const auto &coord: verts) {
@@ -47,8 +47,8 @@ bool CurveSaver::saveCurveWithNormals(const std::string &fileName, const Curve &
     }
 
     // Get coordinates and normals from curve
-    const std::vector<Vector2DD> &verts = curve.getVertices();
-    const std::vector<Vector2DD> &normals = curve.getNormals();
+    const auto &verts = curve.getVertices();
+    const auto &normals = curve.getNormals();
 
     // Write coordinates to the file with "v" prefix
     for (const auto &coord: verts) {

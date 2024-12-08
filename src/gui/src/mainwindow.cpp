@@ -150,7 +150,6 @@ QDockWidget *MainWindow::initSideMenu() {
     vertLayout->addWidget(splitConvexityCheckBox);
     vertLayout->addWidget(weightedInflPointLoc);
     vertLayout->addWidget(gravitateAnglesCheckBox);
-#endif
 
     auto *patchSizeSlider = new IntSlider("Patch Size", 2, 1, 5, BoundMode::UPPER_LOWER);
     patchSizeSlider->setToolTip("<html><head/><body><p>Changes how much the patch should grow in "
@@ -173,9 +172,9 @@ QDockWidget *MainWindow::initSideMenu() {
         auto &conisCurve = sceneView_->getConisCurve();
         conisCurve.resubdivide();
     });
-
     vertLayout->addWidget(patchSizeSlider);
     vertLayout->addWidget(dynamicPatchSizeCheckBox);
+#endif
 
     vertLayout->addStretch();
 
@@ -297,58 +296,59 @@ QDockWidget *MainWindow::initSideMenu() {
 #endif
     vertLayout->addStretch();
 
-    auto *refineNormalsButton = new QPushButton("Refine Normals");
-    connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
-        setCursor(Qt::WaitCursor);
-        auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormalsProgressively(viewSettings_.curvatureType);
-        unsetCursor();
-    });
-    vertLayout->addWidget(refineNormalsButton);
-
-    auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
-    connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
-        setCursor(Qt::WaitCursor);
-        auto &conisCurve = sceneView_->getConisCurve();
-        conisCurve.refineNormalProgressively(viewSettings_.selectedVertex, viewSettings_.curvatureType);
-        unsetCursor();
-    });
-    vertLayout->addWidget(refineSelectedNormalButton);
-
-    vertLayout->addWidget(new QLabel("Test Subdiv Level"));
-    IntSlider *testSubdivLevelSpinBox = new IntSlider("Test Subdiv Level",
-                                                      normRefSettings_.testSubdivLevel,
-                                                      1,
-                                                      7,
-                                                      BoundMode::LOWER_ONLY);
-    connect(testSubdivLevelSpinBox, &IntSlider::valueUpdated, [this](int subdivLvl) {
-        normRefSettings_.testSubdivLevel = subdivLvl;
-    });
-    vertLayout->addWidget(testSubdivLevelSpinBox);
-
-    vertLayout->addWidget(new QLabel("Max iterations"));
-    IntSlider *refinementIterationsSpinBox = new IntSlider("Iterations",
-                                                           normRefSettings_.maxRefinementIterations,
-                                                           1,
-                                                           100,
-                                                           BoundMode::LOWER_ONLY);
-    connect(refinementIterationsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
-        normRefSettings_.maxRefinementIterations = numSteps;
-    });
-    vertLayout->addWidget(refinementIterationsSpinBox);
-
-    vertLayout->addWidget(new QLabel("Angle limit (degrees)"));
-    DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
-                                                       normRefSettings_.angleLimit,
-                                                       0.0000001,
-                                                       1,
-                                                       BoundMode::UPPER_LOWER);
-    connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
-        normRefSettings_.angleLimit = angleLimit * (M_PI / 180.0);
-    });
-    vertLayout->addWidget(angleLimitSpinBox);
-
-    vertLayout->addStretch();
+    // Normal refinement
+    // auto *refineNormalsButton = new QPushButton("Refine Normals");
+    // connect(refineNormalsButton, &QPushButton::pressed, this, [this] {
+    //     setCursor(Qt::WaitCursor);
+    //     auto &conisCurve = sceneView_->getConisCurve();
+    //     conisCurve.refineNormalsProgressively(viewSettings_.curvatureType);
+    //     unsetCursor();
+    // });
+    // vertLayout->addWidget(refineNormalsButton);
+    //
+    // auto *refineSelectedNormalButton = new QPushButton("Refine Selected Normal");
+    // connect(refineSelectedNormalButton, &QPushButton::pressed, this, [this] {
+    //     setCursor(Qt::WaitCursor);
+    //     auto &conisCurve = sceneView_->getConisCurve();
+    //     conisCurve.refineNormalProgressively(viewSettings_.selectedVertex, viewSettings_.curvatureType);
+    //     unsetCursor();
+    // });
+    // vertLayout->addWidget(refineSelectedNormalButton);
+    //
+    // vertLayout->addWidget(new QLabel("Test Subdiv Level"));
+    // IntSlider *testSubdivLevelSpinBox = new IntSlider("Test Subdiv Level",
+    //                                                   normRefSettings_.testSubdivLevel,
+    //                                                   1,
+    //                                                   7,
+    //                                                   BoundMode::LOWER_ONLY);
+    // connect(testSubdivLevelSpinBox, &IntSlider::valueUpdated, [this](int subdivLvl) {
+    //     normRefSettings_.testSubdivLevel = subdivLvl;
+    // });
+    // vertLayout->addWidget(testSubdivLevelSpinBox);
+    //
+    // vertLayout->addWidget(new QLabel("Max iterations"));
+    // IntSlider *refinementIterationsSpinBox = new IntSlider("Iterations",
+    //                                                        normRefSettings_.maxRefinementIterations,
+    //                                                        1,
+    //                                                        100,
+    //                                                        BoundMode::LOWER_ONLY);
+    // connect(refinementIterationsSpinBox, &IntSlider::valueUpdated, [this](int numSteps) {
+    //     normRefSettings_.maxRefinementIterations = numSteps;
+    // });
+    // vertLayout->addWidget(refinementIterationsSpinBox);
+    //
+    // vertLayout->addWidget(new QLabel("Angle limit (degrees)"));
+    // DoubleSlider *angleLimitSpinBox = new DoubleSlider("Angle limit",
+    //                                                    normRefSettings_.angleLimit,
+    //                                                    0.0000001,
+    //                                                    1,
+    //                                                    BoundMode::UPPER_LOWER);
+    // connect(angleLimitSpinBox, &DoubleSlider::valueUpdated, [this](double angleLimit) {
+    //     normRefSettings_.angleLimit = angleLimit * (M_PI / 180.0);
+    // });
+    // vertLayout->addWidget(angleLimitSpinBox);
+    //
+    // vertLayout->addStretch();
 
     auto *curvatureTypeDropdown = new QComboBox();
     curvatureTypeDropdown->addItem("Circle Radius", conis::core::CurvatureType::CIRCLE_RADIUS);

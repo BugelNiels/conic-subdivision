@@ -16,10 +16,10 @@ ConisCurve::ConisCurve(const SubdivisionSettings &subdivSettings, const NormalRe
       subdivider_(subdivSettings_),
       normalRefiner_(normRefSettings, subdivSettings) {}
 
-void ConisCurve::subdivideCurve(const int numSteps) {
-    lastSubdivLevel_ = numSteps;
+void ConisCurve::subdivideCurve(const int level) {
+    lastSubdivLevel_ = level;
     controlCurve_.copyDataTo(subdivCurve_);
-    subdivider_.subdivide(subdivCurve_, numSteps);
+    subdivider_.subdivide(subdivCurve_, level);
     notifyListeners();
 }
 

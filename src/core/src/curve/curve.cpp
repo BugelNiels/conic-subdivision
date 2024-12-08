@@ -5,26 +5,46 @@
 #include "conis/core/conics/conic.hpp"
 #include "curveutils.hpp"
 
+#include <iostream>
+
 namespace conis::core {
 
 Curve::Curve() : Curve({}, {}, false) {}
 
 Curve::Curve(const bool closed) : Curve({}, {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> verts, const bool closed) : Curve(std::move(verts), {}, closed) {}
+Curve::Curve(std::vector<Vector2DD> verts, const bool closed)
+    : Curve(std::move(verts), {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, const bool closed)
+Curve::Curve(std::vector<Vector2DD> verts,
+             std::vector<Vector2DD> normals,
+             const bool closed)
     : closed_(closed),
       vertices_(std::move(verts)),
       normals_(std::move(normals)) {
     customNormals_.resize(vertices_.size());
     std::fill(customNormals_.begin(), customNormals_.end(), false);
-    if (normals.size() != vertices_.size()) {
+    if (normals_.size() != vertices_.size()) {
         normals_ = calcNormals(vertices_);
     }
 }
 
-std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &verts) const {
+void Curve::setVertex(const int idx, Vector2DD coord) {
+    if (idx < 0 || idx >= static_cast<int>(vertices_.size())) {
+        throw std::out_of_range("Index out of bounds in setVertex");
+    }
+    vertices_[idx] = coord;
+}
+
+void Curve::setNormal(const int idx, Vector2DD normal) {
+    if (idx < 0 || idx >= static_cast<int>(normals_.size())) {
+        throw std::out_of_range("Index out of bounds in setNormal");
+    }
+    normals_[idx] = normal;
+}
+
+std::vector<Vector2DD> Curve::calcNormals(
+    const std::vector<Vector2DD> &verts) const {
     std::vector<Vector2DD> normals;
     const int n = static_cast<int>(verts.size());
     normals.resize(n);
@@ -34,7 +54,8 @@ std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &verts) c
     return normals;
 }
 
-Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &verts, const int i) const {
+Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &verts,
+                                   const int i) const {
     const Vector2DD &a = verts[getPrevIdx(i)];
     const Vector2DD &b = verts[i];
     const Vector2DD &c = verts[getNextIdx(i)];
@@ -181,11 +202,10 @@ int Curve::findInsertIdx(const Vector2DD &p) const {
         return 0;
     }
     int ptIndex = -1;
-    double currentDist;
-    double minDist = std::numeric_limits<double>::infinity();
+    real_t minDist = std::numeric_limits<real_t>::infinity();
 
     for (int k = 0; k < vertices_.size(); k++) {
-        currentDist = CurveUtils::distanceToEdge(vertices_[k], vertices_[getPrevIdx(k)], p);
+        real_t currentDist = CurveUtils::distanceToEdge(vertices_[k], vertices_[getPrevIdx(k)], p);
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -228,9 +248,9 @@ bool Curve::isClosed() const {
     return closed_;
 }
 
-void Curve::setClosed(const bool closed) {
+void Curve::setClosed(const bool closed, bool recalculate) {
     closed_ = closed;
-    if (vertices_.empty()) {
+    if (vertices_.empty() || !recalculate) {
         return;
     }
     if (!customNormals_[0]) {
@@ -255,7 +275,7 @@ void Curve::copyDataTo(Curve &other) const {
     auto &otherCoords = other.getVertices();
     auto &otherNormals = other.getNormals();
     auto &otherCustNormals = other.getCustomNormals();
-    other.setClosed(isClosed());
+    other.setClosed(isClosed(), false);
     const int n = numPoints();
     // Prevent re-allocating the buffer, so copy it into existing buffer
     // Note that resize does not reduce capacity
