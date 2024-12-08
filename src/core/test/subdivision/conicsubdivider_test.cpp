@@ -7,6 +7,7 @@
 using namespace conis::core;
 
 constexpr real_t eps = 1e-1;
+constexpr int testSubdivLevel = 14;
 
 real_t gradientLength(const Vector2DD& p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
     real_t x = p.x();
@@ -114,7 +115,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionCircle) {
     ConicSubdivider subdivider(settings);
 
     int numPoints = 6;
-    int subdivLevel = 12;
+    int subdivLevel = testSubdivLevel;
     std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
     // Note that we start from zero to ensure that the error is actually 0 at that point
     for ( int i = 0; i <= subdivLevel; ++i) {
@@ -139,7 +140,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionEllipse) {
     ConicSubdivider subdivider(settings);
 
     int numPoints = 6;
-    int subdivLevel = 12;
+    int subdivLevel = testSubdivLevel;
     std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
     // Note that we start from zero to ensure that the error is actually 0 at that point
     for ( int i = 0; i <= subdivLevel; ++i) {
@@ -164,7 +165,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionHyperbola) {
     ConicSubdivider subdivider(settings);
 
     int numPoints = 6;
-    int subdivLevel = 12;
+    int subdivLevel = testSubdivLevel;
     std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
     // Note that we start from zero to ensure that the error is actually 0 at that point
     for ( int i = 0; i <= subdivLevel; ++i) {
@@ -189,7 +190,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionParabola) {
     ConicSubdivider subdivider(settings);
 
     int numPoints = 6;
-    int subdivLevel = 12;
+    int subdivLevel = testSubdivLevel;
     std::cout << "Subdiv level, mean conic error, max conic error" << std::endl;
     // Note that we start from zero to ensure that the error is actually 0 at that point
     for ( int i = 0; i <= subdivLevel; ++i) {
