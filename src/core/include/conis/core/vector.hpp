@@ -6,7 +6,7 @@
 namespace conis::core {
 
 #define EXTRA_CONIC_PRECISION
-#define NORMALIZE_CONIC_NORMALS
+// #define NORMALIZE_CONIC_NORMALS
 using real_t = long double;
 
 
