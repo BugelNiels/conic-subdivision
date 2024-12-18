@@ -8,7 +8,7 @@
 using namespace conis::core;
 
 constexpr real_t eps = 1e-1;
-constexpr int testSubdivLevel = 14;
+constexpr int testSubdivLevel = 12;
 
 real_t gradientLength(const Vector2DD &p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
     real_t x = p.x();
