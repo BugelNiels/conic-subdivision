@@ -75,12 +75,12 @@ PointNormalPairs hyperbolaSingleBranch(int numPoints) {
 
     // go from -4 to 4
     real_t startX = -4;
-    real_t step = 8 / static_cast<real_t>(numPoints);
+    real_t step = 8 / (static_cast<real_t>(numPoints) - 1.0);
 
     for (int i = 0; i < numPoints; ++i) {
         real_t px = startX + i * step; // x values spaced linearly
         // y^2 - 4x^2 = 4 -> y = +-sqrt(4 + 4x^2), we only take + to ensure we are on a single branch
-        real_t py = std::sqrt(4 * (px * px) + 4); // Solve for y using hyperbola equation
+        real_t py = std::sqrt(4 * (px * px) + 4);
         points.emplace_back(px, py);
 
         // Gradient for normal calculation

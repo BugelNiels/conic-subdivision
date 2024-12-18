@@ -1,3 +1,4 @@
+#include "conis/core/curve/curvesaver.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
 #include "conis/core/vector.hpp"
@@ -39,10 +40,7 @@ std::tuple<real_t, real_t> conicError(const std::vector<Vector2DD> &points,
     return {sum / points.size(), max};
 }
 
-std::tuple<real_t, real_t> normalError(Curve &curve, int subdivLevel) {
-    if (subdivLevel == 0) {
-        return {0, 0};
-    }
+std::tuple<real_t, real_t> normalError(Curve &curve) {
     std::vector<Vector2DD> actualNormals = curve.getNormals();
     curve.recalculateNormals();
     const std::vector<Vector2DD> expectedNormals = curve.getNormals();
@@ -167,7 +165,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionCircle) {
         ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
 
         auto [meanError, maxError] = conicError(curve.getVertices(), 1, 0, 1, 0, 0, -25);
-        auto [meanAngleError, maxAngleError] = normalError(curve, i);
+        auto [meanAngleError, maxAngleError] = normalError(curve);
 
         std::cout << i << ", " << meanError << ", " << maxError << ", " << meanAngleError << ", " << maxAngleError
                   << std::endl;
@@ -195,7 +193,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionEllipse) {
         ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
 
         auto [meanError, maxError] = conicError(curve.getVertices(), 4, 0, 9, 0, 0, -36);
-        auto [meanAngleError, maxAngleError] = normalError(curve, i);
+        auto [meanAngleError, maxAngleError] = normalError(curve);
 
         std::cout << i << ", " << meanError << ", " << maxError << ", " << meanAngleError << ", " << maxAngleError
                   << std::endl;
@@ -220,13 +218,15 @@ TEST(ConicSubdivisionTest, TestSubdivisionHyperbola) {
     for (int i = 0; i <= subdivLevel; ++i) {
         auto [points, normals] = test::hyperbolaSingleBranch(numPoints);
         Curve curve(points, normals, false);
+
+        CurveSaver saver;
         subdivider.subdivide(curve, i);
 
         ASSERT_EQ(curve.getVertices().size(), (numPoints - 1) * std::pow(2, i) + 1); // original points + 5 subdivisions
         ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
 
         auto [meanError, maxError] = conicError(curve.getVertices(), -4, 0, 1, 0, 0, -4);
-        auto [meanAngleError, maxAngleError] = normalError(curve, i);
+        auto [meanAngleError, maxAngleError] = normalError(curve);
 
         std::cout << i << ", " << meanError << ", " << maxError << ", " << meanAngleError << ", " << maxAngleError
                   << std::endl;
@@ -257,7 +257,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionParabola) {
         ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
 
         auto [meanError, maxError] = conicError(curve.getVertices(), 1, 0, 0, 0, -1, 0);
-        auto [meanAngleError, maxAngleError] = normalError(curve, i);
+        auto [meanAngleError, maxAngleError] = normalError(curve);
 
         std::cout << i << ", " << meanError << ", " << maxError << ", " << meanAngleError << ", " << maxAngleError
                   << std::endl;
