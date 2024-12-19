@@ -12,6 +12,8 @@ namespace conis::core {
 CurveLoader::CurveLoader() {}
 
 Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
+    // Note that std::stod is dependent on the Locale
+    std::setlocale(LC_NUMERIC, "C");
     std::ifstream file(filePath);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filePath << std::endl;
@@ -28,12 +30,9 @@ Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
         while (lineStream >> part) {
             parts.push_back(part);
         }
-
         if (parts.empty())
             continue;
-
         const std::string type = parts[0];
-
         if (type == "v") {
             if (parts.size() >= 3) {
                 Vector2DD vertex;
@@ -46,17 +45,15 @@ Curve CurveLoader::loadCurveFromFile(const std::string &filePath) {
                 Vector2DD normal;
                 normal.x() = std::stod(parts[1]);
                 normal.y() = std::stod(parts[2]);
-                double magnitude = std::sqrt(normal.x() * normal.x() + normal.y() * normal.y());
-                normal /= magnitude;
-                normals.emplace_back(normal);
+                normals.emplace_back(normal.normalized());
             }
         }
     }
 
-    bool closed = true;
+    bool closed = false;
 
     file.close();
-    std::cout << "Loaded curve with " << verts.size() << " vertices" << std::endl;
+    std::cout << "Loaded curve with " << verts.size() << " vertices and " << normals.size() << " normals" << std::endl;
 
     if (normals.empty()) {
         return Curve(verts, closed);
