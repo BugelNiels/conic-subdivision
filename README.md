@@ -16,7 +16,7 @@ You need the following to be able to compile and run the project:
     sudo apt-get install libeigen3-dev
     ```
 * [Qt 6.2+](https://www.qt.io/)
-  * Only necessary to run the program with gui. Optional for building the library
+  * Only necessary to run the program with GUI. Optional for building the core library
 
 ## Quick Start
 
