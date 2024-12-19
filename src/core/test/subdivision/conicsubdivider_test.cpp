@@ -1,3 +1,4 @@
+#include "conis/core/curve/curvepresetfactory.hpp"
 #include "conis/core/curve/curvesaver.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"
@@ -42,7 +43,7 @@ std::tuple<real_t, real_t> conicError(const std::vector<Vector2DD> &points,
 
 std::tuple<real_t, real_t> normalError(Curve &curve) {
     std::vector<Vector2DD> actualNormals = curve.getNormals();
-    curve.recalculateNormals();
+    curve.recalculateNormals(true, false);
     const std::vector<Vector2DD> expectedNormals = curve.getNormals();
 
     // Only check the control normals.
@@ -263,5 +264,27 @@ TEST(ConicSubdivisionTest, TestSubdivisionParabola) {
                   << std::endl;
         ASSERT_LT(meanError, eps);
         ASSERT_LT(maxError, eps);
+    }
+}
+
+TEST(ConicSubdivisionTest, TestSubdivisionG) {
+    SubdivisionSettings settings;
+    ConicSubdivider subdivider(settings);
+
+    int subdivLevel = testSubdivLevel;
+    std::cout << "Subdiv level, mean normal angle error, max normal angle error"
+              << std::endl;
+    // Note that we start from zero to ensure that the error is actually 0 at that point
+    for (int i = 0; i <= subdivLevel; ++i) {
+        CurvePresetFactory presetFactory;
+        Curve curve = presetFactory.getPreset("G");
+        curve.recalculateNormals(false, false);
+        subdivider.subdivide(curve, i);
+        ASSERT_EQ(curve.getNormals().size(), curve.getVertices().size());
+
+        auto [meanAngleError, maxAngleError] = normalError(curve);
+
+        std::cout << i << ", " << meanAngleError << ", " << maxAngleError
+                  << std::endl;
     }
 }
