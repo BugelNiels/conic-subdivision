@@ -30,7 +30,7 @@ using PatchPoint = struct PatchPoint {
     real_t pointWeight;
     real_t normWeight;
 
-    PatchPoint(const Vector2DD &vertex, const Vector2DD& normal, const real_t pointWeight, const real_t normWeight)
+    PatchPoint(const Vector2DD &vertex, const Vector2DD &normal, const real_t pointWeight, const real_t normWeight)
         : vertex(Vector2DD(vertex)),
           normal(Vector2DD(normal)),
           pointWeight(pointWeight),

@@ -8,7 +8,6 @@ class Conic {
 public:
     Conic() = default;
 
-
     // The conic matrix Q represents the coefficients of the general conic equation:
     // ax^2 + bxy + cy^2 + dx + ey + f = 0.
     // It is constructed as a symmetric 3x3 matrix:
@@ -20,7 +19,7 @@ public:
     // Note that the arguments here are therefore assumed to be:
     // ax^2 + 2bxy + cy^2 + 2dx + 2ey + f = 0.
     Conic(real_t a, real_t b, real_t c, real_t d, real_t e, real_t f, real_t epsilon);
-    Conic(const Matrix3DD& Q, real_t epsilon);
+    Conic(const Matrix3DD &Q, real_t epsilon);
 
     /**
      * @brief Checks whether the ray with the given origin and direction intersects and samples the intersection point.
@@ -33,11 +32,11 @@ public:
      * @return true if the ray intersects
      * @return false otherwise
      */
-    bool sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD& point, Vector2DD& normal) const;
+    bool sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD &point, Vector2DD &normal) const;
 
     void printConic() const;
 
-    const Matrix3DD& getMatrix() { return Q_; }
+    const Matrix3DD &getMatrix() { return Q_; }
 
     /**
      * @brief Checks whether the given ray intersects this conic.

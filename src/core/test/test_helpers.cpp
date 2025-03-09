@@ -1,6 +1,5 @@
 #include "test_helpers.hpp"
 
-
 namespace conis::core::test {
 PointNormalPairs straightLine(int numPoints, real_t a, real_t b) {
     std::vector<Vector2DD> points;
@@ -84,7 +83,7 @@ PointNormalPairs hyperbolaSingleBranch(int numPoints) {
         points.emplace_back(px, py);
 
         // Gradient for normal calculation
-        real_t nx = -8 * px;   // df/dx -> -8x
+        real_t nx = -8 * px; // df/dx -> -8x
         real_t ny = 2 * py;  // df/dy -> 2y
         Vector2DD normal(nx, ny);
         normal.normalize();
@@ -105,12 +104,12 @@ PointNormalPairs parabola(int numPoints) {
 
     for (int i = 0; i < numPoints; ++i) {
         real_t px = startX + i * step; // x values spaced linearly
-        real_t py = px * px; // y = x^2
+        real_t py = px * px;           // y = x^2
         points.emplace_back(px, py);
 
         // Gradient for normal calculation
-        real_t nx = 2 * px;  // df/dx = 2x
-        real_t ny = -1;      // df/dy = -1
+        real_t nx = 2 * px; // df/dx = 2x
+        real_t ny = -1;     // df/dy = -1
         Vector2DD normal(nx, ny);
         normal.normalize();
         normals.push_back(normal);
@@ -119,4 +118,4 @@ PointNormalPairs parabola(int numPoints) {
     return {points, normals};
 }
 
-}
+} // namespace conis::core::test

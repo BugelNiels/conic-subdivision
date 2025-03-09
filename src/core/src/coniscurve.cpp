@@ -5,8 +5,8 @@
 
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
-#include "util/asyncrunner.hpp"
 #include "conis/core/vector.hpp"
+#include "util/asyncrunner.hpp"
 
 namespace conis::core {
 
@@ -24,16 +24,14 @@ void ConisCurve::subdivideCurve(const int level) {
 }
 
 Conic ConisCurve::getConicAtIndex(const int idx) const {
-    const std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_,
-                                                             idx,
-                                                             subdivSettings_.patchSize);
+    const std::vector<PatchPoint> patch = subdivider_.extractPatch(controlCurve_, idx, subdivSettings_.patchSize);
     ConicFitter fitter(subdivSettings_.epsilon);
     return fitter.fitConic(patch);
 }
 
 void ConisCurve::insertInflectionPoints() {
     controlCurve_ = subdivider_.getInflPointCurve(controlCurve_);
-    const auto& customNorms = controlCurve_.getCustomNormals();
+    const auto &customNorms = controlCurve_.getCustomNormals();
 
     inflPointIndices_.clear();
     for (int i = 0; i < customNorms.size(); i++) {

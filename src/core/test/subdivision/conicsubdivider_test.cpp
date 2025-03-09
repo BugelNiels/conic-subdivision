@@ -272,8 +272,7 @@ TEST(ConicSubdivisionTest, TestSubdivisionG) {
     ConicSubdivider subdivider(settings);
 
     int subdivLevel = testSubdivLevel;
-    std::cout << "Subdiv level, mean normal angle error, max normal angle error"
-              << std::endl;
+    std::cout << "Subdiv level, mean normal angle error, max normal angle error" << std::endl;
     // Note that we start from zero to ensure that the error is actually 0 at that point
     for (int i = 0; i <= subdivLevel; ++i) {
         CurvePresetFactory presetFactory;
@@ -284,7 +283,6 @@ TEST(ConicSubdivisionTest, TestSubdivisionG) {
 
         auto [meanAngleError, maxAngleError] = normalError(curve);
 
-        std::cout << i << ", " << meanAngleError << ", " << maxAngleError
-                  << std::endl;
+        std::cout << i << ", " << meanAngleError << ", " << maxAngleError << std::endl;
     }
 }

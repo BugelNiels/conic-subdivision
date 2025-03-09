@@ -25,7 +25,7 @@ Conic::Conic(const real_t a,
         }
     }
 }
-Conic::Conic(const Matrix3DD& Q, const real_t epsilon) : epsilon_(epsilon), Q_(Q) {}
+Conic::Conic(const Matrix3DD &Q, const real_t epsilon) : epsilon_(epsilon), Q_(Q) {}
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
     Vector2DD normal = conicNormal(p);
@@ -50,7 +50,7 @@ Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     return {xn, yn};
 }
 
-bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD& point, Vector2DD& normal) const {
+bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD &point, Vector2DD &normal) const {
     if (!valid_) {
         return false;
     }
