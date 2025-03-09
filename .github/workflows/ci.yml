@@ -29,7 +29,7 @@ jobs:
 
       # Upload cppcheck
       - name: Upload cppcheck report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cppcheck-report
           path: cppcheck-report.txt
@@ -47,7 +47,7 @@ jobs:
 
       - name: Lint CMake files
         run: |
-          cmakelint --linelength=120 CMakeLists.txt 
+          cmakelint --linelength=120 CMakeLists.txt
 
       # Build & Test
       - name: Build and test
