@@ -56,7 +56,7 @@ static void normEqYEigen(Eigen::RowVectorX<real_t> &row,
 }
 
 Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
-        const std::vector<PatchPoint> &patchPoints) const {
+    const std::vector<PatchPoint> &patchPoints) const {
     Eigen::MatrixX<real_t> A(numEq_, numUnknowns_);
 
     // Reuse this row buffer
@@ -85,7 +85,7 @@ Eigen::VectorX<real_t> ConicFitter::solveLinSystem(const Eigen::MatrixX<real_t> 
 
 Conic ConicFitter::fitConic(const std::vector<PatchPoint> &patchPoints) {
     const int numPoints = static_cast<int>(patchPoints.size());
-    if(numPoints < 3) {
+    if (numPoints < 3) {
         return {};
     }
     // 6 for the conic coefficients + however many normal scaling factors we need to find

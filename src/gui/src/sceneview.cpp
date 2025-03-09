@@ -215,16 +215,18 @@ void smoothnessPenalty(const Curve &curve,
     const int i = idx * std::pow(2, testSubdivLevel);
     const real_t curvature_1 = curve.curvatureAtIdx(curve.getPrevIdx(i), curvatureType);
     const real_t curvature1 = curve.curvatureAtIdx(curve.getNextIdx(i), curvatureType);
-    std::cout << "Line segment: A-B-C -- " << curve.getPrevIdx(i) << " " << i << " " << curve.getNextIdx(i)
-              << std::endl;
-    std::cout << "\tCurvature at A: " << curvature_1 << std::endl << "\tCurvature at C: " << curvature1 << std::endl;
     real_t p = std::abs(curvature_1 - curvature1);
     if (curvature1 > curvature_1) {
         p = curvature1 / curvature_1;
     } else {
         p = curvature_1 / curvature1;
     }
+    #ifdef DEBUG
+    std::cout << "Line segment: A-B-C -- " << curve.getPrevIdx(i) << " " << i << " " << curve.getNextIdx(i)
+              << std::endl;
+    std::cout << "\tCurvature at A: " << curvature_1 << std::endl << "\tCurvature at C: " << curvature1 << std::endl;
     std::cout << "\tPenalty   at B: " << p << std::endl;
+    #endif
 }
 
 void SceneView::unHighlightAll() {

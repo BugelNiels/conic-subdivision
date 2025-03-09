@@ -9,13 +9,14 @@ usage() {
   echo "Usage: $0 [options]"
   echo ""
   echo "options:"
-  echo "  -h, --help:               Shows help output."
-  echo "  -c, --clean:              Cleans the build directory."
-  echo "      --skip-cmake:         Skips the cmake step of the build_rpm stage during the build process."
-  echo "  -d, --debug:              Builds the program in Debug mode instead of Release."
-  echo "  -t  --test:               Builds and runs the unit tests."
-  echo "  -r, --run:                Runs the built binary."
-  echo "  -l, --library-only:       Only builds the core library. No Qt needed to run this"
+  echo "  -h, --help:                           Shows help output."
+  echo "  -c, --clean:                          Cleans the build directory."
+  echo "      --skip-cmake:                     Skips the cmake step of the build_rpm stage during the build process."
+  echo "  -d, --debug:                          Builds the program in Debug mode instead of Release."
+  echo "  -t  --test:                           Builds and runs the unit tests."
+  echo "  -r, --run:                            Runs the built binary."
+  echo "  -l, --library-only:                   Only builds the core library. No Qt needed to run this"
+  echo "  --enable-shader-double-precision:     Use double in the shader instead of floats. Not all GPUs will support this"
   exit 1
 }
 
@@ -30,6 +31,7 @@ build() {
   local skip_cmake=false
   local run=false
   local library_only=false
+  local shader_double_precision=false
 
 
   # Parse command line arguments
@@ -42,6 +44,7 @@ build() {
       -t|--test) do_tests=true ;;
       -r|--run) run=true ;;
       -l|--library-only) library_only=true ;;
+      --enable-shader-double-precision) shader_double_precision=true ;;
       *)
         echo "Unrecognised command: $1"
         usage
@@ -66,14 +69,19 @@ build() {
   if [ ${skip_cmake} = false ]; then
     local cmake_flags=""
     if [ ${do_tests} = true ]; then
-      cmake_flags+=" -DBUILD_UNIT_TESTS=ON" 
+      cmake_flags+=" -DBUILD_UNIT_TESTS=ON"
     else
-      cmake_flags+=" -DBUILD_UNIT_TESTS=OFF" 
+      cmake_flags+=" -DBUILD_UNIT_TESTS=OFF"
     fi
     if [ ${library_only} = true ]; then
-      cmake_flags+=" -DLIBRARY_ONLY=ON" 
-    else 
-      cmake_flags+=" -DLIBRARY_ONLY=OFF" 
+      cmake_flags+=" -DLIBRARY_ONLY=ON"
+    else
+      cmake_flags+=" -DLIBRARY_ONLY=OFF"
+    fi
+    if [ ${shader_double_precision} = true ]; then
+      cmake_flags+=" -DSHADER_DOUBLE_PRECISION=ON"
+    else
+      cmake_flags+=" -DSHADER_DOUBLE_PRECISION=OFF"
     fi
     cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags}
   fi

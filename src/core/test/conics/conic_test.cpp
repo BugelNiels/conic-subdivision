@@ -1,22 +1,23 @@
-#include <gtest/gtest.h>
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/vector.hpp"
+#include <gtest/gtest.h>
 
 using namespace conis::core;
 
 constexpr real_t eps = 1e-6;
 
-bool pointSatisfiesConic(const Eigen::VectorX<real_t>& conic, const Vector2DD& pt, real_t tolerance = eps) {
+bool pointSatisfiesConic(const Eigen::VectorX<real_t> &conic, const Vector2DD &pt, real_t tolerance = eps) {
     const real_t x = pt.x();
     const real_t y = pt.y();
-    const real_t result = conic[0] * x * x + conic[1] * x * y + conic[2] * y * y + conic[3] * x + conic[4] * y + conic[5];
+    const real_t result = conic[0] * x * x + conic[1] * x * y + conic[2] * y * y + conic[3] * x + conic[4] * y +
+                          conic[5];
     return std::abs(result) < tolerance;
 }
 
 // Note that the conic expects a*x^2 + 2b*x*y + c*y^2 + 2d*x + 2e*y + f
 
 // a*x^2 + b*x*y + c*y^2 + d*x + e*y + f
-Vector2DD referenceConicNormal(const Vector2DD& p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
+Vector2DD referenceConicNormal(const Vector2DD &p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
     real_t x = p.x();
     real_t y = p.y();
     real_t nx = 2 * a * x + b * y + d;
@@ -24,7 +25,6 @@ Vector2DD referenceConicNormal(const Vector2DD& p, real_t a, real_t b, real_t c,
     Vector2DD normal(nx, ny);
     return normal.normalized();
 }
-
 
 // Tests: normal calculation of conic
 
@@ -137,15 +137,13 @@ TEST(ConicTest, TestConicNormalParabolaAtVertex) {
     ASSERT_NEAR(expectedNormal.y(), actualNormal.normalized().y(), eps);
 }
 
-
 // Tests: intersections of ray with conic
-
 
 TEST(ConicTest, TestIntersectsLine) {
     // Line y = 2
     const Conic conic(0, 0, 0, 0, 0.5, -2, eps);
-    const Vector2DD ro(0, 0);    // Ray origin
-    const Vector2DD rd(0, 1);    // Ray direction (straight upward)
+    const Vector2DD ro(0, 0); // Ray origin
+    const Vector2DD rd(0, 1); // Ray direction (straight upward)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t));
@@ -155,8 +153,8 @@ TEST(ConicTest, TestIntersectsLine) {
 TEST(ConicTest, TestIntersectsCircle) {
     // Circle with radius 5 centered at origin
     const Conic conic(1, 0, 1, 0, 0, -25, eps);
-    const Vector2DD ro(0, -10);  // Ray origin below the circle
-    const Vector2DD rd(0, 1);    // Ray direction (upward)
+    const Vector2DD ro(0, -10); // Ray origin below the circle
+    const Vector2DD rd(0, 1);   // Ray direction (upward)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t));
@@ -166,8 +164,8 @@ TEST(ConicTest, TestIntersectsCircle) {
 TEST(ConicTest, TestIntersectsCircleNoHit) {
     // Circle with radius 5 centered at origin
     const Conic conic(1, 0, 1, 0, 0, -25, eps);
-    const Vector2DD ro(0, -10);  // Ray origin below the circle
-    const Vector2DD rd(1, 0);    // Ray direction (horizontal, misses the circle)
+    const Vector2DD ro(0, -10); // Ray origin below the circle
+    const Vector2DD rd(1, 0);   // Ray direction (horizontal, misses the circle)
     real_t t;
 
     ASSERT_FALSE(conic.intersects(ro, rd, t));
@@ -176,8 +174,8 @@ TEST(ConicTest, TestIntersectsCircleNoHit) {
 TEST(ConicTest, TestIntersectsEllipse) {
     // Ellipse: 4*x^2 + y^2 - 25 = 0
     const Conic conic(4, 0, 1, 0, 0, -25, eps);
-    const Vector2DD ro(0, -10);  // Ray origin below the ellipse
-    const Vector2DD rd(0, 1);    // Ray direction (upward)
+    const Vector2DD ro(0, -10); // Ray origin below the ellipse
+    const Vector2DD rd(0, 1);   // Ray direction (upward)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t));
@@ -187,8 +185,8 @@ TEST(ConicTest, TestIntersectsEllipse) {
 TEST(ConicTest, TestIntersectsParabola) {
     // Parabola: -x^2 + 4y = 0
     const Conic conic(-1, 0, 0, 0, 2, 0, eps);
-    const Vector2DD ro(4, 0);    // Ray origin to the right of the vertex
-    const Vector2DD rd(0, 1);    // Ray direction (upward)
+    const Vector2DD ro(4, 0); // Ray origin to the right of the vertex
+    const Vector2DD rd(0, 1); // Ray direction (upward)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t));
@@ -198,12 +196,12 @@ TEST(ConicTest, TestIntersectsParabola) {
 TEST(ConicTest, TestIntersectsEdgeCaseTangent) {
     // Circle with radius 5 centered at origin
     const Conic conic(1, 0, 1, 0, 0, -25, eps);
-    const Vector2DD ro(0, 5);    // Ray origin exactly at the edge of the circle
-    const Vector2DD rd(1, 0);    // Ray direction tangent to the circle (horizontal)
+    const Vector2DD ro(0, 5); // Ray origin exactly at the edge of the circle
+    const Vector2DD rd(1, 0); // Ray direction tangent to the circle (horizontal)
     real_t t;
 
     ASSERT_TRUE(conic.intersects(ro, rd, t)); // No intersection for tangent direction
-    ASSERT_NEAR(t, 0, eps); // Expected intersection at the origin point
+    ASSERT_NEAR(t, 0, eps);                   // Expected intersection at the origin point
 }
 
 // Tests: Sampling of conic with ray
@@ -211,12 +209,13 @@ TEST(ConicTest, TestSampleLine) {
     // Line y = 2
     const Conic conic(0, 0, 0, 0, .5, -2, eps);
     const Vector2DD origin(0, 0);
-    const Vector2DD direction(0, 1);  // Moving upward
+    const Vector2DD direction(0, 1); // Moving upward
 
-    Vector2DD point, normal;
+    Vector2DD point;
+    Vector2DD normal;
     ASSERT_TRUE(conic.sample(origin, direction, point, normal));
     ASSERT_NEAR(point.x(), 0, eps);
-    ASSERT_NEAR(point.y(), 2, eps);  // Intersection at y = 2
+    ASSERT_NEAR(point.y(), 2, eps); // Intersection at y = 2
 
     const Vector2DD expectedNormal = Vector2DD(0, 1);
     ASSERT_NEAR(normal.normalized().x(), expectedNormal.normalized().x(), eps);
@@ -227,12 +226,12 @@ TEST(ConicTest, TestSampleCircle) {
     // Circle with radius 5 centered at origin
     const Conic conic(1, 0, 1, 0, 0, -25, eps);
     const Vector2DD origin(0, -10);
-    const Vector2DD direction(0, 1);  // Moving upward
+    const Vector2DD direction(0, 1); // Moving upward
 
     Vector2DD point, normal;
     ASSERT_TRUE(conic.sample(origin, direction, point, normal));
     ASSERT_NEAR(point.x(), 0, eps);
-    ASSERT_NEAR(point.y(), -5, eps);  // Intersection at y = -5
+    ASSERT_NEAR(point.y(), -5, eps); // Intersection at y = -5
 
     // Technically normal is (0, -1) but normal is flipped in same direction as the ray direction
     const Vector2DD expectedNormal = Vector2DD(0, 1); // Normal at this point
@@ -244,12 +243,12 @@ TEST(ConicTest, TestSampleEllipse) {
     // Ellipse: 4*x^2 + y^2 - 25 = 0
     const Conic conic(4, 0, 1, 0, 0, -25, eps);
     const Vector2DD origin(0, -10);
-    const Vector2DD direction(0, 1);  // Moving upward
+    const Vector2DD direction(0, 1); // Moving upward
 
     Vector2DD point, normal;
     ASSERT_TRUE(conic.sample(origin, direction, point, normal));
     ASSERT_NEAR(point.x(), 0, eps);
-    ASSERT_NEAR(point.y(), -5, eps);  // Intersection at y = -5
+    ASSERT_NEAR(point.y(), -5, eps); // Intersection at y = -5
 
     const Vector2DD expectedNormal = Vector2DD(0, 1); // Normal at this point on the ellipse
     ASSERT_NEAR(normal.normalized().x(), expectedNormal.normalized().x(), eps);
@@ -260,12 +259,12 @@ TEST(ConicTest, TestSampleParabola) {
     // Parabola: -x^2 + 4y = 0
     const Conic conic(-1, 0, 0, 0, 2, 0, eps);
     const Vector2DD origin(2, 0);
-    const Vector2DD direction(0, 1);  // Moving upward
+    const Vector2DD direction(0, 1); // Moving upward
 
     Vector2DD point, normal;
     ASSERT_TRUE(conic.sample(origin, direction, point, normal));
     ASSERT_NEAR(point.x(), 2, eps);
-    ASSERT_NEAR(point.y(), 1, eps);  // Intersection at (2, 1)
+    ASSERT_NEAR(point.y(), 1, eps); // Intersection at (2, 1)
 
     const Vector2DD expectedNormal = referenceConicNormal(point, -1, 0, 0, 0, 4, 0);
     ASSERT_NEAR(normal.normalized().x(), expectedNormal.normalized().x(), eps);

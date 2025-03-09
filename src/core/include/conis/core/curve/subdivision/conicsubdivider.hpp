@@ -77,7 +77,7 @@ private:
                                             const Vector2DD &edgeBC,
                                             const Vector2DD &orthogonal) const;
 
-    void insertInflPoints(const Curve &curve, Curve& targetCurve);
+    void insertInflPoints(const Curve &curve, Curve &targetCurve);
 };
 
 } // namespace conis::core

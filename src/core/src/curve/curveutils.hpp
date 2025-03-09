@@ -1,6 +1,6 @@
 #pragma once
-#include "conis/core/vector.hpp"
 #include "conis/core/curve/curvaturetype.hpp"
+#include "conis/core/vector.hpp"
 
 namespace conis::core {
 

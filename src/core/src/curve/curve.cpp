@@ -13,12 +13,9 @@ Curve::Curve() : Curve({}, {}, false) {}
 
 Curve::Curve(const bool closed) : Curve({}, {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> verts, const bool closed)
-    : Curve(std::move(verts), {}, closed) {}
+Curve::Curve(std::vector<Vector2DD> verts, const bool closed) : Curve(std::move(verts), {}, closed) {}
 
-Curve::Curve(std::vector<Vector2DD> verts,
-             std::vector<Vector2DD> normals,
-             const bool closed)
+Curve::Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, const bool closed)
     : closed_(closed),
       vertices_(std::move(verts)),
       normals_(std::move(normals)) {
@@ -29,33 +26,32 @@ Curve::Curve(std::vector<Vector2DD> verts,
     }
 }
 
-void Curve::setVertex(const int idx, Vector2DD coord) {
+void Curve::setVertex(const int idx, const Vector2DD &coord) {
     if (idx < 0 || idx >= static_cast<int>(vertices_.size())) {
         throw std::out_of_range("Index out of bounds in setVertex");
     }
     vertices_[idx] = coord;
 }
 
-void Curve::setNormal(const int idx, Vector2DD normal) {
+void Curve::setNormal(const int idx, const Vector2DD &normal) {
     if (idx < 0 || idx >= static_cast<int>(normals_.size())) {
         throw std::out_of_range("Index out of bounds in setNormal");
     }
     normals_[idx] = normal;
 }
 
-std::vector<Vector2DD> Curve::calcNormals(
-    const std::vector<Vector2DD> &verts) const {
+std::vector<Vector2DD> Curve::calcNormals(const std::vector<Vector2DD> &verts) const {
     std::vector<Vector2DD> normals;
     const int n = static_cast<int>(verts.size());
     normals.resize(n);
     for (int i = 0; i < n; i++) {
         normals[i] = calcNormalAtIndex(verts, i);
     }
+
     return normals;
 }
 
-Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &verts,
-                                   const int i) const {
+Vector2DD Curve::calcNormalAtIndex(const std::vector<Vector2DD> &verts, const int i) const {
     const Vector2DD &a = verts[getPrevIdx(i)];
     const Vector2DD &b = verts[i];
     const Vector2DD &c = verts[getNextIdx(i)];
@@ -75,9 +71,8 @@ real_t Curve::curvatureAtIdx(int idx, const CurvatureType curvatureType) const {
 int Curve::addPoint(const Vector2DD &p) {
     const int idx = findInsertIdx(p);
     vertices_.insert(vertices_.begin() + idx, p);
-    normals_.insert(normals_.begin() + idx, Vector2DD());
     customNormals_.insert(customNormals_.begin() + idx, false);
-    normals_[idx] = calcNormalAtIndex(vertices_, idx);
+    normals_.insert(normals_.begin() + idx, calcNormalAtIndex(vertices_, idx));
     normals_[getNextIdx(idx)] = calcNormalAtIndex(vertices_, getNextIdx(idx));
     normals_[getPrevIdx(idx)] = calcNormalAtIndex(vertices_, getPrevIdx(idx));
     return idx;

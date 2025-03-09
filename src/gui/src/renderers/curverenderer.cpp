@@ -41,7 +41,7 @@ void CurveRenderer::initBuffers() {
     gl_->glEnableVertexAttribArray(NORM_IDX);
     gl_->glVertexAttribPointer(NORM_IDX, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-#ifdef SHADER_DOUBLE_PRECISION
+#if SHADER_DOUBLE_PRECISION
     gl_->glBindBuffer(GL_ARRAY_BUFFER, vbo_[DOUBLE_IDX]);
     gl_->glEnableVertexAttribArray(DOUBLE_IDX);
     gl_->glVertexAttribLPointer(DOUBLE_IDX, 2, GL_DOUBLE, 0, nullptr);
@@ -91,7 +91,7 @@ void CurveRenderer::updateBuffers(const conis::core::Curve &curve) {
                       normals.data(),
                       GL_DYNAMIC_DRAW);
 
-#ifdef SHADER_DOUBLE_PRECISION
+#if SHADER_DOUBLE_PRECISION
     const auto &coords_d = curve.getVertices();
 
     std::vector<double> doubleData;

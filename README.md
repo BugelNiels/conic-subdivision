@@ -8,17 +8,111 @@ The program supports the loading of object files (provided that the `.obj` file 
 
 ## Prerequisites
 
-You need the following to be able to compile and run the project:
+To compile and run the project, you need a number of dependencies. Basic instructions are provided for Ubuntu-based distros, Fedora-based distros and MacOS. If you plan to run this on Windows, install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the instructions for the Ubuntu-based distros.
 
-* [CMake](https://cmake.org/)
-* [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) 
-  * ```shell
-    sudo apt-get install libeigen3-dev
-    ```
-* [Qt 6.2+](https://www.qt.io/)
-  * Only necessary to run the program with gui. Optional for building the library
+In addition to the packages below, the GUI application will also require OpenGL to run, but this should be available by default on most systems.
 
-## Quick Start
+### 1. [CMake](https://cmake.org/)
+
+- **Ubuntu-based distros**:
+
+     ```bash
+     sudo apt-get install -y cmake
+     ```
+
+- **Fedora-based distros**:
+
+     ```bash
+     sudo dnf install -y cmake
+     ```
+
+- **Mac (using Homebrew)**:
+
+     ```bash
+     brew install cmake
+     ```
+
+---
+
+### 2. [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+
+- **Ubuntu-based distros**:
+
+     ```bash
+     sudo apt-get install -y libeigen3-dev
+     ```
+
+- **Fedora-based distros**:
+
+     ```bash
+     sudo dnf install -y eigen3-devel
+     ```
+
+- **Mac (using Homebrew)**:
+
+     ```bash
+     brew install eigen
+     ```
+
+---
+
+### 3. [Qt 6.2+](https://www.qt.io/)
+
+   Qt is required for running the program with a GUI. It is optional for building the core library.
+
+- **Ubuntu-based distros**:
+
+     ```bash
+     sudo apt-get install -y qt6-base-dev qt6-tools-dev
+     ```
+
+     > Note that you will need at least Ubuntu 22 for the qt6 packages to be available.
+
+- **Fedora-based distros**:
+
+     ```bash
+     sudo dnf install -y qt6-qtbase-devel qt6-qttools-devel
+     ```
+
+- **Mac (using Homebrew)**:
+
+     ```bash
+     brew install qt6
+     ```
+
+### 4. [Google Test (GTest)](https://github.com/google/googletest)
+
+   Google Test is required for running unit tests. Pass `-DBUILD_UNIT_TESTS=OFF` to the `cmake` command to skip this requirement.
+
+- **Ubuntu-based distros**:
+
+     ```bash
+     sudo apt-get install -y libgtest-dev
+     ```
+
+- **Fedora-based distros**:
+
+     ```bash
+     sudo dnf install -y gtest-devel
+     ```
+
+- **Mac (using Homebrew)**:
+
+     ```bash
+     brew install googletest
+     ```
+
+## Getting Started
+
+To start, clone the repository and initialise its submodules:
+
+```bash
+git clone https://github.com/BugelNiels/conic-subdivision.git
+cd conic-subdivision
+git submodule update --init
+```
+
+### Quick Start
 
 To build and run:
 
@@ -26,7 +120,9 @@ To build and run:
 ./build.sh -r
 ```
 
-## Compilation
+> Note that not all GPUs support doubles in shaders. As such, the default shaders will use floats. To get slightly more accurate results, use the `--enable-shader-double-precision` flag.
+
+### Compilcation
 
 Compilation can be done easily via the provided build script:
 
@@ -34,30 +130,42 @@ Compilation can be done easily via the provided build script:
 ./build.sh
 ```
 
-See `./build.sh --help` for more information on how to use the build script:
+See `./build.sh --help` for more information on how to use the build script.
 
-```txt
-Builds the conis software.
-
-Usage: ./build.sh [options]
-
-options:
-  -h, --help:               Shows help output.
-  -c, --clean:              Cleans the build directory.
-      --skip-cmake:         Skips the cmake step of the build_rpm stage during the build process.
-  -d, --debug:              Builds the program in Debug mode instead of Release.
-  -t  --test:               Builds and runs the unit tests.
-  -r, --run:                Runs the built binary.
-  -l, --library-only:       Only builts the core library. No Qt needed to run this
-```
+#### Manual Compilation
 
 Alternatively, you can compile it manually (note that this does not create a _release_ build):
-```shell
+
+```bash
 mkdir build
 cd build
-cmake ..
+cmake .. -DBUILD_UNIT_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
 make -j6
 ```
+
+The generated binary will be named `build/conisLauncher`. You can run the program by running this binary:
+
+```sh
+./conisLauncher
+```
+
+### Running Through Docker
+
+It is also possible to run the application through Docker. This might be useful if you don't want to install the above dependencies on your system or if you have troubles doing so.
+
+```bash
+# Ensure you are in the root directory of the project
+docker build -t conis .
+```
+
+Now the "tricky" part will be to run this Docker image with a GUI (and GPU access). How to do this differs per operating system, so you might have to Google around how to do this on your operating system of choice. On Ubuntu with an Intel/AMD GPU, the following should work:
+
+```bash
+xhost +local:docker
+docker run --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/dri conis:latest
+```
+
+You might run into other issues depending on your system and GPU. I can't exhaustively provide all options here, so Google around and create an issue in this repository if you get stuck.
 
 ## Usage
 
@@ -81,3 +189,7 @@ Controls:
 A simplified diagram of the `core` library:
 
 ![UML Diagram CONIS](assets/conis-uml.png)
+
+## Questions or Issues?
+
+If you run into any issues with the setup process or with the application in general, please don't hesitate to [create an issue](https://github.com/BugelNiels/conic-subdivision/issues/new/choose).

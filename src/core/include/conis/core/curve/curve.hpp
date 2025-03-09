@@ -20,9 +20,7 @@ public:
 
     explicit Curve(std::vector<Vector2DD> verts, bool closed = true);
 
-    Curve(std::vector<Vector2DD> verts,
-          std::vector<Vector2DD> normals,
-          bool closed = true);
+    Curve(std::vector<Vector2DD> verts, std::vector<Vector2DD> normals, bool closed = true);
 
     Curve(const Curve &other) = default;
 
@@ -31,12 +29,8 @@ public:
     void copyDataTo(Curve &other) const;
 
     // TODO: don't define these in the header files and add additional checks to them
-    [[nodiscard]] const std::vector<Vector2DD> &getVertices() const {
-        return vertices_;
-    }
-    [[nodiscard]] const std::vector<Vector2DD> &getNormals() const {
-        return normals_;
-    }
+    [[nodiscard]] const std::vector<Vector2DD> &getVertices() const { return vertices_; }
+    [[nodiscard]] const std::vector<Vector2DD> &getNormals() const { return normals_; }
     [[nodiscard]] const std::vector<bool> &getCustomNormals() const { return customNormals_; }
     [[nodiscard]] const Vector2DD &getVertex(const int idx) const { return vertices_[idx]; }
     [[nodiscard]] const Vector2DD &getNormal(const int idx) const { return normals_[idx]; }
@@ -48,13 +42,11 @@ public:
     [[nodiscard]] Vector2DD &getNormal(const int idx) { return normals_[idx]; }
     [[nodiscard]] std::vector<bool> &getCustomNormals() { return customNormals_; }
 
-    void setCoords(std::vector<Vector2DD> verts) { vertices_ = std::move(verts); }
-    void setNormals(std::vector<Vector2DD> normals) {
-        normals_ = std::move(normals);
-    }
+    void setCoords(const std::vector<Vector2DD> &verts) { vertices_ = verts; }
+    void setNormals(const std::vector<Vector2DD> &normals) { normals_ = normals; }
 
-    void setVertex(int idx, Vector2DD coord);
-    void setNormal(int idx, Vector2DD normal);
+    void setVertex(int idx, const Vector2DD &coord);
+    void setNormal(int idx, const Vector2DD &normal);
     void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = std::move(customNormals); }
 
     [[nodiscard]] int findClosestEdge(const Vector2DD &p, double maxDist) const;

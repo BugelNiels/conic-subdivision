@@ -36,7 +36,7 @@ void Renderer::init(QOpenGLFunctions_4_1_Core *f) {
  * @return The constructed shader.
  */
 QOpenGLShaderProgram *Renderer::constructGeomShader(const QString &name) {
-#ifdef SHADER_DOUBLE_PRECISION
+#if SHADER_DOUBLE_PRECISION
     QString pathVert = ":/shaders/double/" + name + ".vert";
     QString pathGeom = ":/shaders/double/" + name + ".geom";
     QString pathFrag = ":/shaders/double/" + name + ".frag";

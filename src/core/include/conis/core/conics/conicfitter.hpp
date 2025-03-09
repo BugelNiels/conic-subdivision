@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 
-#include "conis/core/vector.hpp"
 #include "conic.hpp"
+#include "conis/core/vector.hpp"
 
 namespace conis::core {
 
@@ -19,7 +19,7 @@ private:
     real_t epsilon_;
 
     [[nodiscard]] Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> initAEigen(
-            const std::vector<PatchPoint> &patchPoints) const;
+        const std::vector<PatchPoint> &patchPoints) const;
 
     Eigen::VectorX<real_t> solveLinSystem(const Eigen::MatrixX<real_t> &A);
 };

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "conis/core/curve/curve.hpp"
 #include "conis/core/curve/curvaturetype.hpp"
+#include "conis/core/curve/curve.hpp"
 #include "conis/core/curve/refinement/normalrefinementsettings.hpp"
 #include "conis/core/curve/subdivision/conicsubdivider.hpp"
 #include "conis/core/curve/subdivision/subdivisionsettings.hpp"

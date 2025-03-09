@@ -17,7 +17,7 @@ Conic::Conic(const real_t a,
              real_t epsilon)
     : epsilon_(epsilon) {
     Q_ << a, b, d, b, c, e, d, e, f;
-    valid_ = !Q_.isZero(); // No fully zero matrix
+    valid_ = !Q_.isZero() && Q_.allFinite(); // No fully zero matrix
 
     for (int i = 0; i < Q_.size(); ++i) {
         if (std::isnan(Q_(i))) {
@@ -25,7 +25,7 @@ Conic::Conic(const real_t a,
         }
     }
 }
-Conic::Conic(Matrix3DD Q, const real_t epsilon) : epsilon_(epsilon), Q_(std::move(Q)) {}
+Conic::Conic(const Matrix3DD &Q, const real_t epsilon) : epsilon_(epsilon), Q_(Q) {}
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
     Vector2DD normal = conicNormal(p);
