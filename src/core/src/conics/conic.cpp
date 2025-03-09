@@ -50,7 +50,7 @@ Vector2DD Conic::conicNormal(const Vector2DD &p) const {
     return {xn, yn};
 }
 
-bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Eigen::Ref<Vector2DD> point, Eigen::Ref<Vector2DD> normal) const {
+bool Conic::sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD& point, Vector2DD& normal) const {
     if (!valid_) {
         return false;
     }

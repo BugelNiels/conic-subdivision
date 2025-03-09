@@ -85,9 +85,8 @@ real_t Curve::curvatureAtIdx(int idx, const CurvatureType curvatureType) const {
 int Curve::addPoint(const Vector2DD &p) {
     const int idx = findInsertIdx(p);
     vertices_.insert(vertices_.begin() + idx, p);
-    normals_.insert(normals_.begin() + idx, Vector2DD());
     customNormals_.insert(customNormals_.begin() + idx, false);
-    normals_[idx] = calcNormalAtIndex(vertices_, idx);
+    normals_.insert(normals_.begin() + idx, calcNormalAtIndex(vertices_, idx));
     normals_[getNextIdx(idx)] = calcNormalAtIndex(vertices_, getNextIdx(idx));
     normals_[getPrevIdx(idx)] = calcNormalAtIndex(vertices_, getPrevIdx(idx));
     return idx;
