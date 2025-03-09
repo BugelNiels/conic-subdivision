@@ -9,7 +9,6 @@ namespace conis::core {
 // #define NORMALIZE_CONIC_NORMALS
 using real_t = long double;
 
-// using Vector2DD = Eigen::Matrix<long double, 2, 1, Eigen::DontAlign>;
 using Vector2DD = Eigen::Vector2<real_t>;
 using Vector2DD = Eigen::Vector2<real_t>;
 using Vector3DD = Eigen::Vector3<real_t>;

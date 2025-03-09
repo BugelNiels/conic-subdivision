@@ -120,7 +120,7 @@ To build and run:
 ./build.sh -r
 ```
 
-> Note that not all GPUs support doubles in shaders. To disable this, use the `--disable-shader-double-precision` flag. The resulting shaders might be slightly less accurate. The docker image build disables this by default.
+> Note that not all GPUs support doubles in shaders. As such, the default shaders will use floats. To get slightly more accurate results, use the `--enable-shader-double-precision` flag.
 
 ### Compilcation
 

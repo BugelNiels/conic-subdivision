@@ -33,7 +33,7 @@ public:
      * @return true if the ray intersects
      * @return false otherwise
      */
-    bool sample(const Vector2DD &origin, const Vector2DD &direction, Vector2DD &point, Vector2DD &normal) const;
+    bool sample(const Vector2DD &origin, const Vector2DD &direction, Eigen::Ref<Vector2DD> point, Eigen::Ref<Vector2DD> normal) const;
 
     void printConic() const;
 
