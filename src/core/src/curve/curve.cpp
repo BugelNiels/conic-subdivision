@@ -29,18 +29,18 @@ Curve::Curve(std::vector<Vector2DD> verts,
     }
 }
 
-void Curve::setVertex(const int idx, Vector2DD coord) {
+void Curve::setVertex(const int idx, const Vector2DD& coord) {
     if (idx < 0 || idx >= static_cast<int>(vertices_.size())) {
         throw std::out_of_range("Index out of bounds in setVertex");
     }
-    vertices_[idx] = coord;
+    vertices_[idx] = Vector2DD(coord);
 }
 
-void Curve::setNormal(const int idx, Vector2DD normal) {
+void Curve::setNormal(const int idx, const Vector2DD& normal) {
     if (idx < 0 || idx >= static_cast<int>(normals_.size())) {
         throw std::out_of_range("Index out of bounds in setNormal");
     }
-    normals_[idx] = normal;
+    normals_[idx] = Vector2DD(normal);
 }
 
 std::vector<Vector2DD> Curve::calcNormals(
@@ -48,9 +48,19 @@ std::vector<Vector2DD> Curve::calcNormals(
     std::vector<Vector2DD> normals;
     const int n = static_cast<int>(verts.size());
     normals.resize(n);
-    for (int i = 0; i < n; i++) {
-        normals[i] = calcNormalAtIndex(verts, i);
+   for (int i = 0; i < n; i++) {
+    Vector2DD normal = calcNormalAtIndex(verts, i);
+
+    // Check if the value is invalid
+    if (!normal.allFinite()) {
+        std::cerr << "Error: calcNormalAtIndex returned invalid value at index " << i
+                  << ": " << normal.transpose() << std::endl;
+        abort();  // Stop execution immediately if it happens
     }
+
+    normals[i] = normal;
+}
+
     return normals;
 }
 

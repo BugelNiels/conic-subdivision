@@ -83,7 +83,7 @@ build() {
     else
       cmake_flags+=" -DSHADER_DOUBLE_PRECISION=OFF"
     fi
-    cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags}
+    cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags} -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -g -fno-omit-frame-pointer"
   fi
   make -j$(nproc)
   if [[ $? -eq 0 ]]; then

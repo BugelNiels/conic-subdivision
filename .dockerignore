@@ -1,5 +1,6 @@
 # Ignore build related files
 build/
+_build/
 */build/
 
 # Ignore Git related files

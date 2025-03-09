@@ -48,13 +48,13 @@ public:
     [[nodiscard]] Vector2DD &getNormal(const int idx) { return normals_[idx]; }
     [[nodiscard]] std::vector<bool> &getCustomNormals() { return customNormals_; }
 
-    void setCoords(std::vector<Vector2DD> verts) { vertices_ = std::move(verts); }
-    void setNormals(std::vector<Vector2DD> normals) {
-        normals_ = std::move(normals);
+    void setCoords(const std::vector<Vector2DD>& verts) { vertices_ = verts; }
+    void setNormals(const std::vector<Vector2DD>& normals) {
+        normals_ = normals;
     }
 
-    void setVertex(int idx, Vector2DD coord);
-    void setNormal(int idx, Vector2DD normal);
+    void setVertex(int idx, const Vector2DD& coord);
+    void setNormal(int idx, const Vector2DD& normal);
     void setCustomNormals(std::vector<bool> customNormals) { customNormals_ = std::move(customNormals); }
 
     [[nodiscard]] int findClosestEdge(const Vector2DD &p, double maxDist) const;

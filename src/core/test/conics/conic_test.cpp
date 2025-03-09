@@ -213,7 +213,8 @@ TEST(ConicTest, TestSampleLine) {
     const Vector2DD origin(0, 0);
     const Vector2DD direction(0, 1);  // Moving upward
 
-    Vector2DD point, normal;
+    Vector2DD point;
+    Vector2DD normal;
     ASSERT_TRUE(conic.sample(origin, direction, point, normal));
     ASSERT_NEAR(point.x(), 0, eps);
     ASSERT_NEAR(point.y(), 2, eps);  // Intersection at y = 2

@@ -9,7 +9,8 @@ namespace conis::core {
 // #define NORMALIZE_CONIC_NORMALS
 using real_t = long double;
 
-
+// using Vector2DD = Eigen::Matrix<long double, 2, 1, Eigen::DontAlign>;
+using Vector2DD = Eigen::Vector2<real_t>;
 using Vector2DD = Eigen::Vector2<real_t>;
 using Vector3DD = Eigen::Vector3<real_t>;
 using Vector4DD = Eigen::Vector4<real_t>;
@@ -23,9 +24,9 @@ using PatchPoint = struct PatchPoint {
     real_t pointWeight;
     real_t normWeight;
 
-    PatchPoint(Vector2DD vertex, Vector2DD normal, const real_t pointWeight, const real_t normWeight)
-        : vertex(std::move(vertex)),
-          normal(std::move(normal)),
+    PatchPoint(const Vector2DD &vertex, const Vector2DD& normal, const real_t pointWeight, const real_t normWeight)
+        : vertex(Vector2DD(vertex)),
+          normal(Vector2DD(normal)),
           pointWeight(pointWeight),
           normWeight(normWeight) {}
 };

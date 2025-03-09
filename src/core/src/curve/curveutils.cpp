@@ -10,11 +10,13 @@ Vector2DD CurveUtils::calcNormal(const Vector2DD &a, const Vector2DD &b, const V
     if (a == b) {
         Vector2DD normal = c - b;
         normal.x() *= -1;
+    std::cout << "Normal: " << normal.transpose() << std::endl;
         return Vector2DD(normal.y(), normal.x()).normalized();
     }
     if (b == c) {
         Vector2DD normal = b - a;
         normal.x() *= -1;
+    std::cout << "Normal: " << normal.transpose() << std::endl;
         return Vector2DD(normal.y(), normal.x()).normalized();
     }
     Vector2DD t1 = (a - b);
@@ -26,6 +28,7 @@ Vector2DD CurveUtils::calcNormal(const Vector2DD &a, const Vector2DD &b, const V
         t2.normalize();
     }
     Vector2DD normal = (t1 + t2).normalized();
+    std::cout << "Normal: " << normal.transpose() << std::endl;
     // Ensure correct orientation; normal is always pointing outwards
     const auto ab = a - b;
     const auto cb = c - b;
