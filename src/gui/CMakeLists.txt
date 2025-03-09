@@ -13,6 +13,13 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui Widgets OpenGL OpenGL
 file(GLOB_RECURSE CPP_SOURCES src/*.cpp)
 file(GLOB_RECURSE H_HEADERS src/*.hpp)
 
+option(SHADER_DOUBLE_PRECISION "Enable double precision shaders" OFF)
+
+if(SHADER_DOUBLE_PRECISION)
+    add_compile_definitions(SHADER_DOUBLE_PRECISION=1)
+endif()
+
+
 qt_add_executable(conisLauncher WIN32 MACOSX_BUNDLE
     ${CPP_SOURCES} ${H_HEADERS}
     resources/resources.qrc

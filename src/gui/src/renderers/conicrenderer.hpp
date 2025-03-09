@@ -26,7 +26,7 @@ protected:
 private:
     QMatrix3x3 conicCoefs_;
     float conicWidth_ = 0.1;
-#ifdef SHADER_DOUBLE_PRECISION
+#if SHADER_DOUBLE_PRECISION
     int numBuffers_ = 4;
 #else
     int numBuffers_ = 3;

@@ -25,7 +25,7 @@ protected:
     void initBuffers() override;
 
 private:
-#ifdef SHADER_DOUBLE_PRECISION
+#if SHADER_DOUBLE_PRECISION
     int numBuffers_ = 4;
 #else
     int numBuffers_ = 3;

@@ -9,8 +9,6 @@
 
 namespace conis::gui {
 
-#define SHADER_DOUBLE_PRECISION
-
 /**
  * @brief The Renderer class represents a generic renderer class. The class is
  * abstract and should only contain functionality that is applicable

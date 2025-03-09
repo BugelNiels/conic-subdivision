@@ -1,0 +1,12 @@
+# Ignore build related files
+build/
+*/build/
+
+# Ignore Git related files
+.git/
+.gitignore
+
+# Ignore unnecessary system files
+*.swp
+*.swo
+.DS_Store
