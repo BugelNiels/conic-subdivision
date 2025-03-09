@@ -33,14 +33,14 @@ void Curve::setVertex(const int idx, const Vector2DD& coord) {
     if (idx < 0 || idx >= static_cast<int>(vertices_.size())) {
         throw std::out_of_range("Index out of bounds in setVertex");
     }
-    vertices_[idx] = Vector2DD(coord);
+    vertices_[idx] = coord;
 }
 
 void Curve::setNormal(const int idx, const Vector2DD& normal) {
     if (idx < 0 || idx >= static_cast<int>(normals_.size())) {
         throw std::out_of_range("Index out of bounds in setNormal");
     }
-    normals_[idx] = Vector2DD(normal);
+    normals_[idx] = normal;
 }
 
 std::vector<Vector2DD> Curve::calcNormals(
