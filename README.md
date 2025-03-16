@@ -8,98 +8,35 @@ The program supports the loading of object files (provided that the `.obj` file 
 
 ## Prerequisites
 
-To compile and run the project, you need a number of dependencies. Basic instructions are provided for Ubuntu-based distros, Fedora-based distros and MacOS. If you plan to run this on Windows, install [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the instructions for the Ubuntu-based distros.
+To compile and run the project, you will need the following:
 
-In addition to the packages below, the GUI application will also require OpenGL to run, but this should be available by default on most systems.
+1. A C++ compiler such as `g++`
+2. [CMake](https://cmake.org/)
+3. [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+4. [Qt 6.2+](https://www.qt.io/)
+    - Qt is required for running the program with a GUI. It is optional for building the core library.
+6. [Google Test (GTest)](https://github.com/google/googletest)
+    - Google Test is required for running unit tests. Pass `-DBUILD_UNIT_TESTS=OFF` to the `cmake` command to skip this requirement.
 
-### 1. [CMake](https://cmake.org/)
+ Basic instructions are provided for Ubuntu-based distros, Fedora-based distros and MacOS. If you plan to run this on Windows, install & setup [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the instructions for the Ubuntu-based distros.
+In addition, the GUI application will also require OpenGL to run, but this should be available by default on most systems.
 
 - **Ubuntu-based distros**:
 
      ```bash
-     sudo apt-get install -y cmake
+     sudo apt-get install -y libeigen3-dev qt6-base-dev qt6-tools-dev libgtest-dev
      ```
 
 - **Fedora-based distros**:
 
      ```bash
-     sudo dnf install -y cmake
+     sudo dnf install -y eigen3-devel qt6-qtbase-devel qt6-qttools-devel gtest-devel
      ```
 
 - **Mac (using Homebrew)**:
 
      ```bash
-     brew install cmake
-     ```
-
----
-
-### 2. [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
-
-- **Ubuntu-based distros**:
-
-     ```bash
-     sudo apt-get install -y libeigen3-dev
-     ```
-
-- **Fedora-based distros**:
-
-     ```bash
-     sudo dnf install -y eigen3-devel
-     ```
-
-- **Mac (using Homebrew)**:
-
-     ```bash
-     brew install eigen
-     ```
-
----
-
-### 3. [Qt 6.2+](https://www.qt.io/)
-
-   Qt is required for running the program with a GUI. It is optional for building the core library.
-
-- **Ubuntu-based distros**:
-
-     ```bash
-     sudo apt-get install -y qt6-base-dev qt6-tools-dev
-     ```
-
-     > Note that you will need at least Ubuntu 22 for the qt6 packages to be available.
-
-- **Fedora-based distros**:
-
-     ```bash
-     sudo dnf install -y qt6-qtbase-devel qt6-qttools-devel
-     ```
-
-- **Mac (using Homebrew)**:
-
-     ```bash
-     brew install qt6
-     ```
-
-### 4. [Google Test (GTest)](https://github.com/google/googletest)
-
-   Google Test is required for running unit tests. Pass `-DBUILD_UNIT_TESTS=OFF` to the `cmake` command to skip this requirement.
-
-- **Ubuntu-based distros**:
-
-     ```bash
-     sudo apt-get install -y libgtest-dev
-     ```
-
-- **Fedora-based distros**:
-
-     ```bash
-     sudo dnf install -y gtest-devel
-     ```
-
-- **Mac (using Homebrew)**:
-
-     ```bash
-     brew install googletest
+     brew install eigen qt6 googletest
      ```
 
 ## Getting Started
@@ -151,14 +88,14 @@ The generated binary will be named `build/conisLauncher`. You can run the progra
 
 ### Running Through Docker
 
-It is also possible to run the application through Docker. This might be useful if you don't want to install the above dependencies on your system or if you have troubles doing so.
+It is also possible to run the application through Docker. This might be useful if you don't want to install the above dependencies on your system or if you have trouble doing so.
 
 ```bash
 # Ensure you are in the root directory of the project
 docker build -t conis .
 ```
 
-Now the "tricky" part will be to run this Docker image with a GUI (and GPU access). How to do this differs per operating system, so you might have to Google around how to do this on your operating system of choice. On Ubuntu with an Intel/AMD GPU, the following should work:
+Now the "tricky" part will be to run this Docker image with a GUI (and GPU access). How to do this differs per operating system, so you might have to search for how to do this on your operating system. On Ubuntu with an Intel/AMD GPU, the following should work:
 
 ```bash
 xhost +local:docker
@@ -183,6 +120,8 @@ Controls:
 - Double-clicking on a normal will reset it.
 - Selecting an edge will display the conic constructed based on the patch surrounding said edge (not that this does not automatically insert inflection points)
 - Up/Down/Left/Right arrow keys can be used to translate the mesh.
+
+> Note that memory alignment has been (temporarily) disabled for the Eigen data structures due to memory corruption issues. This might have an impact on the subdivision performance.
 
 ## Design
 
