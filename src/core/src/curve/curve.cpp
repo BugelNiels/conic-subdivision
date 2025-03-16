@@ -119,11 +119,10 @@ void Curve::removePoint(int idx) {
 
 int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
     int ptIndex = -1;
-    double currentDist;
     double minDist = std::numeric_limits<double>::infinity();
 
     for (int k = 0; k < vertices_.size(); k++) {
-        currentDist = (vertices_[k] - p).norm();
+        double currentDist = (vertices_[k] - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;
@@ -139,11 +138,10 @@ int Curve::findClosestVertex(const Vector2DD &p, const double maxDist) const {
 // Returns index of the point normal handle
 int Curve::findClosestNormal(const Vector2DD &p, const double maxDist, const double normalLength) const {
     int ptIndex = -1;
-    double currentDist;
     double minDist = std::numeric_limits<double>::infinity();
     for (int k = 0; k < vertices_.size(); k++) {
         Vector2DD normPos = vertices_[k] + normalLength * normals_[k];
-        currentDist = (normPos - p).norm();
+        double currentDist = (normPos - p).norm();
         if (currentDist < minDist) {
             minDist = currentDist;
             ptIndex = k;

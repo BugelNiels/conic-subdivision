@@ -11,6 +11,7 @@ The program supports the loading of object files (provided that the `.obj` file 
 To compile and run the project, you will need the following:
 
 1. A C++ compiler such as `g++`
+    - Should support at least C++ 17
 2. [CMake](https://cmake.org/)
 3. [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
 4. [Qt 6.2+](https://www.qt.io/)
@@ -57,7 +58,7 @@ To build and run:
 ./build.sh -r
 ```
 
-> Note that not all GPUs support doubles in shaders. As such, the default shaders will use floats. To get slightly more accurate results, use the `--enable-shader-double-precision` flag.
+> Note that not all GPUs support doubles in shaders. As such, the default shaders will use floats. To get more accurate results at higher subdivision levels, use the `--enable-shader-double-precision` flag.
 
 ### Compilcation
 
@@ -121,7 +122,7 @@ Controls:
 - Selecting an edge will display the conic constructed based on the patch surrounding said edge (not that this does not automatically insert inflection points)
 - Up/Down/Left/Right arrow keys can be used to translate the mesh.
 
-> Note that memory alignment has been (temporarily) disabled for the Eigen data structures due to memory corruption issues. This might have an impact on the subdivision performance.
+> Note that memory alignment has been (temporarily) disabled for the Eigen data structures due to memory corruption issues. This might have a slight impact on the subdivision performance.
 
 ## Design
 

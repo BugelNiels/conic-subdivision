@@ -15,8 +15,10 @@ usage() {
   echo "  -d, --debug:                          Builds the program in Debug mode instead of Release."
   echo "  -t  --test:                           Builds and runs the unit tests."
   echo "  -r, --run:                            Runs the built binary."
-  echo "  -l, --library-only:                   Only builds the core library. No Qt needed to run this"
-  echo "  --enable-shader-double-precision:     Use double in the shader instead of floats. Not all GPUs will support this"
+  echo "  -l, --library-only:                   Only builds the core library. No Qt needed to run this."
+  echo "  -s, --asan:                           Builds with address sanitizer."
+  echo "  --valgrind:                           Runs the binaries with valgrind."
+  echo "  --enable-shader-double-precision:     Use double in the shader instead of floats. Not all GPUs will support this."
   exit 1
 }
 
@@ -32,6 +34,8 @@ build() {
   local run=false
   local library_only=false
   local shader_double_precision=false
+  local compile_with_asan=false
+  local run_with_valgrind=false
 
 
   # Parse command line arguments
@@ -44,6 +48,8 @@ build() {
       -t|--test) do_tests=true ;;
       -r|--run) run=true ;;
       -l|--library-only) library_only=true ;;
+      --asan) compile_with_asan=true ;;
+      --valgrind) run_with_valgrind=true ;;
       --enable-shader-double-precision) shader_double_precision=true ;;
       *)
         echo "Unrecognised command: $1"
@@ -83,6 +89,11 @@ build() {
     else
       cmake_flags+=" -DSHADER_DOUBLE_PRECISION=OFF"
     fi
+    if [ ${compile_with_asan} = true ]; then
+      cmake_flags+=" -DCMAKE_CXX_FLAGS='-fsanitize=address'"
+    else
+      cmake_flags+=" -DCMAKE_CXX_FLAGS=''"
+    fi
     cmake .. -DCMAKE_BUILD_TYPE=${build_type} ${cmake_flags}
   fi
   make -j$(nproc)
@@ -102,14 +113,19 @@ build() {
     exit 1
   fi
 
+  run_command=""
+  if [ ${run_with_valgrind} = true ]; then
+      run_command="valgrind"
+  fi
+
   if [ ${do_tests} = true ]; then
     echo "Running tests"
-    ./conisTests
+    ${run_command} ./conisTests
   fi
 
   if [ ${library_only} = false ] && [ ${run} = true ]; then
     echo "Running CONIS"
-    ./conisLauncher
+    ${run_command} ./conisLauncher
   fi
 
   cd "$initial_loc"

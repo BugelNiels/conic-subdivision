@@ -9,7 +9,7 @@ namespace conis::core {
 
 ConicFitter::ConicFitter(const real_t epsilon) : epsilon_(epsilon) {};
 
-static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &vertex, int numUnknowns) {
+static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &vertex) {
     row.setZero();
     const real_t x = vertex.x();
     const real_t y = vertex.y();
@@ -24,7 +24,6 @@ static void pointEqEigen(Eigen::RowVectorX<real_t> &row, const Vector2DD &vertex
 static void normEqXEigen(Eigen::RowVectorX<real_t> &row,
                          const Vector2DD &vertex,
                          const Vector2DD &normal,
-                         int numUnknowns,
                          int normIdx) {
     row.setZero();
     const real_t x = vertex.x();
@@ -41,7 +40,6 @@ static void normEqXEigen(Eigen::RowVectorX<real_t> &row,
 static void normEqYEigen(Eigen::RowVectorX<real_t> &row,
                          const Vector2DD &vertex,
                          const Vector2DD &normal,
-                         int numUnknowns,
                          int normIdx) {
     row.setZero();
     const real_t x = vertex.x();
@@ -68,18 +66,18 @@ Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic> ConicFitter::initAEigen(
         auto &p = patchPoints[i];
         const Vector2DD &vertex = p.vertex;
         const Vector2DD &normal = p.normal;
-        pointEqEigen(row, vertex, numUnknowns_);
+        pointEqEigen(row, vertex);
         A.row(rowIdx++) = row * p.pointWeight;
-        normEqXEigen(row, vertex, normal, numUnknowns_, i);
+        normEqXEigen(row, vertex, normal, i);
         A.row(rowIdx++) = row * p.normWeight;
-        normEqYEigen(row, vertex, normal, numUnknowns_, i);
+        normEqYEigen(row, vertex, normal, i);
         A.row(rowIdx++) = row * p.normWeight;
     }
     return A;
 }
 
 Eigen::VectorX<real_t> ConicFitter::solveLinSystem(const Eigen::MatrixX<real_t> &A) {
-    const Eigen::JacobiSVD<Eigen::MatrixX<real_t>> svd(A, Eigen::ComputeThinV);
+    const Eigen::JacobiSVD svd(A, Eigen::ComputeThinV);
     return svd.matrixV().rightCols<1>();
 }
 
