@@ -14,18 +14,12 @@ Conic::Conic(const real_t a,
              const real_t d,
              const real_t e,
              const real_t f,
-             real_t epsilon)
+             const real_t epsilon)
     : epsilon_(epsilon) {
     Q_ << a, b, d, b, c, e, d, e, f;
-    valid_ = !Q_.isZero() && Q_.allFinite(); // No fully zero matrix
-
-    for (int i = 0; i < Q_.size(); ++i) {
-        if (std::isnan(Q_(i))) {
-            valid_ = false;
-        }
-    }
+    valid_ = !Q_.isZero() && Q_.allFinite(); // No fully zero matrix and no invalid values
 }
-Conic::Conic(const Matrix3DD &Q, const real_t epsilon) : epsilon_(epsilon), Q_(Q) {}
+Conic::Conic(const Matrix3DD &Q, const real_t epsilon) : Q_(Q), epsilon_(epsilon) {}
 
 Vector2DD Conic::conicNormal(const Vector2DD &p, const Vector2DD &rd) const {
     Vector2DD normal = conicNormal(p);

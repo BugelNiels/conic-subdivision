@@ -251,16 +251,15 @@ void SceneView::highlightEdge(const int idx) {
 }
 void SceneView::selectVertex(const int idx) {
     settings_.selectedVertex = idx;
-#if 1
+#ifdef DEBUG
     smoothnessPenalty(conisCurve_.getSubdivCurve(),
                       settings_.highlightedVertex,
                       conisCurve_.getSubdivLevel(),
                       settings_.curvatureType);
-#endif
     if (idx > 0) {
-
         std::cout << "vertex dir: " << conisCurve_.getControlCurve().vertexPointingDir(idx) << std::endl;
     }
+#endif
     updateSelectedConic();
     update();
 }

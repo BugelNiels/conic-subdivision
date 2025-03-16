@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build-library:
+  static-analysis:
     runs-on: ubuntu-latest
     steps:
       # Checkout
@@ -48,10 +48,38 @@ jobs:
       - name: Lint CMake files
         run: |
           cmakelint --linelength=120 CMakeLists.txt
+  run-unit-tests-valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # Install packages
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y valgrind build-essential cmake libgtest-dev libeigen3-dev
 
       # Build & Test
       - name: Build and test
-        run: ./build.sh --library-only --test
+        run: ./build.sh --library-only --test --valgrind
+  run-unit-tests-asan:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      # Install packages
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libgtest-dev libeigen3-dev
+
+      # Build & Test
+      - name: Build and test
+        run: ./build.sh --library-only --test --asan
   build-launcher:
     runs-on: ubuntu-latest
     steps:

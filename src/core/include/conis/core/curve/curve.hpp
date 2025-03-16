@@ -74,19 +74,17 @@ public:
     real_t curvatureAtIdx(int idx, CurvatureType curvatureType) const;
 
 private:
-    bool closed_ = true;
-    bool areaWeightedNormals_ = true;
-    bool circleNormals_ = false;
-
     std::vector<Vector2DD> vertices_;
     std::vector<Vector2DD> normals_;
     std::vector<bool> customNormals_;
 
+    bool closed_ = true;
+    bool areaWeightedNormals_ = true;
+    bool circleNormals_ = false;
+
     Vector2DD getClosestPointOnLineSegment(const Vector2DD &start, const Vector2DD &end, const Vector2DD &point) const;
     [[nodiscard]] std::vector<Vector2DD> calcNormals(const std::vector<Vector2DD> &verts) const;
-
     [[nodiscard]] Vector2DD calcNormalAtIndex(const std::vector<Vector2DD> &verts, int i) const;
-
     [[nodiscard]] int findInsertIdx(const Vector2DD &p) const;
 };
 
