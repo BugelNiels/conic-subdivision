@@ -15,9 +15,9 @@ To compile and run the project, you will need the following:
 2. [CMake](https://cmake.org/)
 3. [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
 4. [Qt 6.2+](https://www.qt.io/)
-    - Qt is required for running the program with a GUI. It is optional for building the core library.
+    - Qt is required to run the program with a GUI. It is optional for building the core library.
 6. [Google Test (GTest)](https://github.com/google/googletest)
-    - Google Test is required for running unit tests. Pass `-DBUILD_UNIT_TESTS=OFF` to the `cmake` command to skip this requirement.
+    - Google Test is required to run unit tests. Pass `-DBUILD_UNIT_TESTS=OFF` to the `cmake` command to skip this requirement.
 
  Basic instructions are provided for Ubuntu-based distros, Fedora-based distros and MacOS. If you plan to run this on Windows, install & setup [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) and follow the instructions for the Ubuntu-based distros.
 In addition, the GUI application will also require OpenGL to run, but this should be available by default on most systems.
@@ -60,7 +60,7 @@ To build and run:
 
 > Note that not all GPUs support doubles in shaders. As such, the default shaders will use floats. To get more accurate results at higher subdivision levels, use the `--enable-shader-double-precision` flag.
 
-### Compilcation
+### Compilation
 
 Compilation can be done easily via the provided build script:
 
