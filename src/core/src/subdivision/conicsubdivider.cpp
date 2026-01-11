@@ -1,4 +1,4 @@
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
+#include "conis/core/subdivision/conicsubdivider.hpp"
 
 #include <cmath>
 #include <iostream>

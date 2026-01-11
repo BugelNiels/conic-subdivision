@@ -2,7 +2,7 @@
 
 #include "conis/core/conics/conicfitter.hpp"
 #include "conis/core/curve/curve.hpp"
-#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
+#include "conis/core/subdivision/subdivisionsettings.hpp"
 #include "conis/core/vector.hpp"
 
 namespace conis::core {

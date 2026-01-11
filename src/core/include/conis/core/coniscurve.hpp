@@ -4,10 +4,10 @@
 
 #include "conis/core/conics/conic.hpp"
 #include "conis/core/curve/curve.hpp"
-#include "conis/core/curve/refinement/normalrefinementsettings.hpp"
-#include "conis/core/curve/refinement/normalrefiner.hpp"
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
-#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
+#include "conis/core/refinement/normalrefinementsettings.hpp"
+#include "conis/core/refinement/normalrefiner.hpp"
+#include "conis/core/subdivision/conicsubdivider.hpp"
+#include "conis/core/subdivision/subdivisionsettings.hpp"
 #include "conis/core/listener.hpp"
 #include "conis/core/vector.hpp"
 

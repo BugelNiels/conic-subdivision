@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "conis/core/conics/conic.hpp"
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
+#include "conis/core/subdivision/conicsubdivider.hpp"
 #include "conis/core/vector.hpp"
 #include "util/asyncrunner.hpp"
 

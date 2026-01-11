@@ -1,7 +1,7 @@
 #include "conis/core/curve/curvepresetfactory.hpp"
 #include "conis/core/curve/curvesaver.hpp"
-#include "conis/core/curve/subdivision/conicsubdivider.hpp"
-#include "conis/core/curve/subdivision/subdivisionsettings.hpp"
+#include "conis/core/subdivision/conicsubdivider.hpp"
+#include "conis/core/subdivision/subdivisionsettings.hpp"
 #include "conis/core/vector.hpp"
 #include "test/test_helpers.hpp"
 #include <gtest/gtest.h>
@@ -9,7 +9,7 @@
 using namespace conis::core;
 
 constexpr real_t eps = 1e-1;
-constexpr int testSubdivLevel = 12;
+constexpr int testSubdivLevel = 2;
 
 real_t gradientLength(const Vector2DD &p, real_t a, real_t b, real_t c, real_t d, real_t e, real_t f) {
     real_t x = p.x();

@@ -1,4 +1,4 @@
-#include "conis/core/curve/refinement/normalrefiner.hpp"
+#include "conis/core/refinement/normalrefiner.hpp"
 
 #include <iostream>
 
